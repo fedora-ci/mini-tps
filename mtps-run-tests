@@ -36,6 +36,7 @@ Options:
 -x, --scriptletcheck                         check output and fail if problems with scriptlets are found
 -r, --repo=NAME                              YUM repo name, must be present, check with: yum repolist --enabled
 -c, --critical                               tests set are critical, example: update, downgrade
+-f, --rpmverify                              run "rpm --verify" to verify that what's installed matches the metadata in the RPM database
 -h, --help                                   display this help and exit
 -v, --verbose                                print debug messages
 EOF
@@ -57,13 +58,17 @@ box_out() {
 
 # http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
-opt=$(getopt -n "$0" --options "hvct:r:s:l:x" --longoptions "help,verbose,skiplangpack,scriptletcheck,critical,test:,repo:,selinux:" -- "$@")
+opt=$(getopt -n "$0" --options "hvct:r:s:l:x:f" --longoptions "help,verbose,skiplangpack,scriptletcheck,rpmverify,critical,test:,repo:,selinux:" -- "$@")
 eval set -- "$opt"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -t|--test)
             TEST="$2"
             shift 2
+            ;;
+        -f|--rpmverify)
+            RPM_VERIFY="yes"
+            shift
             ;;
         -r|--repo)
             REPONAME="$2"
@@ -112,6 +117,7 @@ SELINUX="${SELINUX:-}"
 CRITICAL="${CRITICAL:-}"
 SKIPLANGPACK="${SKIPLANGPACK:-}"
 CHECK_SCRIPTLETS="${CHECK_SCRIPTLETS:-}"
+RPM_VERIFY="${RPM_VERIFY:-}"
 # Put logs by default at CDIR/mtps-logs
 LOGS_DIR="${LOGS_DIR:-mtps-logs}"
 
@@ -193,7 +199,7 @@ for nevra in $nevras_in_repo; do
         "  SELINUX:     $(getenforce || echo "unknown")" \
         "  YUM HISTORY: $START"
     logfname="${LOGS_DIR%%/}/$TESTRUN_ID-$TEST-$nevra.log"
-    mtps-pkg-test --test="$TEST" ${CHECK_SCRIPTLETS:+--scriptletcheck} --nevra="$nevra" 2>&1 | tee "$logfname"
+    mtps-pkg-test --test="$TEST" ${CHECK_SCRIPTLETS:+--scriptletcheck} ${RPM_VERIFY:+--rpmverify} --nevra="$nevra" 2>&1 | tee "$logfname"
     test_status="${PIPESTATUS[0]}"
     #box_out \
     #    "REVERT CHANGES" \
