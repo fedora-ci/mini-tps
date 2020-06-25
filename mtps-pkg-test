@@ -246,6 +246,43 @@ pkg_is_absent() {
     return $ret
 }
 
+rpm_db_verify() {
+    # Run "rpm --verify" on the installed package
+    local name="$1" && shift
+    debug "${FUNCNAME[0]}: $name"
+    local ret=
+
+    echo
+    echo
+    echo "***"
+    echo "Verifying that the installed files match the metadata in the RPM database..."
+    echo "$ rpm --verify $name"
+    rpm --verify "$name" && ret=0 || ret=1
+    echo
+    if [ "$ret" != "0" ]; then
+        echo "Some discrepancies were found. This is how to interpret the output above:"
+        echo
+        echo "S file Size differs"
+        echo "M Mode differs (includes permissions and file type)"
+        echo "5 digest (formerly MD5 sum) differs"
+        echo "D Device major/minor number mismatch"
+        echo "L readLink(2) path mismatch"
+        echo "U User ownership differs"
+        echo "G Group ownership differs"
+        echo "T mTime differs"
+        echo "P caPabilities differ"
+        echo
+        echo "These findings might be real bugs that can be fixed in the spec file,"
+        echo "or they might be false positives that can be suppressed. See the \"%verify\""
+        echo "scriptlet description in the RPM docs: https://rpm-software-management.github.io/rpm/manual/spec.html"
+    else
+        echo "(ok)"
+    fi
+    echo "***"
+
+    return $ret
+}
+
 get_installed_nevra_new() {
     # Sytem can have a few same packages installed
     # rpm -q "kernel-rt-kvm"
@@ -484,13 +521,14 @@ Options:
 -n, --nevra=NEVRA                            package to test: name-[epoch:]version-release.arch
 -r, --revertchanges                          revert changes made to system
 -x, --scriptletcheck                         check output and fail if problems with scriptlets are found
+-f, --rpmverify                              run "rpm --verify" to verify that what's installed matches the metadata in the RPM database
 -h, --help                                   display this help and exit
 EOF
 }
 
 # http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
-opt=$(getopt -n "$0" --options "hvs:t:n:r:x" --longoptions "help,verbose,start:,test:,nevra:,revertchanges,scriptletcheck" -- "$@")
+opt=$(getopt -n "$0" --options "hvs:t:n:r:x:f" --longoptions "help,verbose,start:,test:,nevra:,revertchanges,scriptletcheck,rpmverify" -- "$@")
 eval set -- "$opt"
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -501,6 +539,10 @@ while [[ $# -gt 0 ]]; do
         -t|--test)
             TEST="$2"
             shift 2
+            ;;
+        -f|--rpmverify)
+            RPM_VERIFY="yes"
+            shift
             ;;
         -n|--nevra)
             NEVRA="$2"
@@ -548,6 +590,7 @@ START="${START:-}"
 NEVRA="${NEVRA:-}"
 REVERT="${REVERT:-}"
 CHECK_SCRIPTLETS="${CHECK_SCRIPTLETS:-}"
+RPM_VERIFY="${RPM_VERIFY:-}"
 
 DEBUG_OUT="/dev/null"
 if [ -n "$DEBUG" ]; then
@@ -593,6 +636,15 @@ case $TEST in
         else
             pkg_install_new_if_absent "$NEVRA"
         fi
+        ret=$?
+        if [ -n "$RPM_VERIFY" ]; then
+            if [ "$ret" = "0" ]; then
+                # The "install" test succeeded so we can proceed and rpm-verify the results
+                rpm_db_verify "$NEVRA"
+                ret=$?
+            fi
+        fi
+        exit $ret
         ;;
     update)
         msg_prepare "updating" "$NEVRA"
@@ -614,6 +666,15 @@ case $TEST in
         else
             pkg_update_to_new_if_present "$NEVRA"
         fi
+        ret=$?
+        if [ -n "$RPM_VERIFY" ]; then
+            if [ "$ret" = "0" ]; then
+                # The "update" test succeeded so we can proceed and rpm-verify the results
+                rpm_db_verify "$NEVRA"
+                ret=$?
+            fi
+        fi
+        exit $ret
         ;;
     downgrade)
         msg_prepare "downgrading" "$NEVRA"
