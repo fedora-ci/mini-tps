@@ -1,0 +1,302 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2018
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+
+# https://gitlab.cee.redhat.com/baseos-qe/gluetool-modules/blob/devel/baseosci-xunit.xsd
+
+: <<'END_COMMENT'
+<!-- https://xmltoolbox.appspot.com/ -->
+<!--https://www.webtoolkitonline.com/xml-formatter.html -->
+<testsuites>
+  <testsuite name="restraint" tests="11">
+    <properties>
+      <property name="baseosci.test-type" value="restraint"/>
+      <property name="baseosci.result-class" value="gluetool.glue.testing/restraint-runner.RestraintTestResult"/>
+      <property name="baseosci.overall-result" value="FAIL"/>
+      <property name="baseosci.url.jenkins-build" value="https://baseos-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/ci-openstack/18440/"/>
+    </properties>
+    <testcase name="/CoreOS/p11-kit/Sanity/trust-sanity-test" time="40">
+      <properties>
+        <property name="baseosci.arch" value="x86_64"/>
+        <property name="baseosci.distro" value=""/>
+        <property name="baseosci.host" value="xxx.redhat.com"/>
+        <property name="baseosci.variant" value=""/>
+        <property name="baseosci.beaker-version" value=""/>
+        <property name="baseosci.connectable_host" value="10.10.10.10"/>
+        <property name="baseosci.recipe-id" value=""/>
+        <property name="baseosci.task-id" value="4"/>
+        <property name="baseosci.result" value="PASS"/>
+        <property name="baseosci.status" value="Completed"/>
+      </properties>
+      <parameters>
+        <parameter value=\'BASEOS_CI_TASKS="18957067"\'/>
+        <parameter value=\'BASEOS_CI="true"\'/>
+      </parameters>
+      <logs>
+        <log href="https://xxx.redhat.com/tasks/4/logs/harness.log" name="harness.log"/>
+        <log href="https://xxx.redhat.com/tasks/4/logs/taskout.log" name="taskout.log"/>
+        <log href="https://xxx.redhat.com/tasks/4/logs/journal.xml" name="journal.xml"/>
+      </logs>
+      <phases>
+        <phase name="Setup" result="PASS">
+          <logs>
+            <log href="https://xxx.redhat.com/logs/avc.log" name="avc.log"/>
+            <log href="https://xxx.redhat.com/logs/resultoutputfile.log" name="resultoutputfile.log"/>
+          </logs>
+        </phase>
+        <phase name="Help-test" result="PASS">
+          <logs>
+            <log href="https://xxx.redhat.com/logs/avc.log" name="avc.log"/>
+            <log href="https://xxx.redhat.com/logs/resultoutputfile.log" name="resultoutputfile.log"/>
+          </logs>
+        </phase>
+      </phases>
+      <packages>
+        <package nvr="openssl-CoreOS-openssl-Library-certgen-2.0-57.noarch"/>
+        <package nvr="openssl-CoreOS-openssl-Library-certgen-2.0-57.src.rpm"/>
+        <package nvr="p11-kit-0.23.14-4.el8.src.rpm"/>
+        <package nvr="p11-kit-0.23.14-4.el8.x86_64"/>
+        <package nvr="p11-kit-trust-0.23.14-4.el8.x86_64"/>
+      </packages>
+    </testcase>
+  </testsuite>
+</testsuites>
+END_COMMENT
+
+PROG="${PROG:-${0##*/}}"
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+msg_usage() {
+    cat << EOF
+Usage:
+$PROG <options>
+
+Options:
+-f, --file=XUNITFILE        path to result xunit file
+--tsuite=TESTSUITE          name="restraint" [tests="11"]
+--ts-prop=PROPERTY          name="baseosci.overall-result" value="FAIL"
+--tcase=testcase            name="/CoreOS/p11-kit/trust-sanity-test" [time="40"]
+--tc-prop=PROPERTY          name="baseosci.result" value="PASS"
+--tc-param=PARAMETER        value='BASEOS_CI="true"'
+--tc-log=LOG                href="https://xxx/harness.log" name="harness.log"
+--tc-phase=PARAMETER        name="-extract-option-test" [result="PASS"]
+--tc-phase-log=LOG          href="https://.../avc.log" name="avc.log"
+--tc-fail=PARAMETER         message="Test failed"
+--merge=XUNIT               merge xunit with other file
+-h, --help                  display this help and exit
+
+Examples:
+$PROG --tsuite='name=restraint' --ts-prop='name=osci.overall-result'
+$PROG --tsuite='name=restraint tests=11' --ts-prop='name=osci.overall-result'
+$PROG --tsuite='name=restraint' --tcase='name=/OSCI/brew-repo' --tc-log='href=http://xxx.log name=xxx.log'
+EOF
+}
+
+function getf() {
+    local field="$1" && shift
+    local from="$1" && shift
+    echo "$from" | grep -E -o "[[:space:]]*${field}=[^[:space:]]*" | sed -n -e 's/^[^=]*=//p'
+}
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+short_options="hvf:"
+long_options="help,verbose,file:,tsuite:,ts-prop:,tcase:,tc-prop:,tc-param:,tc-log:,merge:,tc-fail:"
+opt=$(getopt -n "$0" --options "$short_options"  --longoptions "$long_options"  -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -f|--file)
+            XFILE="$2"
+            shift 2
+            ;;
+        --tsuite)
+            TESTSUITE="$2"
+            TS_NAME="$(getf "name" "$TESTSUITE")"
+            TS_TESTS="$(getf "tests" "$TESTSUITE")"
+            shift 2
+            ;;
+        --ts-prop)
+            TS_PROP="$2"
+            TS_PROP_NAME="$(getf "name" "$TS_PROP")"
+            TS_PROP_VALUE="$(getf "value" "$TS_PROP")"
+            shift 2
+            ;;
+        --tcase)
+            TCASE="$2"
+            TC_NAME="$(getf "name" "$TCASE")"
+            TC_TIME="$(getf "time" "$TCASE")"
+            shift 2
+            ;;
+        --tc-prop)
+            TC_PROP="$2"
+            TC_PROP_NAME="$(getf "name" "$TC_PROP")"
+            TC_PROP_VALUE="$(getf "value" "$TC_PROP")"
+            shift 2
+            ;;
+        --tc-param)
+            TC_PARAM="$2"
+            TC_PARAM_VALUE="$(getf "value" "$TC_PARAM")"
+            shift 2
+            ;;
+        --tc-log)
+            TC_LOG="$2"
+            TC_LOG_NAME="$(getf "name" "$TC_LOG")"
+            TC_LOG_HREF="$(getf "href" "$TC_LOG")"
+            shift 2
+            ;;
+        --tc-fail)
+            TC_FAIL="$2"
+            TC_FAIL_MESSAGE="$(getf "message" "$TC_FAIL")"
+            shift 2
+            ;;
+        -v|--verbose)
+            DEBUG="yes"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+# Entry
+
+DEBUG="${DEBUG:-}"
+XFILE="${XFILE:-}"
+debug "XFILE: $XFILE"
+TS_NAME="${TS_NAME:-}"
+debug "TS_NAME: $TS_NAME"
+TS_TESTS="${TS_TESTS:-}"
+debug "TS_TESTS: $TS_TESTS"
+TS_PROP_NAME="${TS_PROP_NAME:-}"
+debug "TS_PROP_NAME: $TS_PROP_NAME"
+TS_PROP_VALUE="${TS_PROP_VALUE:-}"
+debug "TS_PROP_VALUE: $TS_PROP_VALUE"
+TC_NAME="${TC_NAME:-}"
+debug "TC_NAME: $TC_NAME"
+TC_TIME="${TC_TIME:-}"
+debug "TC_TIME: $TC_TIME"
+TC_PROP_NAME="${TC_PROP_NAME:-}"
+debug "TC_PROP_NAME: $TC_PROP_NAME"
+TC_PROP_VALUE="${TC_PROP_VALUE:-}"
+debug "TC_PROP_VALUE: $TC_PROP_VALUE"
+TC_PARAM_VALUE="${TC_PARAM_VALUE:-}"
+debug "TC_PARAM_VALUE: $TC_PARAM_VALUE"
+TC_LOG_NAME="${TC_LOG_NAME:-}"
+debug "TC_LOG_NAME: $TC_LOG_NAME"
+TC_LOG_HREF="${TC_LOG_HREF:-}"
+debug "TC_LOG_HREF: $TC_LOG_HREF"
+TC_FAIL_MESSAGE="${TC_FAIL_MESSAGE:-}"
+debug "TC_FAIL_MESSAGE: $TC_FAIL_MESSAGE"
+
+# Test correct invocation
+if [ -z "$XFILE" ] || [ -z "$TS_NAME" ]; then
+  echo "Use: $PROG -h for help."
+  exit
+fi
+
+if ! [ -e "$XFILE" ]; then
+    debug "Initialize new xunit file: $XFILE"
+    cat << 'EOF' > "$XFILE"
+<?xml version="1.0"?>
+<testsuites/>
+EOF
+fi
+
+# If no any /testsuites/testsuite create at leaest one
+xmlstarlet ed -L -s '/testsuites[not(testsuite)]' -t elem -n "testsuite" "$XFILE"
+xmlstarlet ed -L -s '/testsuites/testsuite[not(@name)]' -t attr -n "name" -v "$TS_NAME"  "$XFILE"
+
+# If no /testsuites/testsuite[name="$TS_NAME"] create it
+xmlstarlet ed -L -s "/testsuites[not(testsuite[@name='$TS_NAME'])]" -t elem -n "testsuite" "$XFILE"
+# Take any empty /testsuite/testsuites and set name
+xmlstarlet ed -L -s '/testsuites/testsuite[not(@name)]' -t attr -n "name" -v "$TS_NAME"  "$XFILE"
+
+if [ -n "$TS_TESTS" ]; then
+    xmlstarlet ed -L -d "/testsuites/testsuite[@name='$TS_NAME']/@tests" "$XFILE"
+    xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']" -t attr -n "tests" -v "$TS_TESTS" "$XFILE"
+fi
+
+if [ -n "$TS_PROP_NAME" -a -n "$TS_PROP_VALUE" ]; then
+    # If no any /testsuites/testsuite/properties create it
+    xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME'][not(properties)]" -t elem -n "properties" "$XFILE"
+    # Remove property with requested name
+    xmlstarlet ed -L -d "/testsuites/testsuite[@name='$TS_NAME']/properties/property[@name='$TS_PROP_NAME']" "$XFILE"
+    xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/properties" -t elem -n "property" "$XFILE"
+    xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/properties/property[not(@name)]" -t attr -n "name" -v "$TS_PROP_NAME" "$XFILE"
+    xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/properties/property[@name='$TS_PROP_NAME']" -t attr -n "value" -v "$TS_PROP_VALUE" "$XFILE"
+fi
+
+if [ -n "$TC_NAME" ]; then
+    # If no any /testsuites/testsuite/testcase  create at leaest one
+    xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME'][not(testcase)]" -t elem -n "testcase" "$XFILE"
+    xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[not(@name)]" -t attr -n "name" -v "$TC_NAME"  "$XFILE"
+
+    # If no /testsuites/testsuite/testcase[name="$TC_NAME"] create it
+    xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME'][not(testcase[@name='$TC_NAME'])]" -t elem -n "testcase" "$XFILE"
+    # Take any empty /testsuite/testsuites/testcase and set name
+    xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[not(@name)]" -t attr -n "name" -v "$TC_NAME"  "$XFILE"
+    if [ -n "$TC_TIME" ]; then
+        xmlstarlet ed -L -d "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/@time" "$XFILE"
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']" -t attr -n "time" -v "$TC_TIME" "$XFILE"
+    fi
+    if [ -n "$TC_PROP_NAME" -a "$TC_PROP_VALUE" ]; then
+        # If no any /testsuites/testsuite/properties create it
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME'][not(properties)]" -t elem -n "properties" "$XFILE"
+        # Remove property with requested name
+        xmlstarlet ed -L -d "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/properties/property[@name='$TC_PROP_NAME']" "$XFILE"
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/properties" -t elem -n "property" "$XFILE"
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/properties/property[not(@name)]" -t attr -n "name" -v "$TC_PROP_NAME" "$XFILE"
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/properties/property[@name='$TC_PROP_NAME']" -t attr -n "value" -v "$TC_PROP_VALUE" "$XFILE"
+    fi
+    if [ -n "$TC_PARAM_VALUE" ]; then
+        # If no any /testsuites/testsuite/properties create it
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME'][not(parameters)]" -t elem -n "parameters" "$XFILE"
+        # Remove property with requested name
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/parameters" -t elem -n "parameter" "$XFILE"
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/parameters/parameter[not(@value)]" -t attr -n "value" -v "$TC_PARAM_VALUE" "$XFILE"
+    fi
+    if [ -n "$TC_LOG_NAME" -a "$TC_LOG_HREF" ]; then
+        # If no any /testsuites/testsuite/properties create it
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME'][not(logs)]" -t elem -n "logs" "$XFILE"
+        # Remove property with requested name
+        xmlstarlet ed -L -d "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/logs/log[@name='$TC_LOG_NAME']" "$XFILE"
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/logs" -t elem -n "log" "$XFILE"
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/logs/log[not(@name)]" -t attr -n "name" -v "$TC_LOG_NAME" "$XFILE"
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/logs/log[@name='$TC_LOG_NAME']" -t attr -n "href" -v "$TC_LOG_HREF" "$XFILE"
+    fi
+    if [ -n "$TC_FAIL_MESSAGE" ]; then
+        # Remove any
+        xmlstarlet ed -L -d "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/failure" "$XFILE"
+        # Create new
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME'][not(failure)]" -t elem -n "failure" "$XFILE"
+        # Remove property with requested name
+        xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/failure" -t attr -n "message" -v "$TC_FAIL_MESSAGE" "$XFILE"
+    fi
+fi

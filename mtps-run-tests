@@ -1,0 +1,221 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2018
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+
+PROG="${PROG:-${0##*/}}"
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+# NEVRA - is a new package to test.
+msg_usage() {
+    cat << EOF
+Usage:
+$PROG <options>
+
+Options:
+-t, --test=TYPE                              one of: install, update, downgrade, remove
+-s, --selinux=<0|1>                          one of: 0|1, defult: run tests in current selinux mode
+-l, --skiplangpack                           Do not test https://fedoraproject.org/wiki/Packaging:Langpacks
+-r, --repo=NAME                              YUM repo name, must be present, check with: yum repolist --enabled
+-c, --critical                               tests set are critical, example: update, downgrade
+-h, --help                                   display this help and exit
+-v, --verbose                                print debug messages
+EOF
+}
+
+box_out() {
+    local s=("$@")
+    local b=
+    local w=
+    for l in "${s[@]}"; do
+        ((w<${#l})) && { b="$l"; w="${#l}"; }
+    done
+    echo -e " -${b//?/-}-\n| ${b//?/ } |"
+    for l in "${s[@]}"; do
+        printf '| %*s |\n' "-$w" "$l"
+    done
+    echo -e "| ${b//?/ } |\n-${b//?/-}-"
+}
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+opt=$(getopt -n "$0" --options "hvct:r:s:l" --longoptions "help,verbose,skiplangpack,critical,test:,repo:,selinux:" -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -t|--test)
+            TEST="$2"
+            shift 2
+            ;;
+        -r|--repo)
+            REPONAME="$2"
+            shift 2
+            ;;
+        -s|--selinux)
+            SELINUX="$2"
+            shift 2
+            ;;
+        -c|--critical)
+            CRITICAL="yes"
+            shift
+            ;;
+        -l|--skiplangpack)
+            SKIPLANGPACK="yes"
+            shift
+            ;;
+        -v|--verbose)
+            DEBUG="yes"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+
+# Entry
+
+DEBUG="${DEBUG:-}"
+TEST="${TEST:-}"
+REPONAME="${REPONAME:-}"
+SELINUX="${SELINUX:-}"
+CRITICAL="${CRITICAL:-}"
+SKIPLANGPACK="${SKIPLANGPACK:-}"
+# Put logs by default at CDIR/mtps-logs
+LOGS_DIR="${LOGS_DIR:-mtps-logs}"
+
+debug "TEST: $TEST"
+debug "REPONAME: $REPONAME"
+debug "SELINUX: $SELINUX"
+
+# Test correct invocation
+if [ -z "$TEST" ] || [ -z "$REPONAME" ]; then
+    echo "Use: $PROG -h for help."
+    exit
+fi
+
+START_DATE="$(date '+%x')"
+START_TIME="$(date '+%T')"
+if [ -n "$SELINUX" ]; then
+    if ! [ "$SELINUX" -eq "0" -o "$SELINUX" -eq "1" ]; then
+        echo "Use: $PROG -h for help."
+        exit
+    fi
+    if [ -e '/usr/sbin/setenforce' ]; then
+        echo "Set selinux enforce to: $SELINUX"
+        setenforce "$SELINUX"
+    else
+        debug "Skipping setenforce. 'setenforce' command is part of libselinux-utils package."
+    fi
+fi
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=584525
+nevras_in_repo="$(
+    yum repoquery \
+        --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}" 2>&1 | \
+        sed -n -e "/^${REPONAME}[[:space:]]/ s/^${REPONAME}[[:space:]]//p"
+)"
+
+if [ -n "$SKIPLANGPACK" ]; then
+    echo "Skipping https://fedoraproject.org/wiki/Packaging:Langpacks packages."
+    nevras_in_repo="$(echo "$nevras_in_repo" | sed -n -e "/-langpack-/d;p")"
+fi
+
+pkgs_list=()
+for i in $nevras_in_repo; do
+        pkgs_list+=("   * $i")
+done
+box_out "# $(echo $TEST | tr '[:lower:]' '[:upper:]') TEST" "" "Packages:" "" "${pkgs_list[@]}"
+
+mkdir -p "$LOGS_DIR"
+TESTRUN_ID="$(date +%H%M%S)"
+if [ -z "${nevras_in_repo// /}" ]; then
+    logfname="${LOGS_DIR%%/}/FAIL-$TESTRUN_ID-$TEST.log"
+    echo "Test '$TEST' failed due no packages for testing in repo '$REPONAME:'." | tee -a "$logfname"
+    echo "Output for: yum repo-pkgs "$REPONAME" list --showduplicates" | tee -a "$logfname"
+    yum repo-pkgs "$REPONAME" list --showduplicates 2>&1 | tee -a "$logfname"
+    exit 1
+fi
+
+# Prefixe all files with common suffix
+ret=0
+for nevra in $nevras_in_repo; do
+    # Make 1 sec between audit entries
+    NEW_START_TIME="$(date '+%T')"
+    if [ "$NEW_START_TIME" = "$START_TIME" ]; then
+        sleep 1
+        NEW_START_TIME="$(date '+%T')"
+    fi
+    START_TIME="$NEW_START_TIME"
+    # Save current YUM transaction ID, to revert it later
+    START="$(yum history list | sed -n -e '0,/^-\+$/d;s/^[[:space:]]*//p' | tr -s ' ' | cut -f 1 -d ' ' | sed -n -e '1p')"
+    box_out \
+        "TEST" \
+        "====" \
+        "" \
+        "  TYPE:        $TEST" \
+        "  NEVRA:       $nevra" \
+        "  SELINUX:     $(getenforce || echo "unknown")" \
+        "  YUM HISTORY: $START"
+    logfname="${LOGS_DIR%%/}/$TESTRUN_ID-$TEST-$nevra.log"
+    mtps-pkg-test --test="$TEST" --nevra="$nevra" 2>&1 | tee "$logfname"
+    test_status="${PIPESTATUS[0]}"
+    #box_out \
+    #    "REVERT CHANGES" \
+    #    "==============" \
+    #    "" \
+    #    "  Rollback yum history to: $START"
+    ## Ignore errors on rollback due to: https://bugzilla.redhat.com/show_bug.cgi?id=1614346
+    ## Rollback fails after Downgrade / Update tests
+    #yum -y history rollback "$START" || echo "Ignoring rollback error: RHBZ#1614346"
+    if [ "$test_status" -ne "0" ]; then
+        ret=1
+        if [ -n "$CRITICAL" ]; then
+            new_logfname="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
+        else
+            new_logfname="$(dirname "$logfname")/WARN-$(basename "$logfname")"
+        fi
+        mv "$logfname" "$new_logfname"
+    else
+        new_logfname="$(dirname "$logfname")/PASS-$(basename "$logfname")"
+        mv "$logfname" "$new_logfname"
+    fi
+    if [ -n "$SELINUX" ] && rpm --quiet -q audit; then
+        selinux_status=0
+        ausearch -m avc,user_avc,selinux_err,user_selinux_err -ts "$START_DATE" "$START_TIME" 2>&1 | grep -s -o 'no matches' >/dev/null 2>&1 || selinux_status=1
+        if [ "$selinux_status" -ne "0" ]; then
+            ret=1
+            # Selinux failed
+            new_logfname="$(dirname "$logfname")/FAIL-selinux-$(basename "$logfname")"
+            echo "Selinux policy:" | tee -a "$logfname"
+            ausearch -m avc,user_avc,selinux_err,user_selinux_err -i -ts "$START_DATE" "$START_TIME" | tee -a "$new_logfname"
+        fi
+    fi
+done
+
+exit $ret

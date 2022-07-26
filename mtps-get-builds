@@ -1,0 +1,381 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2018
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+debug() {
+    if [ -n "$GB_DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+rpms_from_answer() {
+    local arch="$1" && shift
+    local xml="$1" && shift
+    local tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local cmd="cat //member[value/string='$arch']/../member[name='nvr']/value/string/text()"
+    rpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    debug "Arch $arch has next rpms:"
+    debug "$rpm"
+    debug "---"
+    echo "$rpm"
+}
+
+build_from_answer() {
+    local xml="$1" && shift
+    local build_id=
+    build_id="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
+    debug "Brew build id: $build_id"
+    echo "$build_id"
+}
+
+send_query() {
+    local query="$1" && shift
+    local answer="$(curl --silent -k --data "$query" "$GB_BREWHUB")"
+    debug "Brew answer: ${answer:0:200}...(truncated)"
+    echo "$answer"
+}
+
+# Use 'koji list-api' to get a list of available XMLRPC.
+
+mk_query_build_rpms() {
+    # listBuildRPMs query
+    # Build can be: NVR or build number.
+    local build="$1" && shift
+    local re='^[0-9]+$'
+    if [[ $build =~ $re ]] ; then
+        build="<i4>$build</i4>"
+    fi
+    local query="$(cat << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+<methodName>listBuildRPMs</methodName>
+<params>
+<value>$build</value>
+<param>
+</param>
+</params>
+</methodCall>
+EOF
+    )"
+    debug "Brew query for listBuildRPMs: ${query:0:200}...(truncated)"
+    echo "$query"
+}
+
+
+mk_repo() {
+    local brew_id="$1" && shift
+    local repo_dir="$1" && shift
+    local repo_enabled="${1:0}" && shift
+    repo_dir="${repo_dir##/}"
+    repo_dir="${repo_dir%%/}"
+    local repo="$(cat << EOF
+[brew-${brew_id}]
+name=Repo for $brew_id Brew build
+baseurl=file:///${repo_dir}/
+enabled=$repo_enabled
+gpgcheck=0
+EOF
+    )"
+    debug "Repo file text: ${repo:0:200}...(truncated)"
+    echo "$repo"
+}
+
+msg_usage() {
+    cat << EOF
+
+Get RPM for Brew build.
+
+Usage:
+$GB_PROG <options>
+
+Options:
+-h, --help              display this help and exit
+-v, --verbose           turn on debug
+-c, --createrepo        create a repo metadata at REPODIR
+-i, --installrepofile   add to this system a .repo file for REPODIR
+-o, --onlyinrepo        do not download RPMs that are absent in official repos
+-b, --build=<ID|NVR>    Brew build ID or NVR
+-d, --download=REPODIR  download RPM to REPODIR
+-a, --arch=ARCH         look RPM for specified ARCH
+EOF
+}
+
+from_rpm_name() {
+    # Input: 1:bar-9-123a.ia64.rpm or foo-1.0-1.i386
+    # Mimic splitFilename() from https://github.com/rpm-software-management/yum/blob/master/rpmUtils/miscutils.py
+    local filename="$1" && shift
+    # One of: name, ver, rel, epoch, arch
+    local req_info="$1" && shift
+    # Drop .rpm
+    filename="${filename%%.rpm}"
+    # Arch
+    local arch="${filename##*.}"
+    debug "$filename arch: $arch"
+    [[ $req_info == 'arch' ]] && echo "$arch" && return
+    # Release
+    local rel="${filename##*-}"
+    rel="${rel%.*}"
+    debug "$filename rel: $rel"
+    [[ $req_info == 'rel' ]] && echo "$rel" && return
+    # Version
+    local ver="${filename%-${rel}.${arch}}"
+    ver="${ver##*-}"
+    debug "$filename ver: $ver"
+    [[ $req_info == 'ver' ]] && echo "$ver" && return
+    # Name
+    local epoch_name="${filename%-${ver}-${rel}.${arch}}"
+    name="${epoch_name##*:}"
+    debug "$filename name: $name"
+    [[ $req_info == 'name' ]] && echo "$name" && return
+    # Epoch
+    local epoch="${epoch_name%${name}}"
+    epoch="${epoch//:/}"
+    debug "$filename epoch: ${epoch:-none}"
+    [[ $req_info == 'epoch' ]] && echo "$epoch" && return
+}
+
+mk_url() {
+    local srpm="$1" && shift
+    local pkg="$1" && shift
+    local arch="$1" && shift
+    local name="$(from_rpm_name "$srpm" "name")"
+    local ver="$(from_rpm_name "$srpm" "ver")"
+    local rel="$(from_rpm_name "$srpm" "rel")"
+    # http://download.eng.bos.redhat.com/brewroot/packages/libsolv/0.6.34/2.el8+7/src/libsolv-0.6.34-2.el8+7.src.rpm
+    # Need to be re-writen as for mtps-get-task
+    url="${GB_BREWPKGS}/${name}/${ver}/${rel}/${arch}/${pkg}.${arch}.rpm"
+    debug "URL for $pkg: $url"
+    echo "$url"
+}
+
+filter_available() {
+    local arch="$1" && shift
+    local nvrs="$1" && shift
+    local nvrs_filtered=
+    local name=
+    for nvr in $nvrs; do
+        name="$(from_rpm_name "${nvr}.${arch}" "name")"
+        yum info "${name}.${arch}" >/dev/null 2>&1
+        ret="$?"
+        if [ "$ret" -ne 0 ]; then
+            echo "Skipping as it is absent in shipped repos: $name" >&2
+            continue
+        fi
+        nvrs_filtered="${nvrs_filtered:+$nvrs_filtered }${nvr}"
+    done
+    echo "$nvrs_filtered"
+}
+
+download_rpm() {
+    local url="$1" && shift
+    if [ -z "$GB_DOWNLOAD" ]; then
+        return
+    fi
+    mkdir -p "$GB_REPODIR"
+    GB_REPODIR="$(realpath "$GB_REPODIR")"
+    pushd "$GB_REPODIR" > /dev/null
+    curl --retry 5 --insecure --fail --location --show-error --remote-name --remote-header-name "$url"
+    popd > /dev/null
+}
+
+# Entry
+
+GB_PROG="${GB_PROG:-${0##*/}}"
+GB_DEBUG="${GB_DEBUG:-}"
+GB_BREWHUB="${GB_BREWHUB:-https://brewhub.engineering.redhat.com/brewhub}"
+GB_BREWPKGS="${GB_BREWPKGS:-http://download.eng.bos.redhat.com/brewroot/packages}"
+GB_BREWINFO="${GB_BREWINFO:-https://brewweb.engineering.redhat.com/brew/buildinfo?buildID=}"
+GB_BUILD="${GB_BUILD:-}"
+GB_ARCH="${GB_ARCH:-$(uname -m)}"
+GB_REPODIR="${GB_REPODIR:-repodir}"
+GB_DOWNLOAD="${GB_DOWNLOAD:-}"
+GB_CREATEREPO="${GB_CREATEREPO:-}"
+GB_CREATEREPO_BIN="${GB_CREATEREPO_BIN:-}"
+GB_ONLYINREPO="${GB_ONLYINREPO:-}"
+GB_INSTALLREPOFILE="${GB_INSTALLREPOFILE:-}"
+LOGS_DIR="${LOGS_DIR:-mtps-logs}"
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+opt=$(getopt -n "$0" --options "hvd:b:a:cio" --longoptions "help,verbose,download:,build:,arch:,createrepo,installrepofile,onlyinrepo" -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -b|--build)
+            GB_BUILD="$2"
+            shift 2
+            ;;
+        -a|--arch)
+            GB_ARCH="$2"
+            shift 2
+            ;;
+        -d|--download)
+            GB_DOWNLOAD="yes"
+            GB_REPODIR="$2"
+            shift 2
+            ;;
+        -c|--createrepo)
+            GB_CREATEREPO="yes"
+            shift
+            ;;
+        -o|--onlyinrepo)
+            GB_ONLYINREPO="yes"
+            shift
+            ;;
+        -i|--installrepofile)
+            GB_INSTALLREPOFILE="yes"
+            shift
+            ;;
+        -v|--verbose)
+            GB_DEBUG="yes"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+# Test correct invocation
+if [ -z "$GB_BUILD" ]; then
+  echo "Use: $GB_PROG -h for help."
+  exit
+fi
+
+mkdir -p "$LOGS_DIR"
+LOGS_DIR="$(realpath "$LOGS_DIR")"
+while true; do
+    TESTRUN_ID="$(date +%H%M%S)"
+    logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-${GB_BUILD}-mtps-get-builds.log"
+    logfname_pass="$(dirname "$logfname")/PASS-$(basename "$logfname")"
+    logfname_fail="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
+    if [ -e "$logfname" -o -e "$logfname_pass" -o -e "$logfname_fail" ]; then
+        sleep 1
+        continue
+    fi
+    break
+done
+exec &> >(tee -a "$logfname")
+exec 2>&1
+
+do_clean_exit() {
+    rc=$?
+    trap - SIGINT SIGTERM SIGABRT EXIT # clear the trap
+    new_logfname="$logfname_fail"
+    if [ "$rc" = "0" -o "$rc" = "111" ]; then
+        new_logfname="$logfname_pass"
+    fi
+    # Close tee pipes
+    for pid in $(ps -o pid --no-headers --ppid $$); do
+        if [ -n "$(ps -p $pid -o pid=)" ]; then
+            kill -s HUP $pid
+        fi
+    done
+    mv -f "$logfname" "$new_logfname"
+    exit $rc
+}
+
+trap do_clean_exit SIGINT SIGTERM SIGABRT EXIT
+
+debug "Brew build: $GB_BUILD"
+debug "Brew arch: $GB_ARCH"
+debug "Store RPMS at: $GB_DOWNLOAD"
+debug "Create repo: $GB_CREATEREPO"
+
+query_build_rpms="$(mk_query_build_rpms $GB_BUILD)"
+answer_build_rpms="$(send_query "$query_build_rpms")"
+# rpms_from_build is a list of packages in form NVR: dhcp-relay-4.3.6-27.el8+7 dhcp-server-4.3.6-27.el8+7
+rpms_from_build="$(rpms_from_answer "$GB_ARCH" "$answer_build_rpms")"
+rpms_from_build_all="$rpms_from_build"
+rpms_from_build_noarch="$(rpms_from_answer "noarch" "$answer_build_rpms")"
+rpms_from_build_noarch_all="$rpms_from_build_noarch"
+srpm="$(rpms_from_answer "src" "$answer_build_rpms").src.rpm"
+brew_build_id="$(build_from_answer "$answer_build_rpms")"
+srpm_url="$(mk_url "$srpm" "${srpm%%.src.rpm}" "src")"
+
+echo "Brew build ID: $brew_build_id"
+echo "URL: ${GB_BREWINFO}${brew_build_id}"
+echo "SRPM: $srpm_url"
+
+if [ -z "${rpms_from_build_all}${rpms_from_build_noarch_all}" ]; then
+    echo "This build doesn't have packages for testing for arch: x86_64/noarch. Skiping test."
+    exit
+fi
+
+if [ -n "$GB_ONLYINREPO" ]; then
+    # Purpose:
+    #
+    #   * Brew builds always have 1 input SRPM.
+    #   * Brew builds can have many PRM.
+    #
+    # RCM team can choose only some RPM. And make AppStream / BaseOS / Compose
+    # only from some RPMs, ignoring other RPMs from Brew build. This options
+    # says to ignore RPMs that are absent.
+    rpms_from_build="$(filter_available "$GB_ARCH" "$rpms_from_build")"
+    rpms_from_build_noarch="$(filter_available "noarch" "$rpms_from_build_noarch")"
+fi
+
+if [ -z "${rpms_from_build}${rpms_from_build_noarch}" ]; then
+    echo "This build doesn't have packages for testing."
+    echo "Brew repo has next rpms: $rpms_from_build_all $rpms_from_build_noarch_all"
+    echo "None of the above packages is present in current repos."
+    exit 111
+fi
+
+# Download RPMs with specified arch
+for pkg in $rpms_from_build; do
+    url="$(mk_url "$srpm" "$pkg" "$GB_ARCH")"
+    echo "$url"
+    download_rpm "$url"
+done
+
+# Download always 'noarch' packages
+for pkg in $rpms_from_build_noarch; do
+    url="$(mk_url "$srpm" "$pkg" "noarch")"
+    echo "$url"
+    download_rpm "$url"
+done
+
+if [ -z "$GB_CREATEREPO" -o ! -d "$GB_REPODIR" ]; then
+    exit 0
+fi
+
+which 'createrepo' >/dev/null 2>&1 && GB_CREATEREPO_BIN="createrepo" || :
+which 'createrepo_c' >/dev/null 2>&1 && GB_CREATEREPO_BIN="createrepo_c" || :
+if [ -z "$GB_CREATEREPO_BIN" ]; then
+    echo "Install createrepo[_c] to create repositories."
+    exit 0
+fi
+echo "Using $GB_CREATEREPO_BIN"
+"$GB_CREATEREPO_BIN" --database "$GB_REPODIR"
+
+repo_file_text="$(mk_repo "$brew_build_id" "$GB_REPODIR" "1")"
+echo "Repo file:"
+echo "$repo_file_text"
+id="$(id -u)"
+
+if [ -n "$GB_INSTALLREPOFILE" -a "$id" = "0" ]; then
+    repofile="/etc/yum.repos.d/brew-${brew_build_id}.repo"
+    echo "Create repo file: $repofile"
+    echo "$repo_file_text" > "$repofile"
+fi

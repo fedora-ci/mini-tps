@@ -1,0 +1,213 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2018
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+# Prepare system for install, remove, downgrade, update tests
+
+# This is independent script from Brew build.
+
+PROG="${PROG:-${0##*/}}"
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+msg_usage() {
+    cat << EOF
+
+Get RPM for Brew build.
+
+Usage:
+$PROG <options>
+
+Options:
+-h, --help                              display this help and exit
+-v, --verbose                           turn on debug
+-p, --profile=PROFILE                   use profile
+-f, --fixrepo                           fix repo to specific compose ID. Resolve the latest to 
+-l, --list                              list available profiles
+    --optrepo=REPO1 --optrepo=REPO2     use optional repos
+    --optlist                           list available profiles
+    --enablebuildroot                   enable buildroot repository
+EOF
+}
+
+DEBUG="${DEBUG:-}"
+PROFILE="${RPOFILE:-}"
+declare -a OPTREPOS
+OPTREPOS=()
+LIST="${LIST:-}"
+OPTLIST="${OPTLIST:-}"
+ENABLE_BUILD_ROOT="${ENABLE_BUILD_ROOT:-}"
+FIXREPO="${FIXREPO:-}"
+PFILE="${PFILE:-}"
+PROFILES_DIR="${PROFILES_DIR:-$(rpm --eval %_datarootdir)/mini-tps/profiles/}"
+OPTREPOS_DIR="${OPTREPOS_DIR:-$(rpm --eval %_datarootdir)/mini-tps/optrepos/}"
+REPOFILE="/etc/yum.repos.d/mini-tps.repo"
+REPOFILE_OPT_PREFIX="mini-tps-opt"
+
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+opt=$(getopt -n "$0" --options "hvfp:l" --longoptions "help,fixrepo,verbose,enablebuildroot,profile:,list,optlist,optrepo:" -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -p|--profile)
+            PROFILE="$2"
+            shift 2
+            ;;
+        -l|--list)
+            LIST="yes"
+            shift
+            ;;
+        --optlist)
+            OPTLIST="yes"
+            shift
+            ;;
+        --optrepo)
+            OPTREPOS+=("$2")
+            shift 2
+            ;;
+        --enablebuildroot)
+            ENABLE_BUILD_ROOT="yes"
+            shift
+            ;;
+        -f|--fixrepo)
+            FIXREPO="yes"
+            shift
+            ;;
+        -v|--verbose)
+            DEBUG="-v"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+# Test correct invocation
+if [ -z "${LIST}${PROFILE}${OPTLIST}" ]; then
+  echo "Use: $PROG -h for help."
+  exit
+fi
+
+if ! [ -d "$PROFILES_DIR" ]; then
+    PROFILES_DIR="$PWD/profiles"
+    debug "Use dir for profiles: $PROFILES_DIR"
+fi
+
+if ! [ -d "$OPTREPOS_DIR" ]; then
+    OPTREPOS_DIR="$PWD/optrepos"
+    debug "Use dir for optional repos: $PROFILES_DIR"
+fi
+
+if [ -n "$LIST" ]; then
+    find "$PROFILES_DIR" -maxdepth 1 -mindepth 1 -type f -name '*.repo' | sed -n -e 's/\.repo$//;s/^.*\///p'
+    exit
+fi
+
+if [ -n "$OPTLIST" ]; then
+    find "$OPTREPOS_DIR" -maxdepth 1 -mindepth 1 -type f -name '*.repo' | sed -n -e 's/\.repo$//;s/^.*\///p'
+    exit
+fi
+
+if [ -n "$PROFILE" ]; then
+    PFILE="$PROFILES_DIR/${PROFILE}.repo"
+    debug "Using profile: $PFILE"
+fi
+
+if ! [ -r "$PFILE" ]; then
+    echo "Cannot read $PFILE"
+    exit 1
+fi
+
+if [ "$(id -u)" != "0" ]; then
+    echo "Run '$PROG' with root privileges."
+    exit 1
+fi
+
+INT_CERTS="${INT_CERTS:-http://download.eng.bos.redhat.com/brewroot/vol/rhel-7/packages/redhat-internal-cert-install/0.1/9.el7.csb/noarch/redhat-internal-cert-install-0.1-9.el7.csb.noarch.rpm}"
+
+if ! rpm -q redhat-internal-cert-install >/dev/null 2>&1; then
+    echo "Deploy internal certs."
+    yum install -y "$INT_CERTS"
+fi
+
+echo "Setting up RHEL internal YUM repos for selected profile"
+find "/etc/yum.repos.d/" -name "${REPOFILE_OPT_PREFIX}*.repo" -exec rm --verbose -f '{}' ';'
+declare -a INSTALLED_REPO_FILES=()
+cp -f "$PFILE" "$REPOFILE"
+INSTALLED_REPO_FILES+=("$REPOFILE")
+if [ ${#OPTREPOS[@]} -ne 0 ]; then
+    declare -i optindex=0
+    for opt in "${OPTREPOS[@]}"; do
+        OPTFILE_IN="$OPTREPOS_DIR/${opt}.repo"
+        debug "Using opt repo: $OPTFILE_IN"
+        if ! [ -r "$OPTFILE_IN" ]; then
+            echo "Cannot read $OPTFILE_IN"
+            exit 1
+        fi
+        OPTFILE_OUT="/etc/yum.repos.d/${REPOFILE_OPT_PREFIX}-${optindex}.repo"
+        cp "$OPTFILE_IN" "$OPTFILE_OUT"
+        INSTALLED_REPO_FILES+=("$OPTFILE_OUT")
+        optindex+=1
+    done
+fi
+if [ -n "$FIXREPO" ]; then
+    for repofile in "${INSTALLED_REPO_FILES[@]}"; do
+        COMPOSEID="$(cat "$repofile" | \
+            sed -n -e '0,/baseurl/{ /baseurl/ s/^baseurl[[:space:]]*=[[:space:]]*//p }' | \
+            sed -n -e 's/\(latest[^/]\+\).*$/\1\/COMPOSE_ID/p' | \
+            xargs -n1 curl --retry 5 --insecure --fail --location --show-error  --remote-header-name)"
+        echo "Compose ID: $COMPOSEID"
+        THELATESTDIR="$(cat "$repofile" | sed -n -e '0,/baseurl/{ /baseurl/ s/^baseurl[[:space:]]*=[[:space:]]*//p }' | grep -oE 'latest-[^/]+')"
+        echo "Using the latest dir: $THELATESTDIR"
+        echo "Replace $THELATESTDIR with $COMPOSEID in $repofile"
+        sed -i -e "s/$THELATESTDIR/$COMPOSEID/g" "$repofile"
+    done
+fi
+
+yum config-manager --set-disabled '*'
+declare -a yumrepos
+for repofile in "${INSTALLED_REPO_FILES[@]}"; do
+    yumrepos=($(cat "$repofile" | sed -n -e '/buildroot/d' -e '/^\[/p' | tr -d '[]'))
+    yum config-manager --set-enabled "${yumrepos[@]}"
+done
+
+if [ -n "$ENABLE_BUILD_ROOT" ]; then
+    buildroot_repo=$(cat "$REPOFILE" | sed -n -e '/^\[/{/buildroot/p}' | tr -d '[]')
+    yum config-manager --set-enabled "$buildroot_repo"
+fi
+
+# repoquery util acts not on live system, but rather on set of enabled repos. mini-tps hold personal list of protected packages, such as openssh-server
+yum config-manager --set-enabled astepano-mini-tps || :
+
+echo "Installing required packages for testing"
+yum install -y createrepo_c
+
+yum update -y
+yum clean all
+yum makecache

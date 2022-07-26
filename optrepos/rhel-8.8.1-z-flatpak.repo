@@ -1,0 +1,6 @@
+[rhel-8.8.1-z-flatpak]
+name=RHEL-8.8.1-z Flatpak Hidden
+baseurl=http://download.eng.bos.redhat.com/rhel-8/nightly/flatpak/latest-FLATPAK-8.8.1-RHEL-8/compose/Hidden/$basearch/os/
+enabled=0
+gpgcheck=0
+skip_if_unavailable=True

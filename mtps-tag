@@ -1,0 +1,211 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2019
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+shopt -s extglob
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+tasks_id_from_answer() {
+    local xml="$1" && shift
+    local tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local cmd="cat //member[name='task_id']//value/int/text()" 
+    local tasks="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:digit:]]/p')"
+    debug "Tag has next tasks:"
+    debug "$tasks"
+    debug "---"
+    echo "$tasks"
+}
+
+nvrs_from_answer() {
+    local xml="$1" && shift
+    local tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local cmd="cat //member[name='nvr']//value/string/text()" 
+    local nvrs="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    debug "Tag has next tasks:"
+    debug "$nvrs"
+    debug "---"
+    echo "$nvrs"
+}
+
+tag_id_from_answer() {
+    local xml="$1" && shift
+    local task=
+    volume_name="$(echo "$xml" | xmllint --xpath 'string(//member[name="id"]/value/int/text())' -)"
+    debug "Volume name: $volume_name"
+    echo "$volume_name"
+}
+
+send_query() {
+    local query="$1" && shift
+    local answer="$(curl --silent -k --data "$query" "$BREWHUB")"
+    debug "Brew answer:"
+    debug "${answer}"
+    echo "$answer"
+}
+
+# Use:
+#
+#     'koji list-api' to get a list of available XMLRPC.
+#     'brew --debug-xmlrpc' to get XML
+#
+
+mk_query_getTag() {
+    local tag="$1" && shift
+    local query="$(cat << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+<methodName>getTag</methodName>
+<params>
+<param>
+<value>
+<string>$tag</string>
+</value>
+</param>
+</params>
+</methodCall>
+EOF
+    )"
+    debug "Brew query for getTag:"
+    debug "${query}"
+    echo "$query"
+}
+
+
+mk_query_listTagged() {
+    local tag="$1" && shift
+    local query="$(cat << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+<methodName>listTagged</methodName>
+<params>
+<param>
+<value>
+<string>$tag</string>
+</value>
+</param>
+</params>
+</methodCall>
+EOF
+    )"
+    debug "Brew query for listTagged:"
+    debug "${query}"
+    echo "$query"
+}
+
+msg_usage() {
+    cat << EOF
+
+Inspect Brew tag.
+
+Usage:
+$PROG <options>
+
+Options:
+    --tname             tag name
+-i, --id                print tag id
+-t, --tasks             list tasks
+-n, --nvrs              list nvrs
+-h, --help              display this help and exit
+-v, --verbose           turn on debug
+EOF
+}
+
+# Entry
+
+DEBUG="${DEBUG:-}"
+PROG="${PROG:-${0##*/}}"
+TAG_NAME="${TAG_NAME:-}"
+GET_TASKS="${GET_TASKS:-}"
+GET_NVRS="${GET_NVRS:-}"
+GET_TAG_ID="${GET_TAG_ID:-}"
+BREWHUB="${BREWHUB:-https://brewhub.engineering.redhat.com/brewhub}"
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+opt=$(getopt -n "$0" --options "hvtni" --longoptions "help,verbose,tasks,nvrs,id,tname:" -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --tname)
+            TAG_NAME="$2"
+            shift 2
+            ;;
+        -t|--tasks)
+            GET_TASKS="yes"
+            shift
+            ;;
+        -n|--nvrs)
+            GET_NVRS="yes"
+            shift
+            ;;
+        -i|--id)
+            GET_TAG_ID="yes"
+            shift
+            ;;
+        -v|--verbose)
+            DEBUG="yes"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+# Test correct invocation
+if [ -z "$TAG_NAME" ]; then
+  echo "Use: $PROG -h for help."
+  exit
+fi
+
+debug "Tag: $TAG_NAME"
+
+if [ -n "$GET_NVRS" -o -n "$GET_TASKS" ]; then
+    query_listTagged="$(mk_query_listTagged "$TAG_NAME")"
+    answer_listTagged="$(send_query "$query_listTagged")"
+    if [ -n "$GET_NVRS" ]; then
+        nvrs="$(nvrs_from_answer "$answer_listTagged")"
+        echo "$nvrs"
+    elif [ -n "$GET_TASKS" ]; then
+        tasks_id="$(tasks_id_from_answer "$answer_listTagged")"
+        echo "$tasks_id"
+    fi
+    exit 0
+fi
+
+if [ -n "$GET_TAG_ID" ]; then
+    query_getTag="$(mk_query_getTag "$TAG_NAME")"
+    answer_getTag="$(send_query "$query_getTag")"
+    tag_id="$(tag_id_from_answer "$answer_getTag")"
+    echo "$tag_id"
+    exit 0
+fi
+
+echo "Use: $PROG -h for help."
+exit 1

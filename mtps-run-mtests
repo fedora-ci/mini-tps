@@ -1,0 +1,190 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2018
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+
+PROG="${PROG:-${0##*/}}"
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+# NEVRA - is a new package to test.
+msg_usage() {
+    cat << EOF
+Usage:
+$PROG <options>
+
+Options:
+-t, --test=TYPE                              one of: install, update, downgrade, remove
+-s, --selinux=<0|1>                          one of: 0|1, defult: run tests in current selinux mode
+-m, --mmd=FILE                               Module meta data yaml file, can be .gz
+-h, --help                                   display this help and exit
+-v, --verbose                                print debug messages
+EOF
+}
+
+box_out() {
+    local s=("$@")
+    local b=
+    local w=
+    for l in "${s[@]}"; do
+        ((w<${#l})) && { b="$l"; w="${#l}"; }
+    done
+    echo -e " -${b//?/-}-\n| ${b//?/ } |"
+    for l in "${s[@]}"; do
+        printf '| %*s |\n' "-$w" "$l"
+    done
+    echo -e "| ${b//?/ } |\n-${b//?/-}-"
+}
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+opt=$(getopt -n "$0" --options "hvt:s:m:" --longoptions "help,verbose,mmd:,test:,selinux:" -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -t|--test)
+            TEST="$2"
+            shift 2
+            ;;
+        -m|--mmd)
+            MMD="$2"
+            shift 2
+            ;;
+        -s|--selinux)
+            SELINUX="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            DEBUG="-v"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+
+# Entry
+
+DEBUG="${DEBUG:-}"
+TEST="${TEST:-}"
+MMD="${MMD:-}"
+SELINUX="${SELINUX:-}"
+# Put logs by default at CDIR/mtps-logs
+LOGS_DIR="${LOGS_DIR:-mtps-logs}"
+
+debug "TEST: $TEST"
+debug "MMD: $MMD"
+debug "SELINUX: $SELINUX"
+
+# Test correct invocation
+if [ -z "$TEST" ] || [ -z "$MMD" ]; then
+    echo "Use: $PROG -h for help."
+    exit
+fi
+
+START_DATE="$(date '+%x')"
+START_TIME="$(date '+%T')"
+if [ -n "$SELINUX" ]; then
+    if ! [ "$SELINUX" -eq "0" -o "$SELINUX" -eq "1" ]; then
+        echo "Use: $PROG -h for help."
+        exit
+    fi
+    if [ -e '/usr/sbin/setenforce' ]; then
+        echo "Set selinux enforce to: $SELINUX"
+        setenforce "$SELINUX"
+    else
+        debug "Skipping setenforce. 'setenforce' command is part of libselinux-utils package."
+    fi
+fi
+
+# mtps-mutils requires python module "gi"
+# We do not want to make RPM-dependency to this module.
+# Reason for this: mini-tps is not-removable package.
+# But, "python3-gobject-base" can be removed.
+# Install "python3-gobject-base" only we need it, and allow it be removed in tests.
+# Otherwise, test will be skipped.
+# Works for RHEL/Centos/Fedora:
+yum install -y 'python3dist(pygobject)'
+profiles="$(mtps-mutils --modulemd "$MMD" --getprofiles | tr '\n' ' ')"
+stream="$(mtps-mutils --modulemd "$MMD" --getstream)"
+context="$(mtps-mutils --modulemd "$MMD" --getcontext)"
+version="$(mtps-mutils --modulemd "$MMD" --getversion)"
+nsvc="$(mtps-mutils --modulemd "$MMD" --getnsvc)"
+
+profiles_list=()
+for i in $profiles; do
+    profiles_list+=("   * $i")
+done
+box_out "# $(echo $TEST | tr '[:lower:]' '[:upper:]') TEST" "" "Profiles:" "" "${profiles_list[@]:-}"
+
+# Prefix all files with common suffix
+TESTRUN_ID="$(date +%H%M%S)"
+mkdir -p "$LOGS_DIR"
+ret=0
+for profile in $profiles; do
+    # Make 1 sec between audit entries
+    NEW_START_TIME="$(date '+%T')"
+    if [ "$NEW_START_TIME" = "$START_TIME" ]; then
+        sleep 1
+        NEW_START_TIME="$(date '+%T')"
+    fi
+    START_TIME="$NEW_START_TIME"
+    # Save current YUM transaction ID, to revert it later
+    box_out \
+        "TEST" \
+        "====" \
+        "" \
+        "  TYPE:        $TEST" \
+        "  NSVC:        $nsvc" \
+        "  PROFILE:     $profile" \
+        "  SELINUX:     $(getenforce || echo "unknown")"
+    logfname="${LOGS_DIR%%/}/$TESTRUN_ID-profile-$TEST-$nsvc-$profile.log"
+    mtps-module-test --test="$TEST" --nsvc="$nsvc" --profile="$profile" $DEBUG 2>&1 | tee "$logfname"
+    test_status="${PIPESTATUS[0]}"
+    if [ "$test_status" -ne "0" ]; then
+        ret=1
+        new_logfname="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
+        mv "$logfname" "$new_logfname"
+    else
+        new_logfname="$(dirname "$logfname")/PASS-$(basename "$logfname")"
+        mv "$logfname" "$new_logfname"
+    fi
+    if [ -n "$SELINUX" ] && rpm --quiet -q audit; then
+        selinux_status=0
+        ausearch -m avc,user_avc,selinux_err,user_selinux_err -ts "$START_DATE" "$START_TIME" 2>&1 | grep -s -o 'no matches' >/dev/null 2>&1 || selinux_status=1
+        if [ "$selinux_status" -ne "0" ]; then
+            ret=1
+            # Selinux failed
+            new_logfname="$(dirname "$logfname")/FAIL-selinux-$(basename "$logfname")"
+            echo "Selinux policy:" | tee -a "$logfname"
+            ausearch -m avc,user_avc,selinux_err,user_selinux_err -i -ts "$START_DATE" "$START_TIME" | tee -a "$new_logfname"
+        fi
+    fi
+done
+
+exit $ret

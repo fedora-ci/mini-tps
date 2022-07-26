@@ -1,0 +1,139 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2018
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+PROG="${PROG:-${0##*/}}"
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+msg_usage() {
+    cat << EOF
+Usage:
+$PROG <options>
+
+Options:
+-d, --logdir=LOGDIR         path to directory with: PASS / FAIL logs
+-o, --outxml=XUNITFILE      save generated xunit file at specified path
+-l, --link=LOGSBASE         base url to logs
+-h, --help                  display this help and exit
+EOF
+}
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+short_options="hvd:o:l:"
+long_options="help,verbose,logdir:,outxml:link:"
+opt=$(getopt -n "$0" --options "$short_options"  --longoptions "$long_options"  -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -d|--logdir)
+            LOGDIR="$2"
+            shift 2
+            ;;
+        -o|--outxml)
+            OUTXML="$2"
+            shift 2
+            ;;
+        -l|--link)
+            LOGSBASE="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            DEBUG="yes"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+# Entry
+
+LOGDIR="${LOGDIR:-}"
+OUTXML="${OUTXML:-}"
+LOGSBASE="${LOGSBASE:-}"
+
+# Test correct invocation
+if [ -z "$LOGDIR" ] || [ -z "$OUTXML" ] || [ -z "$LOGSBASE" ]; then
+    echo "Use: $PROG -h for help."
+    exit
+fi
+
+if ! [ -d "$LOGDIR" ]; then
+    echo "Cannot access directory: $LOGDIR"
+    exit
+fi
+
+mkdir -p "$(dirname "$OUTXML")"
+
+OLDIFS=$IFS
+IFS=$'\n'
+LOGS_PASS=($(find "$LOGDIR" -type f -name "PASS*log"))
+LOGS_FAIL=($(find "$LOGDIR" -type f -name "FAIL*log"))
+IFS=$OLDIFS
+NLOGS_PASS=${#LOGS_PASS[@]}
+NLOGS_FAIL=${#LOGS_FAIL[@]}
+RESULT_OVERALL="FAIL"
+if [ $NLOGS_FAIL -eq 0 ]; then
+    RESULT_OVERALL="PASS"
+fi
+if [ -f "$OUTXML" ]; then
+    echo "Remove old xunit file: $OUTXML"
+    rm -f "$OUTXML"
+fi
+echo "Overall result: $RESULT_OVERALL"
+[ -e "/usr/bin/xmlstarlet" ] || yum install -y xmlstarlet
+PATH="$PATH:."
+mtps-xunit \
+    -f "$OUTXML" \
+    --tsuite "name=installability" \
+    --ts-prop "name=osci.overall-result value=$RESULT_OVERALL"
+for ((i=0; i<${NLOGS_PASS}; i++)); do
+    LOG_FILE="${LOGS_PASS[$i]}"
+    LOG_FNAME="$(basename "$LOG_FILE")"
+    echo "Process: $LOG_FILE"
+    TC_NAME="$LOG_FNAME"
+    mtps-xunit \
+        -f "$OUTXML" \
+        --tsuite "name=installability" \
+        --tcase "name=/$TC_NAME" \
+        --tc-log "href=$LOGSBASE/$LOG_FNAME name=$LOG_FNAME"
+done
+for ((i=0; i<${NLOGS_FAIL}; i++)); do
+    LOG_FILE="${LOGS_FAIL[$i]}"
+    LOG_FNAME="$(basename "$LOG_FILE")"
+    echo "Process: $LOG_FILE"
+    TC_NAME="$LOG_FNAME"
+    mtps-xunit \
+        -f "$OUTXML" \
+        --tsuite "name=installability" \
+        --tcase "name=/$TC_NAME" \
+        --tc-fail "message=testcase-failed" \
+        --tc-prop "name=osci.result value=FAIL" \
+        --tc-log "href=$LOGSBASE/$LOG_FNAME name=$LOG_FNAME"
+done

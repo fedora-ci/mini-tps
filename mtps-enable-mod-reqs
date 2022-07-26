@@ -1,0 +1,158 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2019
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+
+PROG="${PROG:-${0##*/}}"
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+msg_usage() {
+    cat << EOF
+Usage:
+$PROG <options>
+
+Options:
+-m, --mmd=FILE                               Module meta data yaml file, can be .gz
+-h, --help                                   display this help and exit
+-v, --verbose                                print debug messages
+EOF
+}
+
+box_out() {
+    local s=("$@")
+    local b=
+    local w=
+    for l in "${s[@]}"; do
+        ((w<${#l})) && { b="$l"; w="${#l}"; }
+    done
+    echo -e " -${b//?/-}-\n| ${b//?/ } |"
+    for l in "${s[@]}"; do
+        printf '| %*s |\n' "-$w" "$l"
+    done
+    echo -e "| ${b//?/ } |\n-${b//?/-}-"
+}
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+opt=$(getopt -n "$0" --options "hvt:s:m:" --longoptions "help,verbose,mmd:,test:,selinux:" -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -m|--mmd)
+            MMD="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            DEBUG="-v"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+
+# Entry
+
+DEBUG="${DEBUG:-}"
+MMD="${MMD:-}"
+# Put logs by default at CDIR/mtps-logs
+LOGS_DIR="${LOGS_DIR:-mtps-logs}"
+
+debug "MMD: $MMD"
+
+# Test correct invocation
+if [ -z "$MMD" ]; then
+    echo "Use: $PROG -h for help."
+    exit
+fi
+
+START_DATE="$(date '+%x')"
+START_TIME="$(date '+%T')"
+
+IFS=$'\r\n' GLOBIGNORE='*' command eval  'requires=($(mtps-mutils --modulemd "$MMD" --getrequires))'
+
+requires_list=()
+for i in "${requires[@]}"; do
+    i="${i## }"
+    i="${i%% }"
+    requires_list+=("   * ${i// / or }")
+done
+box_out "# DEPENDENCY" "" "Modules to be enabled:" "" "${requires_list[@]:-}"
+
+# Prefix all files with common suffix
+TESTRUN_ID="$(date +%H%M%S)"
+mkdir -p "$LOGS_DIR"
+
+for require in "${requires[@]}"; do
+    ret=1
+    for name_stream in $require; do
+        name=${name_stream%%:*}
+        stream=${name_stream##*:}
+        # Make 1 sec between audit entries
+        NEW_START_TIME="$(date '+%T')"
+        if [ "$NEW_START_TIME" = "$START_TIME" ]; then
+            sleep 1
+            NEW_START_TIME="$(date '+%T')"
+        fi
+        START_TIME="$NEW_START_TIME"
+        box_out \
+            "Enable required module" \
+            "======================" \
+            "" \
+            "  Name:        $name" \
+            "  Stream:      $stream"
+        logfname="${LOGS_DIR%%/}/$TESTRUN_ID-enable-$name-$stream.log"
+        echo "Reset module: $name" | tee -a "$logfname"
+        yum -y module reset "$name" 2>&1 | tee -a "$logfname"
+        test_status="${PIPESTATUS[0]}"
+        if [ "$test_status" -eq "0" ]; then
+            echo "Enable module: ${name}:${stream}" | tee -a "$logfname"
+            yum -y module enable "${name}:${stream}" 2>&1 | tee -a "$logfname"
+            test_status="${PIPESTATUS[0]}"
+        fi
+        if [ "$test_status" -ne "0" ]; then
+            new_logfname="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
+        else
+            new_logfname="$(dirname "$logfname")/PASS-$(basename "$logfname")"
+            ret=0
+        fi
+        mv "$logfname" "$new_logfname"
+        if [ "$test_status" -eq "0" ]; then
+            ret=0
+            echo "Requirements are satisfied: ${require// / or }"
+            break
+        fi
+    done
+    if [ "$ret" -ne "0" ]; then
+        echo "Fail to meet module dependecy. No one can be enabled from: ${require// / or }"
+        exit 1
+    fi
+done
+
+exit 0

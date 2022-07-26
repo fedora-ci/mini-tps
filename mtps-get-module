@@ -1,0 +1,510 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2019
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+builds_from_answer() {
+    local xml="$1" && shift
+    local tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local cmd="cat //member[name='build_id']/value/int/text()"
+    builds="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    debug "Module has next builds:"
+    debug "$builds"
+    debug "---"
+    echo "$builds"
+}
+
+build_from_answer() {
+    local xml="$1" && shift
+    local build_id=
+    build_id="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
+    debug "Brew build id: $build_id"
+    echo "$build_id"
+}
+
+tag_from_answer() {
+    local xml="$1" && shift
+    local brew_tag=
+    brew_tag="$(echo "$xml" | xmllint --xpath 'string(//member[name="content_koji_tag"]/value/string/text())' -)"
+    debug "Brew tag: $brew_tag"
+    echo "$brew_tag"
+}
+
+owner_from_answer() {
+    local xml="$1" && shift
+    local tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local cmd="cat //member[name='owner_name']/value/string/text()"
+    local owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    debug "Context generated build in Brew has owner name:"
+    debug "$owner"
+    debug "---"
+    echo "$owner"
+}
+
+mname_from_answer() {
+    local xml="$1" && shift
+    local tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local cmd="cat //member[name='package_name']/value/string/text()"
+    local name="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    debug "Module name:"
+    debug "$name"
+    debug "---"
+    echo "$name"
+}
+
+nvr_from_answer() {
+    local xml="$1" && shift
+    local tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local cmd="cat //member[name='nvr']/value/string/text()"
+    local nvr="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    debug "Module NVR for context build in Brew:"
+    debug "$nvr"
+    debug "---"
+    echo "$nvr"
+}
+
+send_query() {
+    local query="$1" && shift
+    local answer="$(curl --silent -k --data "$query" "$BREWHUB")"
+    #debug "Brew answer: ${answer:0:200}...(truncated)"
+    debug "Brew answer: ${answer}"
+    echo "$answer"
+}
+
+# Use 'koji list-api' to get a list of available XMLRPC.
+
+mk_query_build() {
+    # listBuildRPMs query
+    # Build can be: NVR or build number.
+    local build="$1" && shift
+    local query="$(cat << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+<methodName>getBuild</methodName>
+<params>
+<value>$build</value>
+<param>
+</param>
+</params>
+</methodCall>
+EOF
+    )"
+    debug "Brew query for listBuildRPMs: ${query:0:200}...(truncated)"
+    echo "$query"
+}
+
+mk_query_builds() {
+    # listBuildRPMs query
+    # Build can be: NVR or build number.
+    local tag="$1" && shift
+    local query="$(cat << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+<methodName>getLatestBuilds</methodName>
+<params>
+<value>$tag</value>
+<param>
+</param>
+</params>
+</methodCall>
+EOF
+    )"
+    debug "Brew query for getLatestBuilds: ${query:0:200}...(truncated)"
+    echo "$query"
+}
+
+from_module_name() {
+    # Input: perl-5.24-820190207164249.ee766497 OR 389-ds-1.4-820190201170147.1fc8b219
+    local module="$1" && shift
+    # One of: name, stream, version, context
+    local req_info="$1" && shift
+    # Context
+    local context="${module##*.}"
+    debug "$module context: $context"
+    [[ $req_info == 'context' ]] && echo "$context" && return
+    # Version
+    local version="${module##*-}"
+    version="${version%.*}"
+    debug "$module version: $version"
+    [[ $req_info == 'version' ]] && echo "$version" && return
+    # Stream
+    local stream="${module%-${version}.${context}}"
+    stream="${stream##*-}"
+    real_stream="${stream//_/-}"
+    debug "$module stream: $real_stream"
+    [[ $req_info == 'stream' ]] && echo "$real_stream" && return
+    # Name
+    local name="${module%-${stream}-${version}.${context}}"
+    debug "$module name: $name"
+    [[ $req_info == 'name' ]] && echo "$name" && return
+}
+
+mk_url_mmd() {
+    local module="$1" && shift
+    local arch="$1" && shift
+    local name="$(from_module_name "$module" "name")"
+    local stream="$(from_module_name "$module" "stream")"
+    local version="$(from_module_name "$module" "version")"
+    local context="$(from_module_name "$module" "context")"
+    # http://download.eng.bos.redhat.com/brewroot/packages/389-ds/1.4/820190201170147.1fc8b219/files/module/
+    url="${BREWPKGS}/${name}/${stream//-/_}/${version}.${context}/files/module/modulemd.${arch}.txt"
+    debug "URL for modulemd: $url"
+    echo "$url"
+}
+
+download_artifact() {
+    local url="$1" && shift
+    local dstdir="$1" && shift
+    mkdir -p "$dstdir"
+    dstdir="$(realpath "$dstdir")"
+    pushd "$dstdir" > /dev/null
+    curl --retry 5 --insecure --fail --location --show-error --remote-name --remote-header-name "$url"
+    popd > /dev/null
+}
+
+mbsid2minfo() {
+    local mbs_id="$1" && shift
+    local url="$MBS/module-build-service/1/module-builds/$mbs_id"
+    debug "URL to MBS: $url"
+    local minfo="$(curl --silent --retry 5 --insecure --location --fail --show-error "$url")"
+    echo "$minfo"
+}
+
+minfo2tag() {
+    local minfo="$1" && shift
+    local tag="$(echo $minfo | sed -n -e '/component_builds/,/"koji_tag"/ s/^.\+"koji_tag":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    debug "MBS build has tag: $tag"
+    echo "$tag"
+}
+
+minfo2name() {
+    local minfo="$1" && shift
+    local name="$(echo "$minfo" | sed -n -e '/component_builds/,/"name"/ s/^.\+"name":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    debug "MBS build has name: $name"
+    echo "$name"
+}
+
+minfo2stream() {
+    local minfo="$1" && shift
+    local stream="$(echo "$minfo" | sed -n -e '/component_builds/,/"stream"/ s/^.\+"stream":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    debug "MBS build has stream: $stream"
+    echo "$stream"
+}
+
+minfo2version() {
+    local minfo="$1" && shift
+    local version="$(echo "$minfo" | sed -n -e '/component_builds/,/"version"/ s/^.\+"version":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    debug "MBS build has version: $version"
+    echo "$version"
+}
+
+minfo2context() {
+    local minfo="$1" && shift
+    local context="$(echo "$minfo" | sed -n -e '/component_builds/,/"context"/ s/^.\+"context":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    debug "MBS build has context: $context"
+    echo "$context"
+}
+
+minfo2platformtag() {
+    local minfo="$1" && shift
+    local koji_tag="$(echo "$minfo" | sed -n -e '/"platform"/,/koji_tag/ s/^.\+"koji_tag":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    debug "MBS build has platform module koji_tag: $koji_tag"
+    echo "$koji_tag"
+}
+
+# https://docs.fedoraproject.org/en-US/modularity/making-modules/updating-modules/
+tag2nvr() {
+    local tag="$1" && shift
+    local nvr="$(echo "$tag" | sed -n -e "s/-\([[:alnum:]]\+\)$/\.\1/; s/^module-//p")"
+    debug "Brew '$tag' tag has module content build id: $nvr"
+    echo "$nvr"
+}
+
+mk_repo() {
+    local brew_id="$1" && shift
+    local repo_dir="$1" && shift
+    local repo_enabled="${1:0}" && shift
+    repo_dir="${repo_dir##/}"
+    repo_dir="${repo_dir%%/}"
+    local repo="$(cat << EOF
+[brew-${brew_id}]
+name=Repo for $brew_id Brew build
+baseurl=file:///${repo_dir}/
+enabled=$repo_enabled
+gpgcheck=0
+EOF
+    )"
+    debug "Repo file text: ${repo:0:200}...(truncated)"
+    echo "$repo"
+}
+
+msg_usage() {
+    cat << EOF
+
+Get RPM for Brew build.
+
+Usage:
+$PROG <options>
+
+Options:
+-h, --help              display this help and exit
+-v, --verbose           turn on debug
+-c, --createrepo        create a repo metadata at REPODIR
+-i, --installrepofile   add to this system a .repo file for REPODIR
+-o, --onlyinrepo        do not download RPMs that are absent in official repos
+-b, --build=<ID|NVR>    Content-generator Brew build ID for module
+-m, --mbsid=<ID>        Module build ID in MBS
+-t, --tag=<ID>          Module tag in Brew
+-d, --download=REPODIR  download RPM to REPODIR
+-a, --arch=ARCH         look RPM for specified ARCH
+EOF
+}
+
+# Entry
+
+PROG="${PROG:-${0##*/}}"
+DEBUG="${DEBUG:-}"
+BREWHUB="${BREWHUB:-https://brewhub.engineering.redhat.com/brewhub}"
+BREWPKGS="${BREWPKGS:-http://download.eng.bos.redhat.com/brewroot/packages}"
+MBS="${MBS:-https://mbs.engineering.redhat.com}"
+TAG="${TAG:-}"
+GETINFO="${GETINFO:-}"
+BREWINFO="${BREWINFO:-https://brewweb.engineering.redhat.com/brew/buildinfo?buildID=}"
+BUILD="${BUILD:-}"
+MBSID="${MBSID:-}"
+PLATFORM_TAG="${PLATFORM_TAG:-}"
+RHEL_XYZ="${RHEL_XYZ:-}"
+ARCH="${ARCH:-$(uname -m)}"
+REPODIR="${REPODIR:-repodir}"
+DOWNLOAD="${DOWNLOAD:-}"
+CREATEREPO="${CREATEREPO:-}"
+CREATEREPO_BIN="${CREATEREPO_BIN:-}"
+MODIFYREPO_BIN="${MODIFYREPO_BIN:-}"
+ONLYINREPO="${ONLYINREPO:-}"
+INSTALLREPOFILE="${INSTALLREPOFILE:-}"
+LOGS_DIR="${LOGS_DIR:-mtps-logs}"
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+opt=$(getopt -n "$0" --options "hvd:b:a:m:t:cio" --longoptions "help,verbose,download:,build:,arch:,mbsid:,tag:,getinfo,createrepo,installrepofile,onlyinrepo" -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -b|--build)
+            BUILD="$2"
+            shift 2
+            ;;
+        -a|--arch)
+            ARCH="$2"
+            shift 2
+            ;;
+        -d|--download)
+            DOWNLOAD="yes"
+            REPODIR="$2"
+            shift 2
+            ;;
+        -c|--createrepo)
+            CREATEREPO="yes"
+            shift
+            ;;
+        -o|--onlyinrepo)
+            ONLYINREPO="yes"
+            shift
+            ;;
+        -i|--installrepofile)
+            INSTALLREPOFILE="yes"
+            shift
+            ;;
+        --getinfo)
+            GETINFO="yes"
+            shift
+            ;;
+        -m|--mbsid)
+            MBSID="$2"
+            shift 2
+            ;;
+        -t|--tag)
+            TAG="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            DEBUG="-v"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+mkdir -p "$LOGS_DIR"
+TESTRUN_ID="$(date +%H%M%S)"
+logfname="${LOGS_DIR%%/}/$TESTRUN_ID-mtps-get-module.log"
+exec &> >(tee -a "$logfname")
+exec 2>&1
+
+debug "Brew build: $BUILD"
+debug "Brew tag: $TAG"
+debug "MBS build id: $MBSID"
+debug "Brew arch: $ARCH"
+debug "Store RPMS at: $DOWNLOAD"
+debug "Create repo: $CREATEREPO"
+
+# Test correct invocation
+if [ -z "${BUILD}${MBSID}${TAG}" ]; then
+  echo "Use: $PROG -h for help."
+  exit
+fi
+MSTREAM=""
+if [ -z "$BUILD" -a -n "$MBSID" ]; then
+    MINFO="$(mbsid2minfo "$MBSID")"
+    MNAME="$(minfo2name "$MINFO")"
+    MSTREAM="$(minfo2stream "$MINFO")"
+    MVERSION="$(minfo2version "$MINFO")"
+    MCONTEXT="$(minfo2context "$MINFO")"
+    BUILD="${MNAME}-${MSTREAM//-/_}-${MVERSION}.${MCONTEXT}"
+    debug "Brew build: $BUILD"
+    # This module supposed to work in RHEL_XYZ
+    PLATFORM_TAG="$(minfo2platformtag "$MINFO")"
+    if [ -n "$PLATFORM_TAG" ]; then
+        RHEL_XYZ="$(echo "$PLATFORM_TAG" | grep -oE '[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+(-z)?')"
+    fi
+fi
+
+query_m_build="$(mk_query_build $BUILD)"
+answer_m_build="$(send_query "$query_m_build")"
+m_tag="$(tag_from_answer "$answer_m_build")"
+m_nvr="$(nvr_from_answer "$answer_m_build")"
+m_name="$(mname_from_answer "$answer_m_build")"
+m_build_id="$(build_from_answer "$answer_m_build")"
+m_owner_name="$(owner_from_answer "$answer_m_build")"
+
+# It is better to use stream from modulemd file, because the one in the Brew NVR
+# contains "-" replaced with "_" and it is not possible to guess wheter the stream
+# contained "-" which were changed to "_" or it really contained "_" characters.
+if [ -z "$MSTREAM" ]; then
+    m_stream="$(from_module_name "$m_nvr" "stream")"
+else
+    m_stream="$MSTREAM"
+fi
+m_context="$(from_module_name "$m_nvr" "context")"
+m_version="$(from_module_name "$m_nvr" "version")"
+
+# Do not change text messages. Next text messages are necessary for Jenkins pipleline.
+echo "Module tag: $m_tag"
+echo "Module name: $m_name"
+echo "Module stream: $m_stream"
+echo "Module version: $m_version"
+echo "Module context: $m_context"
+echo "Module nsvc: $m_name:$m_stream:$m_version:$m_context"
+echo "Owner user: $m_owner_name"
+echo "CG Brew build NVR: $m_nvr"
+echo "CG Brew build ID: $m_build_id"
+if [ -n "$RHEL_XYZ" ]; then
+    echo "Module target: $RHEL_XYZ"
+fi
+
+if [ -n "$GETINFO" ]; then
+    # Print only module information
+    exit 0
+fi
+
+query_builds_in_m="$(mk_query_builds "$m_tag")"
+answer_builds="$(send_query "$query_builds_in_m")"
+builds_in_m="$(builds_from_answer "$answer_builds")"
+builds_in_m="${builds_in_m// /}"
+
+if [ -z "$builds_in_m" ]; then
+    echo "This module build doesn't have builds."
+    exit 0
+fi
+
+mmd_url="$(mk_url_mmd "$m_nvr" "$ARCH")"
+mmd_file="$(basename "$mmd_url")"
+mmd_dir="$(mktemp --directory)"
+download_artifact "$mmd_url" "$mmd_dir"
+allowed_artifacts="$mmd_dir/artifacts"
+mtps-mutils -a --modulemd "$mmd_dir/$mmd_file" > "$allowed_artifacts"
+debug "Artifacts:"
+debug "$(cat $allowed_artifacts)"
+for build in $builds_in_m; do
+    echo "Process $build"
+    set +e
+    mtps-get-builds $DEBUG --build "$build" --download "$REPODIR"
+    ret=$?
+    set -e
+    if [ "$ret" = "0" ]; then
+        echo "Fetch build: $build success"
+    elif [ "$ret" = "111" ]; then
+        echo "Fetch build: $build doesn't have RPMs for test."
+    else
+        echo "Fetch build: $build failed."
+        exit $ret
+    fi
+done
+
+PKG_FILES=($(find "$REPODIR" -name '*.rpm'))
+for f in "${PKG_FILES[@]}"; do
+    nevra="$(rpm -q --qf "%{name}-%{epochnum}:%{version}-%{release}.%{arch}\n" -p "$f")"
+    if ! grep -q -s "$nevra" "$allowed_artifacts" >/dev/null ; then
+        echo "$nevra is absent in modulemd file. Removing."
+        rm -f "$f"
+    fi
+done
+
+if [ -z "$CREATEREPO" -o ! -d "$REPODIR" ]; then
+    exit 0
+fi
+
+REPODIR="$(realpath "$REPODIR")"
+
+which 'createrepo' >/dev/null 2>&1 && CREATEREPO_BIN="createrepo" || :
+which 'createrepo_c' >/dev/null 2>&1 && CREATEREPO_BIN="createrepo_c" || :
+which 'modifyrepo' >/dev/null 2>&1 && MODIFYREPO_BIN="modifyrepo" || :
+which 'modifyrepo_c' >/dev/null 2>&1 && MODIFYREPO_BIN="modifyrepo_c" || :
+if [ -z "$CREATEREPO_BIN" -o -z "$MODIFYREPO_BIN" ]; then
+    echo "Install createrepo[_c] to create repositories."
+    exit 0
+fi
+
+echo "Using $CREATEREPO_BIN"
+"$CREATEREPO_BIN" --database "$REPODIR"
+"$MODIFYREPO_BIN" --mdtype="modules" "$mmd_dir/$mmd_file" "$REPODIR/repodata"
+repo_file_text="$(mk_repo "$m_build_id" "$REPODIR" "1")"
+echo "Repo file:"
+echo "$repo_file_text"
+id="$(id -u)"
+
+if [ -n "$INSTALLREPOFILE" -a "$id" = "0" ]; then
+    repofile="/etc/yum.repos.d/brew-${m_build_id}.repo"
+    echo "Create repo file: $repofile"
+    echo "$repo_file_text" > "$repofile"
+fi

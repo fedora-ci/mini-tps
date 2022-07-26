@@ -1,0 +1,557 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2018
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+
+# We are testing RHEL compose and a Brew build. Compose is a set of installed
+# packages.
+# Some tests can fail.
+#
+#   * remove - can fail, for example for systemd.
+#   * install - to install a package it is necessary to remove old version.
+#
+# Hard tests:
+#
+#   * update
+#   * downgrade
+#
+# There is always old version of package at:
+#
+#   * http://download.devel.redhat.com/nightly/latest-RHEL-8/compose/BaseOS
+#   * http://download.devel.redhat.com/nightly/latest-RHEL-8/compose/AppStream
+#
+
+PROG="${PROG:-${0##*/}}"
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+from_nevra() {
+    # Input: foo-1.0-1.i386 or foo-1:1.0-1.i386
+    local nevra="$1" && shift
+    # One of: name, ver, rel, epoch, arch
+    local req_info="$1" && shift
+    # Arch
+    local arch="${nevra##*.}"
+    debug "$nevra arch: $arch"
+    [[ $req_info == 'arch' ]] && echo "$arch" && return
+    # Release
+    local rel="${nevra##*-}"
+    rel="${rel%.*}"
+    debug "$nevra rel: $rel"
+    [[ $req_info == 'rel' ]] && echo "$rel" && return
+    # Version
+    local epoch_ver="${nevra%-${rel}.${arch}}"
+    epoch_ver="${epoch_ver##*-}"
+    local ver="${epoch_ver##*:}"
+    debug "$nevra ver: $ver"
+    [[ $req_info == 'ver' ]] && echo "$ver" && return
+    # Epoch
+    local epoch="${epoch_ver%${ver}}"
+    epoch="${epoch//:/}"
+    epoch="${epoch:-0}"
+    debug "$nevra epoch: ${epoch}"
+    [[ $req_info == 'epoch' ]] && echo "$epoch" && return
+    # Name
+    local name="${nevra%-${epoch_ver}-${rel}.${arch}}"
+    debug "$nevra name: $name"
+    [[ $req_info == 'name' ]] && echo "$name" && return
+}
+
+# rpm --define "pkg1 a1" --define "pkg2 a1"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}'
+# https://rpm.org/user_doc/lua.html
+nevra_older_then() {
+    # Verify with: rpmdev-vercmp
+    local nevra1="$1" && shift
+    local nevra2="$1" && shift
+    local name1="$(from_nevra "$nevra1" "name")"
+    local name2="$(from_nevra "$nevra2" "name")"
+    local epoch1="$(from_nevra "$nevra1" "epoch")"
+    local epoch2="$(from_nevra "$nevra2" "epoch")"
+    local version1="$(from_nevra "$nevra1" "ver")"
+    local version2="$(from_nevra "$nevra2" "ver")"
+    local release1="$(from_nevra "$nevra1" "rel")"
+    local release2="$(from_nevra "$nevra2" "rel")"
+    local arch1="$(from_nevra "$nevra1" "arch")"
+    local arch2="$(from_nevra "$nevra2" "arch")"
+    nevra1="${name1}-${epoch1}:${version1}-${release1}"
+    nevra2="${name2}-${epoch2}:${version2}-${release2}"
+    local rcmp="$(rpm --define "pkg1 $nevra1" --define "pkg2 $nevra2"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}')"
+    if [ "x$rcmp" = "x-1" ]; then
+        # True
+        return 0
+    fi
+    # False
+    return -1
+}
+
+pkg_can_be_removed() {
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    debug "${FUNCNAME[0]}: checking '$name' can be removed with help of yum."
+    yum --assumeyes --setopt "tsflags=test" "remove" "$name" >"$DEBUG_OUT" 2>&1
+    if [ ${PIPESTATUS[0]} -eq 0 ]; then
+        echo "${FUNCNAME[0]}: $name can be removed."
+        return 0
+    fi
+    echo "${FUNCNAME[0]}: $name cannot be removed."
+    return 1
+}
+
+pkg_remove_any() {
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    debug "${FUNCNAME[0]}: $name"
+    if pkg_is_absent "$name"; then
+        debug "${FUNCNAME[0]}: $name is not installed. Do nothing."
+        return 0
+    fi
+    # yum remove --allowerasing kernel-rt-kvm
+    #=============================================================================
+    # Package         Arch    Version                Repository              Size
+    #=============================================================================
+    #Removing:
+    # kernel-rt-kvm   x86_64  4.18.0-39.rt9.82.el8   @rhel-8-buildroot      361 k
+    # kernel-rt-kvm   x86_64  4.18.0-37.rt9.80.el8   @rhel-8-buildroot-old  361 k
+    yum remove -y --allowerasing "$name" || :
+    # yum returns 1 for removing non-existing package for yum4/dnf
+    local ret=0
+    pkg_is_present "$name" && ret=1
+    return $ret
+}
+
+pkg_install_new_if_absent() {
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    debug "${FUNCNAME[0]}: $name"
+    if pkg_is_present "$name"; then
+        echo "${FUNCNAME[0]}: package $name is present. Do nothing."
+        return 0
+    fi
+    local ret=0
+    yum install -y --allowerasing "$nevra" || ret=1
+    if [ "$ret" != "0" ]; then
+        echo "Installation of $nevra failed."
+        echo "See yum command output above for more information"
+        exit 1
+    fi
+    if pkg_is_absent "$name"; then
+        echo "Package $name is absent."
+        return 1
+    fi
+    return 0
+}
+
+pkg_is_present() {
+    local name="$1" && shift
+    debug "${FUNCNAME[0]}: $name"
+    local ret=
+    rpm -q --qf "" "$name" >/dev/null 2>&1 && ret=0 || ret=1
+    debug "Package $name is $(test -z "${ret##0}" && echo present || echo absent)"
+    return $ret
+}
+
+pkg_is_absent() {
+    local name="$1" && shift
+    local ret=
+    pkg_is_present "$name" && ret=1 || ret=0
+    return $ret
+}
+
+get_installed_nevra_new() {
+    # Sytem can have a few same packages installed
+    # rpm -q "kernel-rt-kvm"
+    # kernel-rt-kvm-4.18.0-37.rt9.80.el8.x86_64
+    # kernel-rt-kvm-4.18.0-39.rt9.82.el8.x86_64
+    # Return the newest one.
+    local name="$1" && shift
+    local nevras=($(rpm -q --qf "%{name}-%{epochnum}:%{version}-%{release}.%{arch}\n" "$name"))
+    nevra="${nevras[0]}"
+    for n in "${nevras[@]}"; do
+        if nevra_older_then "$nevra" "$n"; then
+            debug "get_installed_nevra_new: $nevra < $n"
+            nevra="$n"
+        else
+            debug "get_installed_nevra_new: $nevra > $n. Skipp"
+        fi
+    done
+    debug "Current the newest package: $nevra"
+    echo "$nevra"
+}
+
+get_installed_nevra_old() {
+    # Sytem can have a few same packages installed
+    # rpm -q "kernel-rt-kvm"
+    # kernel-rt-kvm-4.18.0-37.rt9.80.el8.x86_64
+    # kernel-rt-kvm-4.18.0-39.rt9.82.el8.x86_64
+    # Return the newest one.
+    local name="$1" && shift
+    local nevras=($(rpm -q --qf "%{name}-%{epochnum}:%{version}-%{release}.%{arch}\n" "$name"))
+    nevra="${nevras[0]}"
+    for n in "${nevras[@]}"; do
+        if ! nevra_older_then "$nevra" "$n"; then
+            debug "get_installed_nevra_old: $nevra > $n"
+            nevra="$n"
+        else
+            debug "get_installed_nevra_new: $nevra < $n. Skipp"
+        fi
+    done
+    debug "Current the oldest package: $nevra"
+    echo "$nevra"
+}
+
+pkg_downgrade_if_present() {
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    if pkg_is_absent "$name"; then
+        echo "Package $nevra absent. No downgrade."
+        return 0
+    fi
+    # installonlypkg(foo) case
+    local installed_nevra_old="$(get_installed_nevra_old "$name")"
+    echo "The oldest installed nevra: $installed_nevra_old"
+    if nevra_older_then "$installed_nevra_old" "$nevra"; then
+        echo "Do not downgrade package: $nevra. There is already installed old package: $installed_nevra_old"
+        return 0
+    fi
+    yum downgrade -y --allowerasing "$name"
+}
+
+get_old_nevra() {
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    local version="$(from_nevra "$nevra" "ver")"
+    local epoch="$(from_nevra "$nevra" "epoch")"
+    local release="$(from_nevra "$nevra" "rel")"
+    local arch="$(from_nevra "$nevra" "arch")"
+    # Find previous version of the package.
+    local old_nevras=($(
+        yum repoquery -q $name.$arch --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" | \
+        tr -s ' ' | \
+        grep $arch | \
+        sed -n -e "/^${name}-${epoch}:${version}-${release}.${arch}$/"'!p'
+        ))
+    if [ ${#old_nevras[@]} -eq 0 ]; then
+        debug "Cannot find older version for $nevra."
+        return 1
+    fi
+    local old_nevra="${old_nevras[0]}"
+    for n in "${old_nevras[@]}"; do
+        if ! nevra_older_then "$old_nevra" "$n"; then
+            debug "get_old_nevra: $old_nevra > $n"
+            old_nevra="$n"
+        else
+            debug "get_old_nevra: $old_nevra < $n. Skipp"
+        fi
+    done
+    if ! nevra_older_then "$old_nevra" "$nevra"; then
+        debug "Cannot find older version for $nevra."
+        return 1
+    fi
+    debug "${FUNCNAME[0]}: older for $nevra is : $old_nevra"
+    echo "$old_nevra"
+}
+
+pkg_remove_and_any_never() {
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    local installed_nevra=($(rpm -q --qf "%{name}-%{epochnum}:%{version}-%{release}.%{arch}\n" "$name"))
+    for to_remove in "${installed_nevra[@]}"; do
+        debug "Test if remove: $to_remove"
+        if nevra_older_then "$to_remove" "$nevra"; then
+            echo "Do not remove older $to_remove"
+            continue
+        fi
+        echo "Remove nevra: $to_remove"
+        yum remove -y --allowerasing "$to_remove" || :
+    done
+}
+
+pkg_remove_any_older() {
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    local installed_nevra=($(rpm -q --qf "%{name}-%{epochnum}:%{version}-%{release}.%{arch}\n" "$name"))
+    for to_remove in "${installed_nevra[@]}"; do
+        debug "Test if remove: $to_remove"
+        if ! pkg_can_be_removed "$to_remove"; then
+            # RHBZ: 1698145
+            echo "Skipping remove: $to_remove. Package cannot be clearly removed."
+            continue
+        fi
+        if nevra_older_then "$to_remove" "$nevra"; then
+            echo "Remove older nevra: $to_remove"
+            yum remove -y --allowerasing "$to_remove" || :
+        else
+            echo "Do not remove newer package: $to_remove"
+            continue
+        fi
+    done
+}
+
+pkg_install_old_if_absent() {
+    # Installs package < nevra, if pkg with name is absent.
+    # 2nd column yum output: 12:4.3.6-25.el8+7
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    if pkg_is_present "$name"; then
+        echo "Package $name is present. No install."
+        return 0
+    fi
+    local old_nevra="$(get_old_nevra "$nevra")"
+    echo "Install an older version for $nevra: $old_nevra"
+    yum install -y --allowerasing "$old_nevra"
+    if pkg_is_absent "$old_nevra"; then
+        echo "Could not install: $old_nevra."
+        return 1
+    fi
+    return 0
+}
+
+pkg_update_to_new_if_present() {
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    debug "${FUNCNAME[0]}: $name"
+    if pkg_is_absent "$name"; then
+        debug "Package $name is absent. No update."
+        return 0
+    fi
+    # Update only if NEVRA installed package < NEVRA requested.
+    local installed_nevra_new="$(get_installed_nevra_new "$name")"
+    echo "The newest installed nevra: $installed_nevra_new"
+    if ! nevra_older_then "$installed_nevra_new" "$nevra"; then
+        echo "Do not update a new package: $installed_nevra_new."
+        return 0
+    fi
+    yum update -y --allowerasing "$nevra"
+    if pkg_is_absent "$nevra"; then
+        echo "Could not update to: $nevra."
+        return 1
+    fi
+    return 0
+}
+
+pkg_downgrade_to_old() {
+    local nevra="$1" && shift
+    local name="$(from_nevra "$nevra" "name")"
+    if pkg_is_absent "$name"; then
+        debug "Package $name is absent. No downgrade."
+        return 1
+    fi
+    local installed_nevra_old="$(get_installed_nevra_old "$name")"
+    if rpm -q --provides "$installed_nevra_old" | grep -q -s "installonlypkg"; then
+        echo "Skipping downgrade test, because the oldest package: $installed_nevra_old has RPM flag: installonlypkg"
+        return 0
+    fi
+    if nevra_older_then "$installed_nevra_old" "$nevra"; then
+        echo "Do not downgrade package: ${installed_nevra_old}."
+        return 1
+    fi
+    # dnf return 1 if no downgrade available
+    yum downgrade -y --allowerasing "$name"
+}
+
+box_out() {
+    local s=("$@")
+    local b=
+    local w=
+    for l in "${s[@]}"; do
+        ((w<${#l})) && { b="$l"; w="${#l}"; }
+    done
+    echo -e " -${b//?/-}-\n| ${b//?/ } |"
+    for l in "${s[@]}"; do
+        printf '| %*s |\n' "-$w" "$l"
+    done
+    echo -e "| ${b//?/ } |\n-${b//?/-}-"
+}
+
+msg_prepare() {
+    local action="$1" && shift
+    local nevra="$1" && shift
+    box_out \
+        "  Prepare for $action $nevra "
+}
+
+msg_run() {
+    local action="$1" && shift
+    local nevra="$1" && shift
+    box_out \
+        "  Run $action test for $nevra "
+}
+
+# rpm -q --qf "%{NEVRA}\n" openssl
+# openssl-1:1.1.0h-3.el8+7.x86_64
+# rpm -q --qf "%{NEVRA}\n" dhcp-common
+# dhcp-common-12:4.3.6-25.el8+7.noarch
+# rpm --querytags
+
+# NEVRA - is a new package to test.
+msg_usage() {
+    cat << EOF
+Usage:
+$PROG <options>
+
+Options:
+-s, --start=YUM_HISTORY_TRANSACTION_ID       reset system to YUM history transition before start the tests
+-t, --test=TYPE                              one of: install, update, downgrade, remove
+-n, --nevra=NEVRA                            package to test: name-[epoch:]version-release.arch
+-r, --revertchanges                          revert changes made to system
+-h, --help                                   display this help and exit
+EOF
+}
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+opt=$(getopt -n "$0" --options "hvs:t:n:r" --longoptions "help,verbose,start:,test:,nevra:,revertchanges" -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -s|--start)
+            START="$2"
+            shift 2
+            ;;
+        -t|--test)
+            TEST="$2"
+            shift 2
+            ;;
+        -n|--nevra)
+            NEVRA="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            DEBUG="yes"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        -r|--revertchanges)
+            REVERT="yes"
+            shift
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+do_yum_revert() {
+    rc=$?;
+    trap - SIGINT SIGTERM SIGABRT EXIT # clear the trap
+    echo "Revert YUM history to: $HISTORY_ID"
+    echo "Rollback to YUM history transaction ID: $HISTORY_ID"
+    yum -y history rollback "$HISTORY_ID"
+    exit $rc
+}
+
+# Entry
+
+DEBUG="${DEBUG:-}"
+TEST="${TEST:-}"
+START="${START:-}"
+NEVRA="${NEVRA:-}"
+REVERT="${REVERT:-}"
+
+DEBUG_OUT="/dev/null"
+if [ -n "$DEBUG" ]; then
+    DEBUG_OUT="/dev/stdout"
+fi
+
+debug "TEST: $TEST"
+debug "DNF HISTORY START: $START"
+debug "NEVRA: $NEVRA"
+
+# Test correct invocation
+if [ -z "$NEVRA" ] || ! [ "$TEST" = "install" -o "$TEST" = "update" -o "$TEST" = "downgrade" -o "$TEST" = "remove" ]; then
+  echo "Use: $PROG -h for help."
+  exit
+fi
+
+if [ -n "$REVERT" ]; then
+    # Save current YUM transaction ID, to revert it later
+    HISTORY_ID="$(yum history list | sed -n -e '0,/^-\+$/d;s/^[[:space:]]*//p' | tr -s ' ' | cut -f 1 -d ' ' | sed -n -e '1p')"
+    echo "Current YUM history transaction ID: $HISTORY_ID"
+    trap do_yum_revert SIGINT SIGTERM SIGABRT EXIT
+fi
+
+if [ -n "$START" ]; then
+    echo "Revert YUM history before test run to: $START"
+    yum -y history rollback "$START"
+fi
+
+if [ "$TEST" = "install" -o "$TEST" = "remove" ]; then
+    if ! pkg_can_be_removed "$NEVRA"; then
+        echo "Skipping test: $TEST for $NEVRA. Package cannot be clearly removed."
+        exit 0
+    fi
+fi
+
+case $TEST in
+    install)
+        msg_prepare "installing" "$NEVRA"
+        pkg_remove_any "$NEVRA"
+        msg_run "install" "$NEVRA"
+        pkg_install_new_if_absent "$NEVRA"
+        ;;
+    update)
+        msg_prepare "updating" "$NEVRA"
+        old_nevra="$(get_old_nevra "$NEVRA" || true)"
+        if [ -z "$old_nevra" ]; then
+            echo "Cannot find older package than: $NEVRA. Skipping test."
+            # Skipping test
+            exit 0
+        fi
+        echo "Found available older package: $old_nevra"
+        # At this point there is available in repo an old nevra
+        pkg_downgrade_if_present "$NEVRA"
+        pkg_install_old_if_absent "$NEVRA"
+        # At this point pkg is installed, but can be many installonlypkg(foo) packages
+        pkg_remove_and_any_never "$NEVRA"
+        msg_run "update" "$NEVRA"
+        pkg_update_to_new_if_present "$NEVRA"
+        ;;
+    downgrade)
+        msg_prepare "downgrading" "$NEVRA"
+        old_nevra="$(get_old_nevra "$NEVRA" || true)"
+        echo "Older package than $NEVRA is: $old_nevra"
+        if [ -z "$old_nevra" ]; then
+            echo "Cannot find older package than: $NEVRA. Skipping test."
+            # Skipping test
+            exit 0
+        fi
+        pkg_update_to_new_if_present "$NEVRA"
+        pkg_install_new_if_absent "$NEVRA"
+        pkg_remove_any_older "$NEVRA" # This is for installonlypkg(foo) packages, like kernel
+        msg_run "downgrade" "$NEVRA"
+        pkg_downgrade_to_old "$NEVRA"
+        ;;
+    remove)
+        msg_prepare "removing" "$NEVRA"
+        pkg_update_to_new_if_present "$NEVRA"
+        pkg_install_new_if_absent "$NEVRA"
+        msg_run "remove" "$NEVRA"
+        pkg_remove_any "$NEVRA"
+        ;;
+    *)
+        echo "Use: $PROG -h for help."
+        exit
+        ;;
+esac

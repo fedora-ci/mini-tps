@@ -1,0 +1,159 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2019
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+
+PROG="${PROG:-${0##*/}}"
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
+box_out() {
+    local s=("$@")
+    local b=
+    local w=
+    for l in "${s[@]}"; do
+        ((w<${#l})) && { b="$l"; w="${#l}"; }
+    done
+    echo -e " -${b//?/-}-\n| ${b//?/ } |"
+    for l in "${s[@]}"; do
+        printf '| %*s |\n' "-$w" "$l"
+    done
+    echo -e "| ${b//?/ } |\n-${b//?/-}-"
+}
+
+msg_prepare() {
+    local action="$1" && shift
+    local nsvc="$1" && shift
+    box_out \
+        "  Prepare for $action $nsvc "
+}
+
+msg_run() {
+    local action="$1" && shift
+    local nsvc="$1" && shift
+    box_out \
+        "  Run $action test for $nsvc "
+}
+
+msg_usage() {
+    cat << EOF
+Usage:
+$PROG <options>
+
+Options:
+-t, --test=TYPE                              one of: install, update, downgrade, remove
+-n, --nsvc=NSVC                              module to test: name:stream:version:context
+-p, --profile=PROFILE                        module profile
+-h, --help                                   display this help and exit
+EOF
+}
+
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+opt_str="$@"
+opt=$(getopt -n "$0" --options "hvs:t:n:p:" --longoptions "help,verbose,start:,profile:,test:,nsvc:" -- "$@")
+eval set -- "$opt"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -t|--test)
+            TEST="$2"
+            shift 2
+            ;;
+        -n|--nsvc)
+            NSVC="$2"
+            shift 2
+            ;;
+        -p|--profile)
+            PROFILE="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            DEBUG="yes"
+            shift
+            ;;
+        -h|--help)
+            msg_usage
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            msg_usage
+            exit 1
+    esac
+done
+
+# Entry
+
+DEBUG="${DEBUG:-}"
+TEST="${TEST:-}"
+NSVC="${NSVC:-}"
+PROFILE="${PROFILE:-}"
+
+debug "TEST: $TEST"
+debug "NSVC: $NSVC"
+debug "PROFILE: $PROFILE"
+
+# Test correct invocation
+if [ -z "$NSVC" ] || ! [ "$TEST" = "install" -o "$TEST" = "remove" ]; then
+  echo "Use: $PROG -h for help."
+  exit
+fi
+
+p_remove() {
+    local nsvc="$1" && shift
+    local profile="$1" && shift
+    if ! dnf module info "$nsvc" 2>/dev/null | grep -q -E "^Profiles[[:space:]]*:.*${profile}[^,]*\[i\]"; then
+        echo "Profile is not installed."
+        return
+    fi
+    yum -y module remove "$nsvc"
+}
+
+p_install() {
+    local nsvc="$1" && shift
+    local profile="$1" && shift
+    local name="${nsvc%%:*}"
+    if dnf module info "$nsvc" 2>/dev/null | grep -q -E "^Profiles[[:space:]]*:.*${profile}[^,]*\[i\]"; then
+        echo "Profile is already installed."
+        return
+    fi
+    yum -y module reset "$nsvc"
+    yum -y module enable "$nsvc"
+    yum -y module install "$nsvc/$profile"
+}
+
+case $TEST in
+    install)
+        msg_prepare "installing" "$NSVC/$PROFILE"
+        p_remove "$NSVC" "$PROFILE"
+        msg_run "install" "$NSVC/$PROFILE"
+        p_install "$NSVC" "$PROFILE"
+        ;;
+    remove)
+        msg_prepare "removing" "$NSVC/$PROFILE"
+        p_install "$NSVC" "$PROFILE"
+        msg_run "remove" "$NSVC/$PROFILE"
+        p_remove "$NSVC" "$PROFILE"
+        ;;
+    *)
+        echo "Use: $PROG -h for help."
+        exit
+        ;;
+esac
