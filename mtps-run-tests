@@ -141,6 +141,10 @@ nevras_in_repo="$(
         sed -n -e "/^${REPONAME}[[:space:]]/ s/^${REPONAME}[[:space:]]//p"
 )"
 
+# Exclude SRPMs if they happen to be in the repository;
+# SRPM cannot be dnf-installed anyway
+nevras_in_repo="$(echo "$nevras_in_repo" | sed -n -e "/\.src$/d;p")"
+
 if [ -n "$SKIPLANGPACK" ]; then
     echo "Skipping https://fedoraproject.org/wiki/Packaging:Langpacks packages."
     nevras_in_repo="$(echo "$nevras_in_repo" | sed -n -e "/-langpack-/d;p")"
