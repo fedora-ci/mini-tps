@@ -463,32 +463,15 @@ download_rpm() {
 mk_url() {
     local filename="$1" && shift
     local srpm_filename="$1" && shift
-    # http://download.eng.bos.redhat.com/brewroot/vol/rhel-8/packages/ghostscript/9.25/2.el8_0.1/s390x/ghostscript-9.25-2.el8_0.1.s390x.rpm
-    # http://download.eng.bos.redhat.com/brewroot/vol/rhel-8/packages/ghostscript/9.25/2.el8_0.1/src/ghostscript-9.25-2.el8_0.1.src.rpm
+    # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/s390x/ghostscript-9.25-2.el8_0.1.s390x.rpm
+    # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/src/ghostscript-9.25-2.el8_0.1.src.rpm
     filename=$(basename "$filename")
     srpm_filename=$(basename "$srpm_filename")
     name="$(from_rpm_name "${srpm_filename}" "name")"
     rel="$(from_rpm_name "${srpm_filename}" "rel")"
     ver="$(from_rpm_name "${srpm_filename}" "ver")"
     arch="$(from_rpm_name "${filename}" "arch")"
-    rhel_ver="$(echo $rel | sed -n -e 's/^.*el\([[:digit:]]\+\).*$/\1/p')"
-    local vn="vol/rhel-${rhel_ver}"
-    # https://github.com/koji-project/koji/blob/master/docs/source/volumes.rst
-    if [ -n "$volume_name" ]; then
-        if [ "$volume_name" == "DEFAULT" ]; then
-            # "DEFAULT" volume means unnamed volume
-            vn=""
-        else
-            vn="vol/$volume_name"
-        fi
-    fi
-    # /usr/lib/python2.7/site-packages/koji/__init__.py
-    # class PathInfo(object):
-    #
-    #     def build(self, build):
-    #    """Return the directory where a build belongs"""
-    #    return self.volumedir(build.get('volume_name')) + ("/packages/%(name)s/%(version)s/%(release)s" % build)
-    url="${BREWROOT}/${vn}/packages/${srpm_pkg_name}/${ver}/${rel}/${arch}/$filename"
+    url="${BREWROOT}/packages/${srpm_pkg_name}/${ver}/${rel}/${arch}/$filename"
     debug "URL for $filename: $url"
     echo "$url"
 }
