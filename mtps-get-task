@@ -666,9 +666,7 @@ for task in $TASKS; do
     query_task_files="$(mk_query_task_result $task)" # Holds plain XML
     answer_task_result="$(send_query "$query_task_files")"
     rpms_from_task="$(rpms_from_answer "$ARCH" "$answer_task_result")"
-    rpms_from_task_all+=" $rpms_from_task"
     rpms_from_task_noarch="$(rpms_from_answer "noarch" "$answer_task_result")"
-    rpms_from_task_noarch_all+=" $rpms_from_task_noarch"
     srpm="$(srpms_from_answer "$answer_task_result")"
     if [ -n "$srpm" ]; then
         srpm_pkg_file="$(basename $srpm)"
@@ -694,6 +692,8 @@ for task in $TASKS; do
         rpms_from_task="$(filter_available "$ARCH" "$rpms_from_task")"
         rpms_from_task_noarch="$(filter_available "noarch" "$rpms_from_task_noarch")"
     fi
+    rpms_from_task_all+=" $rpms_from_task"
+    rpms_from_task_noarch_all+=" $rpms_from_task_noarch"
 done
 
 echo "NVR: $nvr"
