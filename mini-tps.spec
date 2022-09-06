@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 148%{?dist}
+Release: 149%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -42,6 +42,9 @@ cp -rfp optrepos/*.repo %{buildroot}%{_datarootdir}/mini-tps/optrepos
 %{_datarootdir}/mini-tps/*
 
 %changelog
+* Tue Sep 06 2022 Michal Srb <michal@redhat.com> - 0.1-149
+- Fix --onlyinrepo option in mtps-get-task.
+
 * Wed Oct 13 2021 Michal Srb <michal@redhat.com> - 0.1-145
 - Build with the latest changes.
 
