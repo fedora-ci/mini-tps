@@ -51,7 +51,7 @@ See `mtps-prepare-system --list` for the list of available profiles.
 # How to build RPM
 
 ```sh
-tar --transform 's,^,mini-tps/,' -czf mini-tps.tar.gz README.md mini-tps.conf mtps-* profiles/ optrepos/
+tar --transform 's,^,mini-tps/,' -czf mini-tps.tar.gz README.md mini-tps.conf mtps-* profiles/
 rpmdev-bumpspec --comment='Build with the latest changes.' --userstring='Andrei Stepanov <astepano@redhat.com>' mini-tps.spec
 rpmbuild --define="_sourcedir $PWD" --define="%_srcrpmdir $PWD" -bs mini-tps.spec
 copr-cli --config ~/.config/copr2 build astepano/mini-tps mini-tps-0.1-29.el7.src.rpm

@@ -1,0 +1,62 @@
+INT_CERTS="${INT_CERTS:-http://download.eng.bos.redhat.com/brewroot/vol/rhel-7/packages/redhat-internal-cert-install/0.1/9.el7.csb/noarch/redhat-internal-cert-install-0.1-9.el7.csb.noarch.rpm}"
+
+if ! rpm -q redhat-internal-cert-install >/dev/null 2>&1; then
+    echo "Deploy internal certs."
+    yum install -y "$INT_CERTS"
+fi
+
+echo "Setting up RHEL internal YUM repos for selected profile"
+find "/etc/yum.repos.d/" -name "${REPOFILE_OPT_PREFIX}*.repo" -exec rm --verbose -f '{}' ';'
+declare -a INSTALLED_REPO_FILES=()
+cp -f "$PFILE" "$REPOFILE"
+INSTALLED_REPO_FILES+=("$REPOFILE")
+if [ ${#OPTREPOS[@]} -ne 0 ]; then
+    declare -i optindex=0
+    for opt in "${OPTREPOS[@]}"; do
+        OPTFILE_IN="$OPTREPOS_DIR/${opt}.repo"
+        debug "Using opt repo: $OPTFILE_IN"
+        if ! [ -r "$OPTFILE_IN" ]; then
+            echo "Cannot read $OPTFILE_IN"
+            exit 1
+        fi
+        OPTFILE_OUT="/etc/yum.repos.d/${REPOFILE_OPT_PREFIX}-${optindex}.repo"
+        cp "$OPTFILE_IN" "$OPTFILE_OUT"
+        INSTALLED_REPO_FILES+=("$OPTFILE_OUT")
+        optindex+=1
+    done
+fi
+if [ -n "$FIXREPO" ]; then
+    for repofile in "${INSTALLED_REPO_FILES[@]}"; do
+        COMPOSEID="$(cat "$repofile" | \
+            sed -n -e '0,/baseurl/{ /baseurl/ s/^baseurl[[:space:]]*=[[:space:]]*//p }' | \
+            sed -n -e 's/\(latest[^/]\+\).*$/\1\/COMPOSE_ID/p' | \
+            xargs -n1 curl --retry 5 --insecure --fail --location --show-error  --remote-header-name)"
+        echo "Compose ID: $COMPOSEID"
+        THELATESTDIR="$(cat "$repofile" | sed -n -e '0,/baseurl/{ /baseurl/ s/^baseurl[[:space:]]*=[[:space:]]*//p }' | grep -oE 'latest-[^/]+')"
+        echo "Using the latest dir: $THELATESTDIR"
+        echo "Replace $THELATESTDIR with $COMPOSEID in $repofile"
+        sed -i -e "s/$THELATESTDIR/$COMPOSEID/g" "$repofile"
+    done
+fi
+
+yum config-manager --set-disabled '*'
+declare -a yumrepos
+for repofile in "${INSTALLED_REPO_FILES[@]}"; do
+    yumrepos=($(cat "$repofile" | sed -n -e '/buildroot/d' -e '/^\[/p' | tr -d '[]'))
+    yum config-manager --set-enabled "${yumrepos[@]}"
+done
+
+if [ -n "$ENABLE_BUILD_ROOT" ]; then
+    buildroot_repo=$(cat "$REPOFILE" | sed -n -e '/^\[/{/buildroot/p}' | tr -d '[]')
+    yum config-manager --set-enabled "$buildroot_repo"
+fi
+
+# repoquery util acts not on live system, but rather on set of enabled repos. mini-tps hold personal list of protected packages, such as openssh-server
+yum config-manager --set-enabled astepano-mini-tps || :
+
+echo "Installing required packages for testing"
+yum install -y createrepo_c
+
+yum update -y
+yum clean all
+yum makecache
