@@ -1,3 +1,4 @@
 /ignore/*
 /gitignore/*
 *.tar.gz
+*.src.rpm
