@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 149%{?dist}
+Release: 150%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -31,17 +31,27 @@ mkdir -p %{buildroot}%{_prefix}/local/bin/
 cp -rfp mtps* %{buildroot}%{_prefix}/local/bin/
 mkdir -p %{buildroot}%{_sysconfdir}/dnf/protected.d
 cp -pf mini-tps.conf %{buildroot}%{_sysconfdir}/dnf/protected.d/
-mkdir -p %{buildroot}%{_datarootdir}/mini-tps/profiles
-cp -rfp profiles/*.repo %{buildroot}%{_datarootdir}/mini-tps/profiles
-mkdir -p %{buildroot}%{_datarootdir}/mini-tps/optrepos
-cp -rfp optrepos/*.repo %{buildroot}%{_datarootdir}/mini-tps/optrepos
+
+# profiles
+mkdir -p %{buildroot}%{_datarootdir}/mini-tps/profiles/rhel/
+# rhel
+cp -rfp profiles/rhel/{repos,optrepos}/ %{buildroot}%{_datarootdir}/mini-tps/profiles/rhel/
+
+# prepare scripts
+mkdir -p %{buildroot}%{_libexecdir}/mini-tps/rhel/
+# rhel
+cp -pf profiles/rhel/prepare-system %{buildroot}%{_libexecdir}/mini-tps/rhel/
 
 %files
 %{_prefix}/local/bin/mtps*
 %{_sysconfdir}/dnf/protected.d/mini-tps.conf
 %{_datarootdir}/mini-tps/*
+%{_libexecdir}/mini-tps/*
 
 %changelog
+* Fri Sep 09 2022 Michal Srb <michal@redhat.com> - 0.1-150
+- Make profiles configurable for different operating systems.
+
 * Tue Sep 06 2022 Michal Srb <michal@redhat.com> - 0.1-149
 - Fix --onlyinrepo option in mtps-get-task.
 
