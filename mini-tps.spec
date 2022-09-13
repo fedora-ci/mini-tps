@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 150%{?dist}
+Release: 151%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -33,14 +33,18 @@ mkdir -p %{buildroot}%{_sysconfdir}/dnf/protected.d
 cp -pf mini-tps.conf %{buildroot}%{_sysconfdir}/dnf/protected.d/
 
 # profiles
-mkdir -p %{buildroot}%{_datarootdir}/mini-tps/profiles/rhel/
+mkdir -p %{buildroot}%{_datarootdir}/mini-tps/profiles/{rhel,centos-stream}/
 # rhel
 cp -rfp profiles/rhel/{repos,optrepos}/ %{buildroot}%{_datarootdir}/mini-tps/profiles/rhel/
+# centos-stream
+cp -rfp profiles/centos-stream/{repos,optrepos}/ %{buildroot}%{_datarootdir}/mini-tps/profiles/centos-stream/
 
 # prepare scripts
-mkdir -p %{buildroot}%{_libexecdir}/mini-tps/rhel/
+mkdir -p %{buildroot}%{_libexecdir}/mini-tps/{rhel,centos-stream}/
 # rhel
 cp -pf profiles/rhel/prepare-system %{buildroot}%{_libexecdir}/mini-tps/rhel/
+# centos-stream
+cp -pf profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps/centos-stream/
 
 %files
 %{_prefix}/local/bin/mtps*
@@ -49,6 +53,9 @@ cp -pf profiles/rhel/prepare-system %{buildroot}%{_libexecdir}/mini-tps/rhel/
 %{_libexecdir}/mini-tps/*
 
 %changelog
+* Tue Sep 13 2022 Michal Srb <michal@redhat.com> - 0.1-151
+- Add profile for CentOS Stream 9
+
 * Fri Sep 09 2022 Michal Srb <michal@redhat.com> - 0.1-150
 - Make profiles configurable for different operating systems.
 
