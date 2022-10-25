@@ -49,6 +49,15 @@ srpms_from_answer() {
     echo "$srpm"
 }
 
+is_scratch_from_answer() {
+    local xml="$1" && shift
+    local is_scratch=
+    is_scratch="$(echo "$xml" | xmllint --xpath 'string(//member[name="scratch"]/value/boolean/text())' -)"
+    [[ "$is_scratch" == '1' ]] && is_scratch="yes" || is_scratch="no"
+    debug "Is scratch: $is_scratch"
+    echo "$is_scratch"
+}
+
 volume_name_from_answer() {
     local xml="$1" && shift
     local volume_name=
@@ -463,15 +472,21 @@ download_rpm() {
 mk_url() {
     local filename="$1" && shift
     local srpm_filename="$1" && shift
-    # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/s390x/ghostscript-9.25-2.el8_0.1.s390x.rpm
-    # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/src/ghostscript-9.25-2.el8_0.1.src.rpm
-    filename=$(basename "$filename")
-    srpm_filename=$(basename "$srpm_filename")
-    name="$(from_rpm_name "${srpm_filename}" "name")"
-    rel="$(from_rpm_name "${srpm_filename}" "rel")"
-    ver="$(from_rpm_name "${srpm_filename}" "ver")"
-    arch="$(from_rpm_name "${filename}" "arch")"
-    url="${BREWROOT}/packages/${srpm_pkg_name}/${ver}/${rel}/${arch}/$filename"
+    local is_scratch="$1" && shift
+
+    if [ "$is_scratch" == "no" ]; then
+        # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/s390x/ghostscript-9.25-2.el8_0.1.s390x.rpm
+        # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/src/ghostscript-9.25-2.el8_0.1.src.rpm
+        filename=$(basename "$filename")
+        srpm_filename=$(basename "$srpm_filename")
+        name="$(from_rpm_name "${srpm_filename}" "name")"
+        rel="$(from_rpm_name "${srpm_filename}" "rel")"
+        ver="$(from_rpm_name "${srpm_filename}" "ver")"
+        arch="$(from_rpm_name "${filename}" "arch")"
+        url="${BREWROOT}/packages/${srpm_pkg_name}/${ver}/${rel}/${arch}/$filename"
+    else
+        url="${BREWROOT}/work/${filename}"
+    fi
     debug "URL for $filename: $url"
     echo "$url"
 }
@@ -619,6 +634,7 @@ task_owner_id="$(taskinfo2owner "$answer_task_info")"
 
 query_task_request="$(mk_query_task_request $TASK)"
 answer_task_request="$(send_query "$query_task_request")"
+is_scratch="$(is_scratch_from_answer "$answer_task_request")"
 task_build_target="$(taskquery2target "$answer_task_request")"
 
 query_owner_info="$(mk_query_get_user $task_owner_id)"
@@ -629,6 +645,7 @@ OWNERKRB="$(ownerinfo2krb "$answer_owner_info")"
 echo "Owner user: $OWNERUSER"
 echo "Owner krb: $OWNERKRB"
 echo "Task target: $task_build_target"
+echo "Is scratch build: $is_scratch"
 
 if [ -n "$OWNER" ]; then
     # Print only owner information
@@ -678,7 +695,7 @@ for task in $TASKS; do
         answer_build="$(send_query "$query_build")"
         volume_name="$(volume_name_from_answer "$answer_build")"
         build_source="$(build_source_from_answer "$answer_build")"
-        srpm_url="$(mk_url "$srpm" "$srpm_pkg_file")"
+        srpm_url="$(mk_url "$srpm" "$srpm_pkg_file" "$is_scratch")"
     fi
     if [ -n "$ONLYINREPO" ]; then
         # Purpose:
@@ -719,7 +736,7 @@ fi
 
 urls=()
 for pkg in $rpms_from_task_all $rpms_from_task_noarch_all; do
-    url="$(mk_url "$pkg" "$srpm_pkg_file")"
+    url="$(mk_url "$pkg" "$srpm_pkg_file" "$is_scratch")"
     urls+=("$url")
 done
 
