@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 152%{?dist}
+Release: 153%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -53,6 +53,9 @@ cp -pf profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps
 %{_libexecdir}/mini-tps/*
 
 %changelog
+* Sun Dec 04 2022 Andrei Stepanov <astepano@redhat.com> - 0.1-153
+- Build with the latest merged PRs.
+
 * Tue Oct 25 2022 Michal Srb <michal@redhat.com> - 0.1-152
 - Add support for scratch builds
 
