@@ -11,7 +11,7 @@
 #
 # See LICENSE for more details.
 #
-# Copyright: Red Hat Inc. 2018
+# Copyright: Red Hat Inc. 2018, 2022
 # Author: Andrei Stepanov <astepano@redhat.com>
 
 
@@ -211,7 +211,7 @@ for nevra in $nevras_in_repo; do
     fi
     if [ -n "$SELINUX" ] && rpm --quiet -q audit; then
         selinux_status=0
-        ausearch -m avc,user_avc,selinux_err,user_selinux_err -ts "$START_DATE" "$START_TIME" 2>&1 | grep -s -o 'no matches' >/dev/null 2>&1 || selinux_status=1
+        ausearch --format raw -m avc,user_avc,selinux_err,user_selinux_err -ts "$START_DATE" "$START_TIME" 2>&1 | sed -e '/received policyload notice/d' | grep -s -o '^' && selinux_status=1
         if [ "$selinux_status" -ne "0" ]; then
             ret=1
             # Selinux failed
