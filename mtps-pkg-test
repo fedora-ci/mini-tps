@@ -547,6 +547,16 @@ case $TEST in
         msg_prepare "removing" "$NEVRA"
         pkg_update_to_new_if_present "$NEVRA"
         pkg_install_new_if_absent "$NEVRA"
+
+        # OSCI-4333: We have to check again if the pakage can be removed
+        # now after we installed its latest version. It can happen that
+        # the update introduced new /etc/yum/protected.d/* file which makes
+        # it uninstallable.
+        if ! pkg_can_be_removed "$NEVRA"; then
+            echo "Skipping test: $TEST for $NEVRA. Package cannot be clearly removed."
+            exit 0
+        fi
+
         msg_run "remove" "$NEVRA"
         pkg_remove_any "$NEVRA"
         ;;
