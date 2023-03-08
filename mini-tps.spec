@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 155%{?dist}
+Release: 156%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -53,6 +53,9 @@ cp -pf profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps
 %{_libexecdir}/mini-tps/*
 
 %changelog
+* Wed Mar 08 2023 Michal Srb <michal@redhat.com> - 0.1-156
+- Add option to check for problems in scriptlet outputs (OSCI-1230)
+
 * Wed Feb 08 2023 Michal Srb <michal@redhat.com> - 0.1-155
 - Add flatpak repos for RHEL 9
 
