@@ -100,6 +100,69 @@ nevra_older_then() {
     return -1
 }
 
+run_with_scriptlet_check() {
+    # Run a command and check if the output doesn't contain certain keywords.
+    # The return code from the command is preserved. If the comand failed,
+    # we don't bother checking the output. If the command succeeded, we check
+    # the output and return "1" if any of the keywords were found in the output.
+    #
+    # Example usage:
+    # run_with_scriptlet_check dnf install -y mypackage
+
+    local cmd_output
+    cmd_output=$(mktemp)
+    debug "${FUNCNAME[0]}: running command \"$*\" and checking the output for errors."
+    # Capture the output in a temporary file
+    "$@" 2>&1 | tee "$cmd_output"
+    # Preserve return code from the command
+    local ret=${PIPESTATUS[0]}
+    if [ "$ret" -eq "0" ]; then
+        cmd_output_parts_prefix="cmd-output-part"
+        # The script is running with globbing off, but it's useful here, so let's enabled it temporarily
+        set +f
+        rm -f "$cmd_output_parts_prefix"*
+        # Split the output into separate files on the lines containing the "Running scriptlet: " string
+        csplit "$cmd_output" --quiet --prefix="$cmd_output_parts_prefix" --suffix-format='%04d' '/Running scriptlet: /' '{*}'
+
+        # Check all output parts and find those that belong to the NVRA that is currently being tested
+        for output_part in "$cmd_output_parts_prefix"*; do
+            # Extract NVRA. The first line of the file should look like this:
+            #   Running scriptlet: abc-1-1.el9.x86_64  50/180
+            scriptlet_nvra=$(head -1 "$output_part" | awk -F' ' '{ print $3 }')
+
+            # Remove epoch from the NEVRA under test
+            test_nvra=$(echo "$NEVRA" | sed -e 's/-[0-9]\+:/-/')
+            # Check if the  NVRA matches the NVRA under test
+            if [ "$test_nvra" == "$scriptlet_nvra" ]; then
+                # We found a part of the output that matters, let's look for problematic words here;
+                # We only look for the following words (case-insensitive):
+                # * error
+                # * failure
+                # * failed
+                # * warning
+                # Note: we ignore cases where there is a leading or trailing dash (-),
+                # the reason is that the keyword ("error" for example) can appear in package names.
+                # See how the regexp works (and play with it!): https://regex101.com/r/Yws0tT/1
+                grep -P -i -q '(?<![-a-z])error|failure|failed|warning(?![-a-z])' "$output_part" && ret=1
+                if [ "$ret" -eq "1" ]; then
+                    echo
+                    echo "The test succeeded, but there were possible problems (e.g. errors, warnings, or failures) detected in the output. This may indicate a problem in RPM scriptlets."
+                    echo "Please check the output above for more information."
+                    break
+                fi
+            fi
+        done
+    fi
+    # Clean up the temporary file(s)
+    rm -f "$cmd_output"
+    rm -f "$cmd_output_parts_prefix"*
+
+    # Globbing off again
+    set -f
+
+    return "$ret"
+}
+
 pkg_can_be_removed() {
     local nevra="$1" && shift
     local name="$(from_nevra "$nevra" "name")"
@@ -410,13 +473,14 @@ Options:
 -t, --test=TYPE                              one of: install, update, downgrade, remove
 -n, --nevra=NEVRA                            package to test: name-[epoch:]version-release.arch
 -r, --revertchanges                          revert changes made to system
+-x, --scriptletcheck                         check output and fail if problems with scriptlets are found
 -h, --help                                   display this help and exit
 EOF
 }
 
 # http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
-opt=$(getopt -n "$0" --options "hvs:t:n:r" --longoptions "help,verbose,start:,test:,nevra:,revertchanges" -- "$@")
+opt=$(getopt -n "$0" --options "hvs:t:n:r:x" --longoptions "help,verbose,start:,test:,nevra:,revertchanges,scriptletcheck" -- "$@")
 eval set -- "$opt"
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -444,6 +508,10 @@ while [[ $# -gt 0 ]]; do
             REVERT="yes"
             shift
             ;;
+        -x|--scriptletcheck)
+            CHECK_SCRIPTLETS="yes"
+            shift
+            ;;
         --)
             shift
             ;;
@@ -469,6 +537,7 @@ TEST="${TEST:-}"
 START="${START:-}"
 NEVRA="${NEVRA:-}"
 REVERT="${REVERT:-}"
+CHECK_SCRIPTLETS="${CHECK_SCRIPTLETS:-}"
 
 DEBUG_OUT="/dev/null"
 if [ -n "$DEBUG" ]; then
@@ -509,7 +578,11 @@ case $TEST in
         msg_prepare "installing" "$NEVRA"
         pkg_remove_any "$NEVRA"
         msg_run "install" "$NEVRA"
-        pkg_install_new_if_absent "$NEVRA"
+        if [ -n "$CHECK_SCRIPTLETS" ]; then
+            run_with_scriptlet_check pkg_install_new_if_absent "$NEVRA"
+        else
+            pkg_install_new_if_absent "$NEVRA"
+        fi
         ;;
     update)
         msg_prepare "updating" "$NEVRA"
@@ -526,7 +599,11 @@ case $TEST in
         # At this point pkg is installed, but can be many installonlypkg(foo) packages
         pkg_remove_and_any_never "$NEVRA"
         msg_run "update" "$NEVRA"
-        pkg_update_to_new_if_present "$NEVRA"
+        if [ -n "$CHECK_SCRIPTLETS" ]; then
+            run_with_scriptlet_check pkg_update_to_new_if_present "$NEVRA"
+        else
+            pkg_update_to_new_if_present "$NEVRA"
+        fi
         ;;
     downgrade)
         msg_prepare "downgrading" "$NEVRA"
@@ -541,7 +618,11 @@ case $TEST in
         pkg_install_new_if_absent "$NEVRA"
         pkg_remove_any_older "$NEVRA" # This is for installonlypkg(foo) packages, like kernel
         msg_run "downgrade" "$NEVRA"
-        pkg_downgrade_to_old "$NEVRA"
+        if [ -n "$CHECK_SCRIPTLETS" ]; then
+            run_with_scriptlet_check pkg_downgrade_to_old "$NEVRA"
+        else
+            pkg_downgrade_to_old "$NEVRA"
+        fi
         ;;
     remove)
         msg_prepare "removing" "$NEVRA"
@@ -558,7 +639,11 @@ case $TEST in
         fi
 
         msg_run "remove" "$NEVRA"
-        pkg_remove_any "$NEVRA"
+        if [ -n "$CHECK_SCRIPTLETS" ]; then
+            run_with_scriptlet_check pkg_remove_any "$NEVRA"
+        else
+            pkg_remove_any "$NEVRA"
+        fi
         ;;
     *)
         echo "Use: $PROG -h for help."

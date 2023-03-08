@@ -33,6 +33,7 @@ Options:
 -t, --test=TYPE                              one of: install, update, downgrade, remove
 -s, --selinux=<0|1>                          one of: 0|1, defult: run tests in current selinux mode
 -l, --skiplangpack                           Do not test https://fedoraproject.org/wiki/Packaging:Langpacks
+-x, --scriptletcheck                         check output and fail if problems with scriptlets are found
 -r, --repo=NAME                              YUM repo name, must be present, check with: yum repolist --enabled
 -c, --critical                               tests set are critical, example: update, downgrade
 -h, --help                                   display this help and exit
@@ -56,7 +57,7 @@ box_out() {
 
 # http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
-opt=$(getopt -n "$0" --options "hvct:r:s:l" --longoptions "help,verbose,skiplangpack,critical,test:,repo:,selinux:" -- "$@")
+opt=$(getopt -n "$0" --options "hvct:r:s:l:x" --longoptions "help,verbose,skiplangpack,scriptletcheck,critical,test:,repo:,selinux:" -- "$@")
 eval set -- "$opt"
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -78,6 +79,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -l|--skiplangpack)
             SKIPLANGPACK="yes"
+            shift
+            ;;
+        -x|--scriptletcheck)
+            CHECK_SCRIPTLETS="yes"
             shift
             ;;
         -v|--verbose)
@@ -106,6 +111,7 @@ REPONAME="${REPONAME:-}"
 SELINUX="${SELINUX:-}"
 CRITICAL="${CRITICAL:-}"
 SKIPLANGPACK="${SKIPLANGPACK:-}"
+CHECK_SCRIPTLETS="${CHECK_SCRIPTLETS:-}"
 # Put logs by default at CDIR/mtps-logs
 LOGS_DIR="${LOGS_DIR:-mtps-logs}"
 
@@ -187,7 +193,7 @@ for nevra in $nevras_in_repo; do
         "  SELINUX:     $(getenforce || echo "unknown")" \
         "  YUM HISTORY: $START"
     logfname="${LOGS_DIR%%/}/$TESTRUN_ID-$TEST-$nevra.log"
-    mtps-pkg-test --test="$TEST" --nevra="$nevra" 2>&1 | tee "$logfname"
+    mtps-pkg-test --test="$TEST" ${CHECK_SCRIPTLETS:+--scriptletcheck} --nevra="$nevra" 2>&1 | tee "$logfname"
     test_status="${PIPESTATUS[0]}"
     #box_out \
     #    "REVERT CHANGES" \
