@@ -116,8 +116,8 @@ run_with_scriptlet_check() {
     "$@" 2>&1 | tee "$cmd_output"
     # Preserve return code from the command
     local ret=${PIPESTATUS[0]}
+    cmd_output_parts_prefix="cmd-output-part"
     if [ "$ret" -eq "0" ]; then
-        cmd_output_parts_prefix="cmd-output-part"
         # The script is running with globbing off, but it's useful here, so let's enabled it temporarily
         set +f
         rm -f "$cmd_output_parts_prefix"*
