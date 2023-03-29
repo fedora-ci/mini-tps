@@ -135,7 +135,14 @@ run_with_scriptlet_check() {
             # Check if the  NVRA matches the NVRA under test
             if [ "$test_nvra" == "$scriptlet_nvra" ]; then
                 # We found a part of the output that matters, let's look for problematic words here;
-                # We only look for the following words (case-insensitive):
+                # However, let's filter out lines with known false positives first:
+                #  Ignore warning about a new .rpmsave file (https://access.redhat.com/solutions/60263)
+                grep -P -v -i 'warning: .* saved as .*\.rpmsave' "$output_part" > "${output_part}-filtered" && mv "${output_part}-filtered" "$output_part"
+                #  Ignore warning about UID being outside of the SYS_UID_MIN/SYS_UID_MAX range.
+                #  This is a "known unfixable". See comments in OSCI-4825 for more information.
+                grep -P -v -i 'useradd warning: [^ ]+ uid [0-9]+ outside of the SYS_UID_MIN [0-9]+ and SYS_UID_MAX [0-9]+ range\.' "$output_part" > "${output_part}-filtered" && mv "${output_part}-filtered" "$output_part"
+
+                # We only look for the following problematic words (case-insensitive):
                 # * error
                 # * failure
                 # * failed
