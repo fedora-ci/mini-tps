@@ -153,8 +153,11 @@ run_with_scriptlet_check() {
                 grep -P -i -q '(?<![-a-z])error|failure|failed|warning(?![-a-z])' "$output_part" && ret=1
                 if [ "$ret" -eq "1" ]; then
                     echo
-                    echo "The test succeeded, but there were possible problems (e.g. errors, warnings, or failures) detected in the output. This may indicate a problem in RPM scriptlets."
-                    echo "Please check the output above for more information."
+                    echo
+                    echo "***"
+                    echo "The test succeeded, but potential scriptlet problems were detected in the output."
+                    echo "Please check the log above for more information."
+                    echo "***"
                     break
                 fi
             fi
