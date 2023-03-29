@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 157%{?dist}
+Release: 158%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -59,6 +59,9 @@ cp -pf profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps
 %{_libexecdir}/mini-tps/*
 
 %changelog
+* Wed Mar 29 2023 Michal Srb <michal@redhat.com> - 0.1-158
+- Ignore known scriptlet false positives
+
 * Wed Mar 29 2023 Michal Srb <michal@redhat.com> - 0.1-157
 - Add HTML result viewer
 
