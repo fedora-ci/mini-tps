@@ -1,0 +1,55 @@
+#!/usr/bin/python3
+
+import os
+import sys
+import json
+
+RESULTS_MAPPING = {
+    "PASS": "OK",
+    "WARN": "INFO",
+    "FAIL": "BAD"
+}
+
+mtps_log_dir = sys.argv[1]
+
+results = {}
+for log_file in os.listdir(mtps_log_dir):
+    # For example:
+    # FAIL-045051-install-systemd-standalone-sysusers-0:252-2.el9.x86_64.log
+    result, test_run_id, test_name, test_object = log_file[:-len(".log")].split("-", 3)
+    if result not in RESULTS_MAPPING:
+        # This is probably some file we do not want to handle.
+        continue
+
+    # Selinux test has the "selinux" infix, for example:
+    # FAIL-selinux-045051-install-systemd-container-0:252-2.el9.x86_64.log
+    if test_run_id == "selinux":
+        result, _, test_run_id, test_name, test_object = log_file[:-len(".log")].split("-", 4)
+        test_object += " (selinux AVCs)"
+
+    # The mtps log file with mtps-get-task object contains information about
+    # the download of Brew build, for example:
+    # PASS-045029-49526253-mtps-get-task.log
+    if test_object == "mtps-get-task":
+        test_name = "download build"
+        test_object = None
+
+    if test_name not in results:
+        results[test_name] = []
+
+    # Read the content of the log file to so we can store it in results.json.
+    log_path = os.path.join(mtps_log_dir, log_file)
+    with open(log_path) as f:
+        details = f.read()
+
+    message = test_name
+    if test_object:
+        message += ": " + test_object
+
+    results[test_name].append({
+        "result": RESULTS_MAPPING[result],
+        "message": message,
+        "details": details,
+    })
+
+print(json.dumps(results))
