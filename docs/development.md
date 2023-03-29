@@ -1,7 +1,7 @@
 # How to build SRPM
 
 ```sh
-tar --transform 's,^,mini-tps/,' -czf mini-tps.tar.gz README.md mini-tps.conf mtps-* profiles/
+tar --transform 's,^,mini-tps/,' -czf mini-tps.tar.gz README.md mini-tps.conf mtps-* profiles/ viewer/
 rpmdev-bumpspec --comment='Build with the latest changes.' --userstring='Andrei Stepanov <astepano@redhat.com>' mini-tps.spec
 rpmbuild --define="_sourcedir $PWD" --define="%_srcrpmdir $PWD" -bs mini-tps.spec
 ```

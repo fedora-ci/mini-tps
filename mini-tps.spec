@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 156%{?dist}
+Release: 157%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -32,6 +32,12 @@ cp -rfp mtps* %{buildroot}%{_prefix}/local/bin/
 mkdir -p %{buildroot}%{_sysconfdir}/dnf/protected.d
 cp -pf mini-tps.conf %{buildroot}%{_sysconfdir}/dnf/protected.d/
 
+# viewer
+mkdir -p %{buildroot}%{_datarootdir}/mini-tps/viewer/
+cp -pf viewer/viewer.html %{buildroot}%{_datarootdir}/mini-tps/viewer/
+mkdir -p %{buildroot}%{_libexecdir}/mini-tps/viewer/
+cp -pf viewer/generate-result-json %{buildroot}%{_libexecdir}/mini-tps/viewer/
+
 # profiles
 mkdir -p %{buildroot}%{_datarootdir}/mini-tps/profiles/{rhel,centos-stream}/
 # rhel
@@ -53,6 +59,9 @@ cp -pf profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps
 %{_libexecdir}/mini-tps/*
 
 %changelog
+* Wed Mar 29 2023 Michal Srb <michal@redhat.com> - 0.1-157
+- Add HTML result viewer
+
 * Wed Mar 08 2023 Michal Srb <michal@redhat.com> - 0.1-156
 - Add option to check for problems in scriptlet outputs (OSCI-1230)
 
