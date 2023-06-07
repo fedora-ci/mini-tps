@@ -354,7 +354,6 @@ name=Repo for $task_id Brew build
 baseurl=file:///${repo_dir}/
 enabled=$repo_enabled
 gpgcheck=0
-module_hotfixes=1
 EOF
     )"
     debug "Repo file text: ${repo:0:200}...(truncated)"
