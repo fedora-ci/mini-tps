@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 158%{?dist}
+Release: 159%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -59,6 +59,9 @@ cp -pf profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps
 %{_libexecdir}/mini-tps/*
 
 %changelog
+* Wed Jul 26 2023 Michal Srb <michal@redhat.com> - 0.1-159
+- Add option to rpm-verify installed packages (OSCI-1240)
+
 * Wed Mar 29 2023 Michal Srb <michal@redhat.com> - 0.1-158
 - Ignore known scriptlet false positives
 
