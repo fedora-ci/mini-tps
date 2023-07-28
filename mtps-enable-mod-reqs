@@ -11,17 +11,16 @@
 #
 # See LICENSE for more details.
 #
-# Copyright: Red Hat Inc. 2019
+# Copyright: Red Hat Inc. 2019, 2023
 # Author: Andrei Stepanov <astepano@redhat.com>
 
 
 PROG="${PROG:-${0##*/}}"
 
-debug() {
-    if [ -n "$DEBUG" ]; then
-        echo "$*" >&2
-    fi
-}
+# Source `mtps-setup' from $PATH
+if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
+# If previous fails source `mtps-setup` from this script dir
+if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
 msg_usage() {
     cat << EOF
@@ -85,6 +84,7 @@ MMD="${MMD:-}"
 LOGS_DIR="${LOGS_DIR:-mtps-logs}"
 
 debug "MMD: $MMD"
+debug "Use ${YUMDNFCMD}"
 
 # Test correct invocation
 if [ -z "$MMD" ]; then
@@ -129,11 +129,11 @@ for require in "${requires[@]}"; do
             "  Stream:      $stream"
         logfname="${LOGS_DIR%%/}/$TESTRUN_ID-enable-$name-$stream.log"
         echo "Reset module: $name" | tee -a "$logfname"
-        yum -y module reset "$name" 2>&1 | tee -a "$logfname"
+        "${YUMDNFCMD}" -y module reset "$name" 2>&1 | tee -a "$logfname"
         test_status="${PIPESTATUS[0]}"
         if [ "$test_status" -eq "0" ]; then
             echo "Enable module: ${name}:${stream}" | tee -a "$logfname"
-            yum -y module enable "${name}:${stream}" 2>&1 | tee -a "$logfname"
+            "${YUMDNFCMD}" -y module enable "${name}:${stream}" 2>&1 | tee -a "$logfname"
             test_status="${PIPESTATUS[0]}"
         fi
         if [ "$test_status" -ne "0" ]; then

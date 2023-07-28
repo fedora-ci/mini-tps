@@ -11,17 +11,15 @@
 #
 # See LICENSE for more details.
 #
-# Copyright: Red Hat Inc. 2018, 2022
+# Copyright: Red Hat Inc. 2018, 2022, 2023
 # Author: Andrei Stepanov <astepano@redhat.com>
-
 
 PROG="${PROG:-${0##*/}}"
 
-debug() {
-    if [ -n "$DEBUG" ]; then
-        echo "$*" >&2
-    fi
-}
+# Source `mtps-setup' from $PATH
+if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
+# If previous fails source `mtps-setup` from this script dir
+if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
 # NEVRA - is a new package to test.
 msg_usage() {
@@ -34,7 +32,7 @@ Options:
 -s, --selinux=<0|1>                          one of: 0|1, defult: run tests in current selinux mode
 -l, --skiplangpack                           Do not test https://fedoraproject.org/wiki/Packaging:Langpacks
 -x, --scriptletcheck                         check output and fail if problems with scriptlets are found
--r, --repo=NAME                              YUM repo name, must be present, check with: yum repolist --enabled
+-r, --repo=NAME                              ${YUMDNFCMD} repo name, must be present, check with: ${YUMDNFCMD} repolist --enabled
 -c, --critical                               tests set are critical, example: update, downgrade
 -f, --rpmverify                              run "rpm --verify" to verify that what's installed matches the metadata in the RPM database
 -h, --help                                   display this help and exit
@@ -148,7 +146,7 @@ fi
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=584525
 nevras_in_repo="$(
-    yum repoquery \
+    "$YUMDNFCMD" repoquery \
         --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}" 2>&1 | \
         sed -n -e "/^${REPONAME}[[:space:]]/ s/^${REPONAME}[[:space:]]//p"
 )"
@@ -173,8 +171,8 @@ TESTRUN_ID="$(date +%H%M%S)"
 if [ -z "${nevras_in_repo// /}" ]; then
     logfname="${LOGS_DIR%%/}/FAIL-$TESTRUN_ID-$TEST.log"
     echo "Test '$TEST' failed due no packages for testing in repo '$REPONAME:'." | tee -a "$logfname"
-    echo "Output for: yum repo-pkgs "$REPONAME" list --showduplicates" | tee -a "$logfname"
-    yum repo-pkgs "$REPONAME" list --showduplicates 2>&1 | tee -a "$logfname"
+    echo "Output for: ${YUMDNFCMD} repo-pkgs "$REPONAME" list --showduplicates" | tee -a "$logfname"
+    "$YUMDNFCMD" repo-pkgs "$REPONAME" list --showduplicates 2>&1 | tee -a "$logfname"
     exit 1
 fi
 
@@ -189,7 +187,7 @@ for nevra in $nevras_in_repo; do
     fi
     START_TIME="$NEW_START_TIME"
     # Save current YUM transaction ID, to revert it later
-    START="$(yum history list | sed -n -e '0,/^-\+$/d;s/^[[:space:]]*//p' | tr -s ' ' | cut -f 1 -d ' ' | sed -n -e '1p')"
+    START="$("$YUMDNFCMD" history list | sed -n -e '0,/^-\+$/d;s/^[[:space:]]*//p' | tr -s ' ' | cut -f 1 -d ' ' | sed -n -e '1p')"
     box_out \
         "TEST" \
         "====" \
@@ -197,7 +195,7 @@ for nevra in $nevras_in_repo; do
         "  TYPE:        $TEST" \
         "  NEVRA:       $nevra" \
         "  SELINUX:     $(getenforce || echo "unknown")" \
-        "  YUM HISTORY: $START"
+        "  ${YUMDNFCMD} HISTORY: $START"
     logfname="${LOGS_DIR%%/}/$TESTRUN_ID-$TEST-$nevra.log"
     mtps-pkg-test --test="$TEST" ${CHECK_SCRIPTLETS:+--scriptletcheck} ${RPM_VERIFY:+--rpmverify} --nevra="$nevra" 2>&1 | tee "$logfname"
     test_status="${PIPESTATUS[0]}"

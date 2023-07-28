@@ -13,16 +13,15 @@ shopt -s extglob
 #
 # See LICENSE for more details.
 #
-# Copyright: Red Hat Inc. 2018
+# Copyright: Red Hat Inc. 2018, 2023
 # Author: Andrei Stepanov <astepano@redhat.com>
 
-RET_NO_PKG=7
+# Source `mtps-setup' from $PATH
+if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
+# If previous fails source `mtps-setup` from this script dir
+if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
-debug() {
-    if [ -n "$DEBUG" ]; then
-        echo "$*" >&2
-    fi
-}
+RET_NO_PKG=7
 
 rpms_from_answer() {
     local arch="$1" && shift
@@ -445,7 +444,7 @@ filter_available() {
     for rpm in $rpms; do
         rpm_file="$(basename "$rpm")"
         name="$(from_rpm_name "${rpm_file}" "name")"
-        yum info "${name}.${arch}" >/dev/null 2>&1
+        "$YUMDNFCMD" info "${name}.${arch}" >/dev/null 2>&1
         ret="$?"
         if [ "$ret" -ne 0 ]; then
             echo "Skipping as it is absent in shipped repos: $name" >&2

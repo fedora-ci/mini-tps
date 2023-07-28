@@ -13,17 +13,26 @@
 #
 # Copyright: Red Hat Inc. 2023
 # Author: Michal Srb <michal@redhat.com>
+# Andrei Stepanov <astepano@redhat.com>
 
 # Prepare system for install, remove, downgrade, update tests
 
+set -x
+
+# Source mtps-setup from $PATH
+if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
+# If previous fails source `mtps-setup` from this script dir
+# shellcheck disable=SC1091
+if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/../../mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
+
 echo "Preparing the system for testing..."
 
-if [ -n "$FIXREPO" ]; then
+if [ -n "${FIXREPO:-}" ]; then
     echo "Ignoring \"--fixrepo\" option as it has no effect on Fedora profiles"
 fi
 
 # Add buildroot repo, if needed
-if [ -n "$ENABLE_BUILD_ROOT" ]; then
+if [ -n "${ENABLE_BUILD_ROOT:-}" ]; then
     echo "Enabling buildroot repository..."
     FEDORA_NUMBER=$(echo "${PROFILE}" | awk -F'-' '{ print $2 }')
 
@@ -38,16 +47,16 @@ EOF
 fi
 
 # Make sure fedora and fedora-updates repos are enabled
-dnf config-manager --set-enabled 'fedora' 'updates'
+"$YUMDNFCMD" config-manager --set-enabled 'fedora' 'updates'
 # Disable all COPR repositories (mini-tps, ...)
-dnf config-manager --set-disabled 'copr:*'
+"$YUMDNFCMD" config-manager --set-disabled 'copr:*'
 
 echo "Recreating the DNF cache..."
-dnf clean all
-dnf makecache
+"$YUMDNFCMD" clean all
+"$YUMDNFCMD" makecache
 
 echo "Installing packages required for testing..."
-dnf install -y createrepo_c
+"$YUMDNFCMD" install -y createrepo_c
 
 echo "Updating the system..."
-dnf update -y
+"$YUMDNFCMD" update -y

@@ -11,17 +11,16 @@
 #
 # See LICENSE for more details.
 #
-# Copyright: Red Hat Inc. 2019
+# Copyright: Red Hat Inc. 2019, 2023
 # Author: Andrei Stepanov <astepano@redhat.com>
 
 
 PROG="${PROG:-${0##*/}}"
 
-debug() {
-    if [ -n "$DEBUG" ]; then
-        echo "$*" >&2
-    fi
-}
+# Source `mtps-setup' from $PATH
+if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
+# If previous fails source `mtps-setup` from this script dir
+if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
 box_out() {
     local s=("$@")
@@ -119,24 +118,24 @@ fi
 p_remove() {
     local nsvc="$1" && shift
     local profile="$1" && shift
-    if ! dnf module info "$nsvc" 2>/dev/null | grep -q -E "^Profiles[[:space:]]*:.*${profile}[^,]*\[i\]"; then
+    if ! "$YUMDNFCMD" module info "$nsvc" 2>/dev/null | grep -q -E "^Profiles[[:space:]]*:.*${profile}[^,]*\[i\]"; then
         echo "Profile is not installed."
         return
     fi
-    yum -y module remove "$nsvc"
+    "$YUMDNFCMD" -y module remove "$nsvc"
 }
 
 p_install() {
     local nsvc="$1" && shift
     local profile="$1" && shift
     local name="${nsvc%%:*}"
-    if dnf module info "$nsvc" 2>/dev/null | grep -q -E "^Profiles[[:space:]]*:.*${profile}[^,]*\[i\]"; then
+    if "$YUMDNFCMD" module info "$nsvc" 2>/dev/null | grep -q -E "^Profiles[[:space:]]*:.*${profile}[^,]*\[i\]"; then
         echo "Profile is already installed."
         return
     fi
-    yum -y module reset "$nsvc"
-    yum -y module enable "$nsvc"
-    yum -y module install "$nsvc/$profile"
+    "$YUMDNFCMD" -y module reset "$nsvc"
+    "$YUMDNFCMD" -y module enable "$nsvc"
+    "$YUMDNFCMD" -y module install "$nsvc/$profile"
 }
 
 case $TEST in
