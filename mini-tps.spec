@@ -39,18 +39,22 @@ mkdir -p %{buildroot}%{_libexecdir}/mini-tps/viewer/
 cp -pf viewer/generate-result-json %{buildroot}%{_libexecdir}/mini-tps/viewer/
 
 # profiles
-mkdir -p %{buildroot}%{_datarootdir}/mini-tps/profiles/{rhel,centos-stream}/
+mkdir -p %{buildroot}%{_datarootdir}/mini-tps/profiles/{rhel,centos-stream,fedora}/
 # rhel
 cp -rfp profiles/rhel/{repos,optrepos}/ %{buildroot}%{_datarootdir}/mini-tps/profiles/rhel/
 # centos-stream
 cp -rfp profiles/centos-stream/{repos,optrepos}/ %{buildroot}%{_datarootdir}/mini-tps/profiles/centos-stream/
+# fedora
+cp -rfp profiles/fedora/repos/ %{buildroot}%{_datarootdir}/mini-tps/profiles/fedora/
 
 # prepare scripts
-mkdir -p %{buildroot}%{_libexecdir}/mini-tps/{rhel,centos-stream}/
+mkdir -p %{buildroot}%{_libexecdir}/mini-tps/{rhel,centos-stream,fedora}/
 # rhel
 cp -pf profiles/rhel/prepare-system %{buildroot}%{_libexecdir}/mini-tps/rhel/
 # centos-stream
 cp -pf profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps/centos-stream/
+# fedora
+cp -pf profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mini-tps/fedora/
 
 %files
 %{_prefix}/local/bin/mtps*

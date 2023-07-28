@@ -1,0 +1,53 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2023
+# Author: Michal Srb <michal@redhat.com>
+
+# Prepare system for install, remove, downgrade, update tests
+
+echo "Preparing the system for testing..."
+
+if [ -n "$FIXREPO" ]; then
+    echo "Ignoring \"--fixrepo\" option as it has no effect on Fedora profiles"
+fi
+
+# Add buildroot repo, if needed
+if [ -n "$ENABLE_BUILD_ROOT" ]; then
+    echo "Enabling buildroot repository..."
+    FEDORA_NUMBER=$(echo "${PROFILE}" | awk -F'-' '{ print $2 }')
+
+cat << EOF > "/etc/yum.repos.d/${PROFILE}.repo"
+[${PROFILE}-buildroot]
+name=${PROFILE} Buildroot
+baseurl=https://kojipkgs.fedoraproject.org/repos/f${FEDORA_NUMBER}-build/latest/x86_64/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+EOF
+fi
+
+# Make sure fedora and fedora-updates repos are enabled
+dnf config-manager --set-enabled 'fedora' 'updates'
+# Disable all COPR repositories (mini-tps, ...)
+dnf config-manager --set-disabled 'copr:*'
+
+echo "Recreating the DNF cache..."
+dnf clean all
+dnf makecache
+
+echo "Installing packages required for testing..."
+dnf install -y createrepo_c
+
+echo "Updating the system..."
+dnf update -y
