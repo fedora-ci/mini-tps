@@ -11,7 +11,7 @@
 #
 # See LICENSE for more details.
 #
-# Copyright: Red Hat Inc. 2018
+# Copyright: Red Hat Inc. 2018, 2023
 # Author: Andrei Stepanov <astepano@redhat.com>
 
 # Prepare system for install, remove, downgrade, update tests
@@ -20,11 +20,10 @@
 
 PROG="${PROG:-${0##*/}}"
 
-debug() {
-    if [ -n "$DEBUG" ]; then
-        echo "$*" >&2
-    fi
-}
+# Source `mtps-setup' from $PATH
+if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
+# If previous fails source `mtps-setup` from this script dir
+if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
 msg_usage() {
     cat << EOF

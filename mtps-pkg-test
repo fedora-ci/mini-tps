@@ -11,7 +11,7 @@
 #
 # See LICENSE for more details.
 #
-# Copyright: Red Hat Inc. 2018
+# Copyright: Red Hat Inc. 2018, 2023
 # Author: Andrei Stepanov <astepano@redhat.com>
 
 
@@ -35,11 +35,10 @@
 
 PROG="${PROG:-${0##*/}}"
 
-debug() {
-    if [ -n "$DEBUG" ]; then
-        echo "$*" >&2
-    fi
-}
+# Source `mtps-setup' from $PATH
+if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
+# If previous fails source `mtps-setup` from this script dir
+if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
 from_nevra() {
     # Input: foo-1.0-1.i386 or foo-1:1.0-1.i386
@@ -176,8 +175,8 @@ run_with_scriptlet_check() {
 pkg_can_be_removed() {
     local nevra="$1" && shift
     local name="$(from_nevra "$nevra" "name")"
-    debug "${FUNCNAME[0]}: checking '$name' can be removed with help of yum."
-    yum --assumeyes --setopt "tsflags=test" "remove" "$name" >"$DEBUG_OUT" 2>&1
+    debug "${FUNCNAME[0]}: checking '$name' can be removed with help of ${YUMDNFCMD}."
+    "$YUMDNFCMD" --assumeyes --setopt "tsflags=test" "remove" "$name" >"$DEBUG_OUT" 2>&1
     if [ ${PIPESTATUS[0]} -eq 0 ]; then
         echo "${FUNCNAME[0]}: $name can be removed."
         return 0
@@ -201,7 +200,7 @@ pkg_remove_any() {
     #Removing:
     # kernel-rt-kvm   x86_64  4.18.0-39.rt9.82.el8   @rhel-8-buildroot      361 k
     # kernel-rt-kvm   x86_64  4.18.0-37.rt9.80.el8   @rhel-8-buildroot-old  361 k
-    yum remove -y --allowerasing "$name" || :
+    "$YUMDNFCMD" remove -y --allowerasing "$name" || :
     # yum returns 1 for removing non-existing package for yum4/dnf
     local ret=0
     pkg_is_present "$name" && ret=1
@@ -217,10 +216,10 @@ pkg_install_new_if_absent() {
         return 0
     fi
     local ret=0
-    yum install -y --allowerasing "$nevra" || ret=1
+    "$YUMDNFCMD" install -y --allowerasing "$nevra" || ret=1
     if [ "$ret" != "0" ]; then
         echo "Installation of $nevra failed."
-        echo "See yum command output above for more information"
+        echo "See $YUMDNFCMD command output above for more information"
         exit 1
     fi
     if pkg_is_absent "$name"; then
@@ -339,7 +338,7 @@ pkg_downgrade_if_present() {
         echo "Do not downgrade package: $nevra. There is already installed old package: $installed_nevra_old"
         return 0
     fi
-    yum downgrade -y --allowerasing "$name"
+    "$YUMDNFCMD" downgrade -y --allowerasing "$name"
 }
 
 get_old_nevra() {
@@ -351,7 +350,7 @@ get_old_nevra() {
     local arch="$(from_nevra "$nevra" "arch")"
     # Find previous version of the package.
     local old_nevras=($(
-        yum repoquery -q $name.$arch --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" | \
+        "$YUMDNFCMD" repoquery -q $name.$arch --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" | \
         tr -s ' ' | \
         grep $arch | \
         sed -n -e "/^${name}-${epoch}:${version}-${release}.${arch}$/"'!p'
@@ -388,7 +387,7 @@ pkg_remove_and_any_never() {
             continue
         fi
         echo "Remove nevra: $to_remove"
-        yum remove -y --allowerasing "$to_remove" || :
+        "$YUMDNFCMD" remove -y --allowerasing "$to_remove" || :
     done
 }
 
@@ -405,7 +404,7 @@ pkg_remove_any_older() {
         fi
         if nevra_older_then "$to_remove" "$nevra"; then
             echo "Remove older nevra: $to_remove"
-            yum remove -y --allowerasing "$to_remove" || :
+            "$YUMDNFCMD" remove -y --allowerasing "$to_remove" || :
         else
             echo "Do not remove newer package: $to_remove"
             continue
@@ -424,7 +423,7 @@ pkg_install_old_if_absent() {
     fi
     local old_nevra="$(get_old_nevra "$nevra")"
     echo "Install an older version for $nevra: $old_nevra"
-    yum install -y --allowerasing "$old_nevra"
+    "$YUMDNFCMD" install -y --allowerasing "$old_nevra"
     if pkg_is_absent "$old_nevra"; then
         echo "Could not install: $old_nevra."
         return 1
@@ -447,7 +446,7 @@ pkg_update_to_new_if_present() {
         echo "Do not update a new package: $installed_nevra_new."
         return 0
     fi
-    yum update -y --allowerasing "$nevra"
+    "$YUMDNFCMD" update -y --allowerasing "$nevra"
     if pkg_is_absent "$nevra"; then
         echo "Could not update to: $nevra."
         return 1
@@ -472,7 +471,7 @@ pkg_downgrade_to_old() {
         return 1
     fi
     # dnf return 1 if no downgrade available
-    yum downgrade -y --allowerasing "$name"
+    "$YUMDNFCMD" downgrade -y --allowerasing "$name"
 }
 
 box_out() {
@@ -516,7 +515,7 @@ Usage:
 $PROG <options>
 
 Options:
--s, --start=YUM_HISTORY_TRANSACTION_ID       reset system to YUM history transition before start the tests
+-s, --start=YUM_HISTORY_TRANSACTION_ID       reset system to "$YUMDNFCMD" YUM history transition before start the tests
 -t, --test=TYPE                              one of: install, update, downgrade, remove
 -n, --nevra=NEVRA                            package to test: name-[epoch:]version-release.arch
 -r, --revertchanges                          revert changes made to system
@@ -576,9 +575,9 @@ done
 do_yum_revert() {
     rc=$?;
     trap - SIGINT SIGTERM SIGABRT EXIT # clear the trap
-    echo "Revert YUM history to: $HISTORY_ID"
-    echo "Rollback to YUM history transaction ID: $HISTORY_ID"
-    yum -y history rollback "$HISTORY_ID"
+    echo "Revert $YUMDNFCMD history to: $HISTORY_ID"
+    echo "Rollback to $YUMDNFCMD history transaction ID: $HISTORY_ID"
+    "$YUMDNFCMD" -y history rollback "$HISTORY_ID"
     exit $rc
 }
 
@@ -609,14 +608,14 @@ fi
 
 if [ -n "$REVERT" ]; then
     # Save current YUM transaction ID, to revert it later
-    HISTORY_ID="$(yum history list | sed -n -e '0,/^-\+$/d;s/^[[:space:]]*//p' | tr -s ' ' | cut -f 1 -d ' ' | sed -n -e '1p')"
-    echo "Current YUM history transaction ID: $HISTORY_ID"
+    HISTORY_ID="$("$YUMDNFCMD" history list | sed -n -e '0,/^-\+$/d;s/^[[:space:]]*//p' | tr -s ' ' | cut -f 1 -d ' ' | sed -n -e '1p')"
+    echo "Current $YUMDNFCMD history transaction ID: $HISTORY_ID"
     trap do_yum_revert SIGINT SIGTERM SIGABRT EXIT
 fi
 
 if [ -n "$START" ]; then
-    echo "Revert YUM history before test run to: $START"
-    yum -y history rollback "$START"
+    echo "Revert $YUMDNFCMD history before test run to: $START"
+    "$YUMDNFCMD" -y history rollback "$START"
 fi
 
 if [ "$TEST" = "install" -o "$TEST" = "remove" ]; then

@@ -1,0 +1,66 @@
+#!/bin/bash -efu
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2023
+# Author: Andrei Stepanov <astepano@redhat.com>
+
+#
+# This file is `source` by all mini-tps scripts
+#
+
+# What command to used for yum/dnf command defined by next priority:
+# 1. Env variable MINITPSYUMDNFCMD
+# 2. If /usr/bin/yum is symlink:
+#
+#   * read this symlink
+#   * <=f38, c8s, c9s, rhel8, rhel9:
+#
+#      lrwxrwxrwx. 1 root root 5 May 29 00:00 /usr/bin/yum -> dnf-3
+#
+#   * >=F39:
+#
+#      lrwxrwxrwx. 1 root root 4 Jul 19 00:00 /usr/bin/yum -> dnf5
+#
+# 3. If /usr/bin/yum is present then use `yum`
+# 4. Else use `dnf`
+#
+
+YUMDNFCMD="${MINITPSYUMDNFCMD:-}"
+PROTECTEDCFG="/etc/dnf/protected.d/mini-tps-old-dnf.conf"
+
+if [ -z "$YUMDNFCMD" ]; then
+    if [ -L "/usr/bin/yum" ]; then
+        YUMDNFCMD="yum"
+        YUMLINK="$(readlink "/usr/bin/yum")"
+        if [[ "$YUMLINK" == *dnf5* && -x "/usr/bin/dnf-3" ]]; then
+            YUMDNFCMD="/usr/bin/dnf-3"
+            if [ "$EUID" -eq 0 ]; then
+                if ! rpm -q python3-dnf >/dev/null; then
+                    dnf install -y python3-dnf
+                    if [ ! -e "$PROTECTEDCFG" ]; then
+                        echo "python3-dnf" >> "$PROTECTEDCFG"
+                    fi
+                fi
+            fi
+        fi
+    else
+        YUMDNFCMD="dnf"
+    fi
+fi
+
+debug() {
+    if [ -n "$DEBUG" ]; then
+        echo "$*" >&2
+    fi
+}
+
