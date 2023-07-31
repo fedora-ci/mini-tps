@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 160%{?dist}
+Release: 161%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -63,6 +63,9 @@ cp -pf profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mini-tps/fedora
 %{_libexecdir}/mini-tps/*
 
 %changelog
+* Mon Jul 31 2023 Andrei Stepanov <astepano@redhat.com> - 0.1-161
+- new build
+
 * Fri Jul 28 2023 Michal Srb <michal@redhat.com> - 0.1-160
 - Add profiles for Fedora
 
