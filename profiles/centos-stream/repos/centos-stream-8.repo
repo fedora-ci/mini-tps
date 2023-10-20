@@ -1,0 +1,240 @@
+###### BASE OS ###########
+[baseos]
+name=CentOS Stream 8 - BaseOS
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/BaseOS/x86_64/os/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+countme=1
+enabled=1
+skip_if_unavailable=True
+
+[baseos-debug]
+name=CentOS Stream 8 - BaseOS - Debug
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/BaseOS/x86_64/debug/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+[baseos-source]
+name=CentOS Stream 8 - BaseOS - Source
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/BaseOS/source/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+
+########### APPSTREAM ##################
+[appstream]
+name=CentOS Stream 8 - AppStream
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/AppStream/x86_64/os/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+countme=1
+enabled=1
+skip_if_unavailable=True
+
+[appstream-debug]
+name=CentOS Stream 8 - AppStream - Debug
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/AppStream/x86_64/debug/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+[appstream-source]
+name=CentOS Stream 8 - AppStream - Source
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/AppStream/source/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+
+########### HighAvailability ##################
+[highavailability]
+name=CentOS Stream 8 - HighAvailability
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/HighAvailability/x86_64/os/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+countme=1
+enabled=1
+skip_if_unavailable=True
+
+[highavailability-debug]
+name=CentOS Stream 8 - HighAvailability - Debug
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/HighAvailability/x86_64/debug/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+[highavailability-source]
+name=CentOS Stream 8 - HighAvailability - Source
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/HighAvailability/source/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+
+########### NFV ##################
+[nfv]
+name=CentOS Stream 8 - NFV
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/NFV/x86_64/os/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+countme=1
+enabled=1
+skip_if_unavailable=True
+
+[nfv-debug]
+name=CentOS Stream 8 - NFV - Debug
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/NFV/x86_64/debug/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+[nfv-source]
+name=CentOS Stream 8 - NFV - Source
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/NFV/source/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+
+########### PowerTools ##################
+[nfv]
+name=CentOS Stream 8 - PowerTools
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/PowerTools/x86_64/os/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+countme=1
+enabled=1
+skip_if_unavailable=True
+
+[nfv-debug]
+name=CentOS Stream 8 - PowerTools - Debug
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/PowerTools/x86_64/debug/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+[nfv-source]
+name=CentOS Stream 8 - PowerTools - Source
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/PowerTools/source/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+
+########### RT ##################
+[rt]
+name=CentOS Stream 8 - RT
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/RT/x86_64/os/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+countme=1
+enabled=1
+skip_if_unavailable=True
+
+[rt-debug]
+name=CentOS Stream 8 - RT - Debug
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/RT/x86_64/debug/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+[rt-source]
+name=CentOS Stream 8 - RT - Source
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/RT/source/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+
+########### ResilientStorage ##################
+[resilientstorage]
+name=CentOS Stream 8 - ResilientStorage
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/ResilientStorage/x86_64/os/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+countme=1
+enabled=1
+skip_if_unavailable=True
+
+[resilientstorage-debug]
+name=CentOS Stream 8 - ResilientStorage - Debug
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/ResilientStorage/x86_64/debug/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+[resilientstorage-source]
+name=CentOS Stream 8 - ResilientStorage - Source
+baseurl=https://composes.stream.centos.org/stream-8/production/latest-CentOS-Stream/compose/ResilientStorage/source/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+
+############# BUILDROOT ##############
+
+[centos-stream-buildroot]
+name=CentOS Stream 8 Buildroot
+baseurl=https://kojihub.stream.centos.org/kojifiles/repos/c8s-build/latest/x86_64/
+enabled=0
+gpgcheck=0
+skip_if_unavailable=True
+module_hotfixes=1
