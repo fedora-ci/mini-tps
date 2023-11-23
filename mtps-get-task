@@ -746,7 +746,7 @@ if [ ${#urls[@]} -eq 0 ]; then
 fi
 
 # Download RPMs
-for url in ${urls[@]}; do
+for url in "${urls[@]}"; do
     echo "$url"
     download_rpm "$url"
 done

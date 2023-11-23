@@ -96,7 +96,7 @@ nevra_older_then() {
         return 0
     fi
     # False
-    return -1
+    return 1
 }
 
 run_with_scriptlet_check() {
