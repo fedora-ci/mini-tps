@@ -28,7 +28,7 @@ rpms_from_answer() {
     local xml="$1" && shift
     local tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='rpms']//value/string/text()" 
+    local cmd="cat //member[name='rpms']//value/string/text()"
     local rpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.$arch\.rpm/p")"
     debug "Arch $arch has next rpms:"
     debug "$rpm"
@@ -40,7 +40,7 @@ srpms_from_answer() {
     local xml="$1" && shift
     local tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='srpms']//value/string/text()" 
+    local cmd="cat //member[name='srpms']//value/string/text()"
     local srpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.rpm/p")"
     debug "Has next srpms:"
     debug "$srpm"

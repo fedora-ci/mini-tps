@@ -37,7 +37,7 @@ Options:
 -h, --help                              display this help and exit
 -v, --verbose                           turn on debug
 -p, --profile=PROFILE                   use profile
--f, --fixrepo                           fix repo to specific compose ID. Resolve the latest to 
+-f, --fixrepo                           fix repo to specific compose ID. Resolve the latest to
 -l, --list                              list available profiles
     --optrepo=REPO1 --optrepo=REPO2     use optional repos
     --optlist                           list available profiles

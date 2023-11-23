@@ -215,4 +215,3 @@ gpgcheck=0
 skip_if_unavailable=True
 # Enable module_hotfixes to fix https://issues.redhat.com/browse/OSCI-2620
 module_hotfixes=1
-

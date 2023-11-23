@@ -176,7 +176,7 @@ if [ -z "${nevras_in_repo// /}" ]; then
     exit 1
 fi
 
-# Prefixe all files with common suffix
+# Prefix all files with common suffix
 ret=0
 for nevra in $nevras_in_repo; do
     # Make 1 sec between audit entries

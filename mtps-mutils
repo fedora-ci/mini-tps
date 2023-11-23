@@ -22,69 +22,81 @@
 #
 # https://github.com/fedora-modularity/libmodulemd
 
-import os
-import sys
+import argparse
+import gi
 import gzip
 import logging
-import argparse
+import sys
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-import gi
+
 md1 = None
 md2 = None
 
 # gi doesn't allow load two Modulemd at the same time
 
 try:
-    gi.require_version('Modulemd', '2.0') # noqa
+    gi.require_version("Modulemd", "2.0")  # noqa
     from gi.repository import Modulemd as md2
-except:
+except Exception:
     pass
 
 try:
-    gi.require_version('Modulemd', '1.0') # noqa
+    gi.require_version("Modulemd", "1.0")  # noqa
     from gi.repository import Modulemd as md1
-except:
+except Exception:
     pass
 
 if not md1 and not md2:
     logger.debug("Cannot load modulemd library.")
     sys.exit(1)
 
-parser = argparse.ArgumentParser(
-    description='A set of utils for mtps..')
+parser = argparse.ArgumentParser(description="A set of utils for mtps..")
 group = parser.add_mutually_exclusive_group(required=True)
-parser.add_argument("-m", "--modulemd", help="Modulemd file path. Can be .gz",
-                   default="modulemd.txt", metavar='FILE')
-group.add_argument("-f", "--getfiltered", action="store_true",
-                   help="Print filtered packages from module.")
-group.add_argument("-a", "--getfartifacts", action="store_true",
-                   help="Print artifacts from module.")
-group.add_argument("--getprofiles", action="store_true",
-                   help="Print profiles from module.")
-group.add_argument("--getstream", action="store_true",
-                   help="Print stream from module.")
-group.add_argument("--getcontext", action="store_true",
-                   help="Print context from module.")
-group.add_argument("--getversion", action="store_true",
-                   help="Print version from module.")
-group.add_argument("--getnsvc", action="store_true",
-                   help="Print n:s:v:c from module.")
-group.add_argument("--getrequires", action="store_true",
-                   help="Print list n:s required modules.")
+parser.add_argument(
+    "-m",
+    "--modulemd",
+    help="Modulemd file path. Can be .gz",
+    default="modulemd.txt",
+    metavar="FILE",
+)
+group.add_argument(
+    "-f",
+    "--getfiltered",
+    action="store_true",
+    help="Print filtered packages from module.",
+)
+group.add_argument(
+    "-a", "--getfartifacts", action="store_true", help="Print artifacts from module."
+)
+group.add_argument(
+    "--getprofiles", action="store_true", help="Print profiles from module."
+)
+group.add_argument("--getstream", action="store_true", help="Print stream from module.")
+group.add_argument(
+    "--getcontext", action="store_true", help="Print context from module."
+)
+group.add_argument(
+    "--getversion", action="store_true", help="Print version from module."
+)
+group.add_argument("--getnsvc", action="store_true", help="Print n:s:v:c from module.")
+group.add_argument(
+    "--getrequires", action="store_true", help="Print list n:s required modules."
+)
 args = parser.parse_args()
 mmds = []
 
 if args.modulemd:
     if args.modulemd.endswith(".gz"):
-        f = gzip.open(args.modulemd, 'rb')
+        f = gzip.open(args.modulemd, "rb")
     else:
-        f = open(args.modulemd, 'rb')
-    md = f.read().decode(encoding='utf-8')
+        f = open(args.modulemd, "rb")
+    md = f.read().decode(encoding="utf-8")
     f.close()
 
 if md2:
+
     def get_nsvc(module):
         nsvc = "%s:%s:%s:%s" % (
             module.get_module_name(),
@@ -93,6 +105,7 @@ if md2:
             module.get_all_streams()[0].get_context(),
         )
         return nsvc
+
     # 1 brew build == 1 stream
     index = md2.ModuleIndex.new()
     ret, failures = index.update_from_string(md, True)
@@ -146,9 +159,9 @@ if md2:
             for stream in module.get_all_streams():
                 deps = stream.get_dependencies()
                 for dep in deps:
-                    req_modules =  dep.get_runtime_modules()
+                    req_modules = dep.get_runtime_modules()
                     for req_module in req_modules:
-                        if req_module == 'platform':
+                        if req_module == "platform":
                             continue
                         req_streams = dep.get_runtime_streams(req_module)
                         line = ""
@@ -157,10 +170,11 @@ if md2:
                         line = line.strip()
                         if line:
                             print(line)
-                            #[expression(i) for i in old_list if filter(i)]
-                            #[print("md_st") for req_stream in req_streams 
+                            # [expression(i) for i in old_list if filter(i)]
+                            # [print("md_st") for req_stream in req_streams
 
 if md1 and not md2:
+
     def get_nsvc(mmd):
         nsvc = "%s:%s:%s:%s" % (
             mmd.peek_name(),
@@ -169,6 +183,7 @@ if md1 and not md2:
             mmd.peek_context(),
         )
         return nsvc
+
     mmds = md1.objects_from_string(md)
     logger.debug("Found modules in {}: {}".format(args.modulemd, len(mmds)))
     if args.getfiltered:
@@ -209,7 +224,7 @@ if md1 and not md2:
             for dep in deps:
                 req_modules = dep.peek_requires()
                 for req_module in req_modules:
-                    if req_module == 'platform':
+                    if req_module == "platform":
                         continue
                     req_streams = req_modules[req_module].get()
                     line = ""
@@ -218,6 +233,5 @@ if md1 and not md2:
                     line = line.strip()
                     if line:
                         print(line)
-                        #[expression(i) for i in old_list if filter(i)]
-                        #[print("md_st") for req_stream in req_streams 
-
+                        # [expression(i) for i in old_list if filter(i)]
+                        # [print("md_st") for req_stream in req_streams
