@@ -1,10 +1,10 @@
 Name: mini-tps
 Version: 0.1
-Release: 161%{?dist}
+Release: 162%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
-URL: https://gitlab.cee.redhat.com/osci/mini-tps
+URL:     https://github.com/fedora-ci/mini-tps
 Source0: %{name}.tar.gz
 Requires: yum-utils
 # List of packages for wich do not run 'remove' test.
@@ -22,7 +22,7 @@ Requires: libselinux-utils
 Light version of TPS
 
 %prep
-%setup -n %{name}
+%autosetup -n %{name}
 
 %build
 
@@ -63,6 +63,9 @@ cp -pf profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mini-tps/fedora
 %{_libexecdir}/mini-tps/*
 
 %changelog
+* Fri Nov 24 2023 Jiri Popelka <jpopelka@redhat.com> - 0.1-162
+- URL update
+
 * Mon Jul 31 2023 Andrei Stepanov <astepano@redhat.com> - 0.1-161
 - new build
 
