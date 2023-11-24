@@ -115,15 +115,13 @@ if md2:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                filtered = stream.get_rpm_filters()
-                for filtered in filtered:
+                for filtered in stream.get_rpm_filters():
                     print(filtered)
     if args.getfartifacts:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                artifacts = stream.get_rpm_artifacts()
-                for artifact in artifacts:
+                for artifact in stream.get_rpm_artifacts():
                     print(artifact)
     if args.getprofiles:
         for name in module_names:
@@ -140,32 +138,26 @@ if md2:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                context = stream.get_context()
-                print(context)
+                print(stream.get_context())
     if args.getversion:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                version = stream.get_version()
-                print(version)
+                print(stream.get_version())
     if args.getnsvc:
         for name in module_names:
             module = index.get_module(name)
-            nsvc = get_nsvc(module)
-            print(nsvc)
+            print(get_nsvc(module))
     if args.getrequires:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                deps = stream.get_dependencies()
-                for dep in deps:
-                    req_modules = dep.get_runtime_modules()
-                    for req_module in req_modules:
+                for dep in stream.get_dependencies():
+                    for req_module in dep.get_runtime_modules():
                         if req_module == "platform":
                             continue
-                        req_streams = dep.get_runtime_streams(req_module)
                         line = ""
-                        for req_stream in req_streams:
+                        for req_stream in dep.get_runtime_streams(req_module):
                             line += " " + req_module + ":" + req_stream
                         line = line.strip()
                         if line:
@@ -188,31 +180,25 @@ if md1 and not md2:
     logger.debug("Found modules in {}: {}".format(args.modulemd, len(mmds)))
     if args.getfiltered:
         for mmd in mmds:
-            filtered = mmd.peek_rpm_filter().get()
-            for filtered in filtered:
+            for filtered in mmd.peek_rpm_filter().get():
                 print(filtered)
     if args.getfartifacts:
         for mmd in mmds:
-            artifacts = mmd.peek_rpm_artifacts().get()
-            for artifact in artifacts:
+            for artifact in mmd.peek_rpm_artifacts().get():
                 print(artifact)
     if args.getprofiles:
         for mmd in mmds:
-            profiles = mmd.peek_profiles().keys()
-            for profile in profiles:
+            for profile in mmd.peek_profiles().keys():
                 print(profile)
     if args.getstream:
         for mmd in mmds:
-            stream = mmd.peek_stream()
-            print(stream)
+            print(mmd.peek_stream())
     if args.getcontext:
         for mmd in mmds:
-            context = mmd.peek_context()
-            print(context)
+            print(mmd.peek_context())
     if args.getversion:
         for mmd in mmds:
-            version = mmd.peek_version()
-            print(version)
+            print(mmd.peek_version())
     if args.getnsvc:
         for mmd in mmds:
             nsvc = get_nsvc(mmd)
@@ -220,15 +206,13 @@ if md1 and not md2:
             print(nsvc)
     if args.getrequires:
         for mmd in mmds:
-            deps = mmd.peek_dependencies()
-            for dep in deps:
+            for dep in mmd.peek_dependencies():
                 req_modules = dep.peek_requires()
                 for req_module in req_modules:
                     if req_module == "platform":
                         continue
-                    req_streams = req_modules[req_module].get()
                     line = ""
-                    for req_stream in req_streams:
+                    for req_stream in req_modules[req_module].get():
                         line += " " + req_module + ":" + req_stream
                     line = line.strip()
                     if line:

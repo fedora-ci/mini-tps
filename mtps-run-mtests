@@ -108,7 +108,7 @@ fi
 START_DATE="$(date '+%x')"
 START_TIME="$(date '+%T')"
 if [ -n "$SELINUX" ]; then
-    if ! [ "$SELINUX" -eq "0" -o "$SELINUX" -eq "1" ]; then
+    if ! [[ "$SELINUX" -eq 0 || "$SELINUX" -eq 1 ]]; then
         echo "Use: $PROG -h for help."
         exit
     fi
@@ -161,7 +161,7 @@ for profile in $profiles; do
         "  NSVC:        $nsvc" \
         "  PROFILE:     $profile" \
         "  SELINUX:     $(getenforce || echo "unknown")"
-    logfname="${LOGS_DIR%%/}/$TESTRUN_ID-profile-$TEST-$nsvc-$profile.log"
+    logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-profile-${TEST}-${nsvc}-${profile}.log"
     mtps-module-test --test="$TEST" --nsvc="$nsvc" --profile="$profile" $DEBUG 2>&1 | tee "$logfname"
     test_status="${PIPESTATUS[0]}"
     if [ "$test_status" -ne "0" ]; then

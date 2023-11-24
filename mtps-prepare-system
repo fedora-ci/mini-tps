@@ -18,7 +18,7 @@
 
 # This is independent script from Brew build.
 
-PROG="${PROG:-${0##*/}}"
+: "${PROG:=${0##*/}}"
 
 # Source `mtps-setup' from $PATH
 if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
@@ -45,26 +45,27 @@ Options:
 EOF
 }
 
-DEBUG="${DEBUG:-}"
-PROFILE="${RPOFILE:-}"
+: "${DEBUG:=}"
+: "${PROFILE:=}"
+: "${LIST:=}"
+: "${OPTLIST:=}"
+: "${ENABLE_BUILD_ROOT:=}"
+: "${FIXREPO:=}"
+: "${PFILE:=}"
+
 declare -a OPTREPOS
 OPTREPOS=()
-LIST="${LIST:-}"
-OPTLIST="${OPTLIST:-}"
-ENABLE_BUILD_ROOT="${ENABLE_BUILD_ROOT:-}"
-FIXREPO="${FIXREPO:-}"
-PFILE="${PFILE:-}"
+
+# shellcheck disable=SC2034
 REPOFILE="/etc/yum.repos.d/mini-tps.repo"
+# shellcheck disable=SC2034
 REPOFILE_OPT_PREFIX="mini-tps-opt"
 
-PROFILES_TOPDIR="${PROFILESTOP_DIR:-$(rpm --eval %_datarootdir)/mini-tps/profiles/}"
-if ! [ -d "$PROFILES_TOPDIR" ]; then
-    PROFILES_TOPDIR="$PWD/profiles/"
-    debug "Use dir for profiles: $PROFILES_TOPDIR"
+if ! [ -d "${PROFILES_TOPDIR:=$(rpm --eval %_datarootdir)/mini-tps/profiles/}" ]; then
+    debug "Use dir for profiles: ${PROFILES_TOPDIR:="$PWD/profiles/"}"
 fi
 
-# http://wiki.bash-hackers.org/howto/getopts_tutorial
-opt_str="$@"
+#opt_str="$@"
 opt=$(getopt -n "$0" --options "hvfp:l" --longoptions "help,fixrepo,verbose,enablebuildroot,profile:,list,optlist,optrepo:" -- "$@")
 eval set -- "$opt"
 while [[ $# -gt 0 ]]; do
@@ -117,15 +118,18 @@ if [ -z "${LIST}${PROFILE}${OPTLIST}" ]; then
 fi
 
 if [ -n "$LIST" ]; then
+    # shellcheck disable=SC2046
     find $(find "${PROFILES_TOPDIR}" -maxdepth 1 -mindepth 1 -type d -exec echo {}/repos/ \;) -type f -name "*.repo" | sed -n -e 's/\.repo$//;s/^.*\///p'
     exit
 fi
 
 if [ -n "$OPTLIST" ]; then
+    # shellcheck disable=SC2046
     find $(find "${PROFILES_TOPDIR}" -maxdepth 1 -mindepth 1 -type d -exec echo {}/optrepos/ \;) -type f -name "*.repo" | sed -n -e 's/\.repo$//;s/^.*\///p'
     exit
 fi
 
+# shellcheck disable=SC2046
 # Find the repo file for given profile. We assume that repo files have unique names across all supported systems
 PFILE=$(find $(find "${PROFILES_TOPDIR}" -maxdepth 1 -mindepth 1 -type d -exec echo {}/repos/ \;) -type f -name "${PROFILE}.repo")
 if ! [ -f "$PFILE" ]; then
@@ -138,15 +142,15 @@ fi
 debug "Profile file: $PFILE"
 
 # OS-specific profile directories should have names like: "rhel", "centos-stream", "fedora", etc.
-OS_ID="$(basename $(dirname $(dirname "$PFILE")))"
-PROFILES_DIR="${PROFILES_DIR:-$(rpm --eval %_datarootdir)/mini-tps/profiles/${OS_ID}/repos/}"
-OPTREPOS_DIR="${OPTREPOS_DIR:-$(rpm --eval %_datarootdir)/mini-tps/profiles/${OS_ID}/optrepos/}"
-PREPARE_SYSTEM_SCRIPT="${PREPARE_SYSTEM_SCRIPT:-$(rpm --eval %_libexecdir)/mini-tps/${OS_ID}/prepare-system}"
+OS_ID="$(basename "$(dirname "$(dirname "${PFILE}")")")"
+: "${PROFILES_DIR:=$(rpm --eval %_datarootdir)/mini-tps/profiles/${OS_ID}/repos/}"
+: "${OPTREPOS_DIR:=$(rpm --eval %_datarootdir)/mini-tps/profiles/${OS_ID}/optrepos/}"
 
 if [ "$(id -u)" != "0" ]; then
-    echo "Run '$PROG' with root privileges."
+    echo "Run $PROG with root privileges."
     exit 1
 fi
 
-debug "Running prepare script: $PREPARE_SYSTEM_SCRIPT"
+debug "Running prepare script: ${PREPARE_SYSTEM_SCRIPT:=$(rpm --eval %_libexecdir)/mini-tps/${OS_ID}/prepare-system}"
+# shellcheck disable=SC1090
 source "$PREPARE_SYSTEM_SCRIPT"

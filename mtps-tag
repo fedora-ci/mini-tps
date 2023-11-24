@@ -185,7 +185,7 @@ fi
 
 debug "Tag: $TAG_NAME"
 
-if [ -n "$GET_NVRS" -o -n "$GET_TASKS" ]; then
+if [[ -n "$GET_NVRS" || -n "$GET_TASKS" ]]; then
     query_listTagged="$(mk_query_listTagged "$TAG_NAME")"
     answer_listTagged="$(send_query "$query_listTagged")"
     if [ -n "$GET_NVRS" ]; then

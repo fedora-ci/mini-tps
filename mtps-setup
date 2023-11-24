@@ -59,7 +59,7 @@ if [ -z "$YUMDNFCMD" ]; then
 fi
 
 debug() {
-    if [ -n "$DEBUG" ]; then
+    if [ -n "${DEBUG:-}" ]; then
         echo "$*" >&2
     fi
 }

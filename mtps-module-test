@@ -110,7 +110,7 @@ debug "NSVC: $NSVC"
 debug "PROFILE: $PROFILE"
 
 # Test correct invocation
-if [ -z "$NSVC" ] || ! [ "$TEST" = "install" -o "$TEST" = "remove" ]; then
+if [ -z "$NSVC" ] || ! [[ "$TEST" == "install" || "$TEST" == "remove" ]]; then
   echo "Use: $PROG -h for help."
   exit
 fi

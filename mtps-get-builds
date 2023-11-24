@@ -205,7 +205,6 @@ GB_CREATEREPO="${GB_CREATEREPO:-}"
 GB_CREATEREPO_BIN="${GB_CREATEREPO_BIN:-}"
 GB_ONLYINREPO="${GB_ONLYINREPO:-}"
 GB_INSTALLREPOFILE="${GB_INSTALLREPOFILE:-}"
-LOGS_DIR="${LOGS_DIR:-mtps-logs}"
 
 # http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
@@ -261,14 +260,14 @@ if [ -z "$GB_BUILD" ]; then
   exit
 fi
 
-mkdir -p "$LOGS_DIR"
+mkdir -p "${LOGS_DIR:=mtps-logs}"
 LOGS_DIR="$(realpath "$LOGS_DIR")"
 while true; do
     TESTRUN_ID="$(date +%H%M%S)"
     logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-${GB_BUILD}-mtps-get-builds.log"
     logfname_pass="$(dirname "$logfname")/PASS-$(basename "$logfname")"
     logfname_fail="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
-    if [ -e "$logfname" -o -e "$logfname_pass" -o -e "$logfname_fail" ]; then
+    if [[ -e "$logfname" || -e "$logfname_pass" || -e "$logfname_fail" ]]; then
         sleep 1
         continue
     fi
@@ -281,7 +280,7 @@ do_clean_exit() {
     rc=$?
     trap - SIGINT SIGTERM SIGABRT EXIT # clear the trap
     new_logfname="$logfname_fail"
-    if [ "$rc" = "0" -o "$rc" = "111" ]; then
+    if [[ "$rc" -eq 0 || "$rc" -eq 111 ]]; then
         new_logfname="$logfname_pass"
     fi
     # Close tee pipes
@@ -355,7 +354,7 @@ for pkg in $rpms_from_build_noarch; do
     download_rpm "$url"
 done
 
-if [ -z "$GB_CREATEREPO" -o ! -d "$GB_REPODIR" ]; then
+if [[ -z "$GB_CREATEREPO" || ! -d "$GB_REPODIR" ]]; then
     exit 0
 fi
 
@@ -373,7 +372,7 @@ echo "Repo file:"
 echo "$repo_file_text"
 id="$(id -u)"
 
-if [ -n "$GB_INSTALLREPOFILE" -a "$id" = "0" ]; then
+if [[ -n "$GB_INSTALLREPOFILE" && "$id" -eq 0 ]]; then
     repofile="/etc/yum.repos.d/brew-${brew_build_id}.repo"
     echo "Create repo file: $repofile"
     echo "$repo_file_text" > "$repofile"

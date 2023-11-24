@@ -33,7 +33,7 @@
 #   * http://download.devel.redhat.com/nightly/latest-RHEL-8/compose/AppStream
 #
 
-PROG="${PROG:-${0##*/}}"
+: "${PROG:=${0##*/}}"
 
 # Source `mtps-setup' from $PATH
 if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
@@ -90,7 +90,8 @@ nevra_older_then() {
     local arch2="$(from_nevra "$nevra2" "arch")"
     nevra1="${name1}-${epoch1}:${version1}-${release1}"
     nevra2="${name2}-${epoch2}:${version2}-${release2}"
-    local rcmp="$(rpm --define "pkg1 $nevra1" --define "pkg2 $nevra2"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}')"
+    local rcmp
+    rcmp="$(rpm --define "pkg1 $nevra1" --define "pkg2 $nevra2"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}')"
     if [ "x$rcmp" = "x-1" ]; then
         # True
         return 0
@@ -116,7 +117,7 @@ run_with_scriptlet_check() {
     # Preserve return code from the command
     local ret=${PIPESTATUS[0]}
     cmd_output_parts_prefix="cmd-output-part"
-    if [ "$ret" -eq "0" ]; then
+    if [ "$ret" -eq 0 ]; then
         # The script is running with globbing off, but it's useful here, so let's enabled it temporarily
         set +f
         rm -f "$cmd_output_parts_prefix"*
@@ -132,7 +133,7 @@ run_with_scriptlet_check() {
             # Remove epoch from the NEVRA under test
             test_nvra=$(echo "$NEVRA" | sed -e 's/-[0-9]\+:/-/')
             # Check if the  NVRA matches the NVRA under test
-            if [ "$test_nvra" == "$scriptlet_nvra" ]; then
+            if [[ "$test_nvra" == "$scriptlet_nvra" ]]; then
                 # We found a part of the output that matters, let's look for problematic words here;
                 # However, let's filter out lines with known false positives first:
                 #  Ignore warning about a new .rpmsave file (https://access.redhat.com/solutions/60263)
@@ -150,7 +151,7 @@ run_with_scriptlet_check() {
                 # the reason is that the keyword ("error" for example) can appear in package names.
                 # See how the regexp works (and play with it!): https://regex101.com/r/Yws0tT/1
                 grep -P -i -q '(?<![-a-z])error|failure|failed|warning(?![-a-z])' "$output_part" && ret=1
-                if [ "$ret" -eq "1" ]; then
+                if [ "$ret" -eq 1 ]; then
                     echo
                     echo
                     echo "***"
@@ -525,7 +526,6 @@ Options:
 EOF
 }
 
-# http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
 opt=$(getopt -n "$0" --options "hvs:t:n:r:x:f" --longoptions "help,verbose,start:,test:,nevra:,revertchanges,scriptletcheck,rpmverify" -- "$@")
 eval set -- "$opt"
@@ -583,30 +583,25 @@ do_yum_revert() {
 
 # Entry
 
-DEBUG="${DEBUG:-}"
-TEST="${TEST:-}"
-START="${START:-}"
-NEVRA="${NEVRA:-}"
-REVERT="${REVERT:-}"
-CHECK_SCRIPTLETS="${CHECK_SCRIPTLETS:-}"
-RPM_VERIFY="${RPM_VERIFY:-}"
+: "${CHECK_SCRIPTLETS:=}"
+: "${RPM_VERIFY:=}"
 
 DEBUG_OUT="/dev/null"
-if [ -n "$DEBUG" ]; then
+if [ -n "${DEBUG:=}" ]; then
     DEBUG_OUT="/dev/stdout"
 fi
 
-debug "TEST: $TEST"
-debug "DNF HISTORY START: $START"
-debug "NEVRA: $NEVRA"
+debug "TEST: ${TEST:=}"
+debug "DNF HISTORY START: ${START:=}"
+debug "NEVRA: ${NEVRA:=}"
 
 # Test correct invocation
-if [ -z "$NEVRA" ] || ! [ "$TEST" = "install" -o "$TEST" = "update" -o "$TEST" = "downgrade" -o "$TEST" = "remove" ]; then
+if [ -z "$NEVRA" ] || ! [[ "$TEST" == "install" || "$TEST" == "update" || "$TEST" == "downgrade" || "$TEST" == "remove" ]]; then
   echo "Use: $PROG -h for help."
   exit
 fi
 
-if [ -n "$REVERT" ]; then
+if [ -n "${REVERT:=}" ]; then
     # Save current YUM transaction ID, to revert it later
     HISTORY_ID="$("$YUMDNFCMD" history list | sed -n -e '0,/^-\+$/d;s/^[[:space:]]*//p' | tr -s ' ' | cut -f 1 -d ' ' | sed -n -e '1p')"
     echo "Current $YUMDNFCMD history transaction ID: $HISTORY_ID"
@@ -618,7 +613,7 @@ if [ -n "$START" ]; then
     "$YUMDNFCMD" -y history rollback "$START"
 fi
 
-if [ "$TEST" = "install" -o "$TEST" = "remove" ]; then
+if [[ "$TEST" == "install" || "$TEST" == "remove" ]]; then
     if ! pkg_can_be_removed "$NEVRA"; then
         echo "Skipping test: $TEST for $NEVRA. Package cannot be clearly removed."
         exit 0

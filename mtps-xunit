@@ -83,7 +83,7 @@ END_COMMENT
 PROG="${PROG:-${0##*/}}"
 
 debug() {
-    if [ -n "$DEBUG" ]; then
+    if [ -n "${DEBUG:-}" ]; then
         echo "$*" >&2
     fi
 }
@@ -247,7 +247,7 @@ if [ -n "$TS_TESTS" ]; then
     xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']" -t attr -n "tests" -v "$TS_TESTS" "$XFILE"
 fi
 
-if [ -n "$TS_PROP_NAME" -a -n "$TS_PROP_VALUE" ]; then
+if [[ -n "$TS_PROP_NAME" && -n "$TS_PROP_VALUE" ]]; then
     # If no any /testsuites/testsuite/properties create it
     xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME'][not(properties)]" -t elem -n "properties" "$XFILE"
     # Remove property with requested name
@@ -270,7 +270,7 @@ if [ -n "$TC_NAME" ]; then
         xmlstarlet ed -L -d "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/@time" "$XFILE"
         xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']" -t attr -n "time" -v "$TC_TIME" "$XFILE"
     fi
-    if [ -n "$TC_PROP_NAME" -a "$TC_PROP_VALUE" ]; then
+    if [[ -n "$TC_PROP_NAME" && "$TC_PROP_VALUE" ]]; then
         # If no any /testsuites/testsuite/properties create it
         xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME'][not(properties)]" -t elem -n "properties" "$XFILE"
         # Remove property with requested name
@@ -286,7 +286,7 @@ if [ -n "$TC_NAME" ]; then
         xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/parameters" -t elem -n "parameter" "$XFILE"
         xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME']/parameters/parameter[not(@value)]" -t attr -n "value" -v "$TC_PARAM_VALUE" "$XFILE"
     fi
-    if [ -n "$TC_LOG_NAME" -a "$TC_LOG_HREF" ]; then
+    if [[ -n "$TC_LOG_NAME" && "$TC_LOG_HREF" ]]; then
         # If no any /testsuites/testsuite/properties create it
         xmlstarlet ed -L -s "/testsuites/testsuite[@name='$TS_NAME']/testcase[@name='$TC_NAME'][not(logs)]" -t elem -n "logs" "$XFILE"
         # Remove property with requested name

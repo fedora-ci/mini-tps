@@ -26,10 +26,12 @@ RET_NO_PKG=7
 rpms_from_answer() {
     local arch="$1" && shift
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='rpms']//value/string/text()"
-    local rpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.$arch\.rpm/p")"
+    local rpm
+    rpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.$arch\.rpm/p")"
     debug "Arch $arch has next rpms:"
     debug "$rpm"
     debug "---"
@@ -38,10 +40,12 @@ rpms_from_answer() {
 
 srpms_from_answer() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='srpms']//value/string/text()"
-    local srpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.rpm/p")"
+    local srpm
+    srpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.rpm/p")"
     debug "Has next srpms:"
     debug "$srpm"
     debug "---"
@@ -50,7 +54,7 @@ srpms_from_answer() {
 
 is_scratch_from_answer() {
     local xml="$1" && shift
-    local is_scratch=
+    local is_scratch
     is_scratch="$(echo "$xml" | xmllint --xpath 'string(//member[name="scratch"]/value/boolean/text())' -)"
     [[ "$is_scratch" == '1' ]] && is_scratch="yes" || is_scratch="no"
     debug "Is scratch: $is_scratch"
@@ -59,7 +63,7 @@ is_scratch_from_answer() {
 
 volume_name_from_answer() {
     local xml="$1" && shift
-    local volume_name=
+    local volume_name
     volume_name="$(echo "$xml" | xmllint --xpath 'string(//member[name="volume_name"]/value/string/text())' -)"
     debug "Volume name: $volume_name"
     echo "$volume_name"
@@ -67,7 +71,7 @@ volume_name_from_answer() {
 
 build_source_from_answer() {
     local xml="$1" && shift
-    local build_source=
+    local build_source
     build_source="$(echo "$xml" | xmllint --xpath 'string(//member[name="source"]/value/string/text())' -)"
     debug "Build source: $build_source"
     echo "$build_source"
@@ -75,7 +79,7 @@ build_source_from_answer() {
 
 nvr_from_answer() {
     local xml="$1" && shift
-    local nvr=
+    local nvr
     nvr="$(echo "$xml" | xmllint --xpath 'string(//member[name="nvr"]/value/string/text())' -)"
     debug "NVR: $nvr"
     echo "$nvr"
@@ -83,7 +87,7 @@ nvr_from_answer() {
 
 buildid_from_answer() {
     local xml="$1" && shift
-    local buildid=
+    local buildid
     buildid="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
     debug "buildid: $buildid"
     echo "$buildid"
@@ -91,10 +95,12 @@ buildid_from_answer() {
 
 buildtags_from_answer() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='name']/value/string/text()"
-    local tags="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local tags
+    tags="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Build has next tags:"
     debug "$tags"
     debug "---"
@@ -103,10 +109,12 @@ buildtags_from_answer() {
 
 children_from_answer() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='id']/value/int/text()"
-    local children="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local children
+    children="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Task has next children:"
     debug "$children"
     debug "---"
@@ -115,7 +123,8 @@ children_from_answer() {
 
 send_query() {
     local query="$1" && shift
-    local answer="$(curl --silent -k --data "$query" "$BREWHUB")"
+    local answer
+    answer="$(curl --silent -k --data "$query" "$BREWHUB")"
     debug "Brew answer: ${answer:0:200}...(truncated)"
     echo "$answer"
 }
@@ -274,10 +283,12 @@ EOF
 
 taskinfo2owner() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='owner']/value/int/text()"
-    local owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local owner
+    owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Task has owner id:"
     debug "$owner"
     debug "---"
@@ -286,10 +297,12 @@ taskinfo2owner() {
 
 taskquery2target() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //params/param[1]/value/array/data[1]/value[2]/string/text()"
-    local target="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local target
+    target="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Task has target:"
     debug "$target"
     debug "---"
@@ -298,10 +311,12 @@ taskquery2target() {
 
 ownerinfo2user() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='name']/value/string/text()"
-    local owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local owner
+    owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Task has owner name:"
     debug "$owner"
     debug "---"
@@ -310,10 +325,12 @@ ownerinfo2user() {
 
 ownerinfo2krb() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='krb_principal']/value/string/text()"
-    local email="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local email
+    email="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Task has owner has email:"
     debug "$email"
     debug "---"
@@ -491,26 +508,24 @@ mk_url() {
 
 # Entry
 
-PROG="${PROG:-${0##*/}}"
-ARCH="${ARCH:-$(uname -m)}"
-DEBUG="${DEBUG:-}"
-TASK="${TASK:-}"
-SRPM="${SRPM:-}"
-OWNER="${OWNER:-}"
-REPOFILENAME="${REPOFILENAME:-}"
-REPODIR="${REPODIR:-repodir}"
-BREWHUB="${BREWHUB:-https://brewhub.engineering.redhat.com/brewhub}"
-DOWNLOAD="${DOWNLOAD:-}"
-BREWROOT="${BREWROOT:-http://download.eng.bos.redhat.com/brewroot}"
-LOGS_DIR="${LOGS_DIR:-mtps-logs}"
-RECURSIVE="${RECURSIVE:-}"
-CREATEREPO="${CREATEREPO:-}"
-ONLYINREPO="${ONLYINREPO:-}"
-CREATEREPO_BIN="${CREATEREPO_BIN:-}"
-INSTALLREPOFILE="${INSTALLREPOFILE:-}"
+: "${PROG:=${0##*/}}"
+: "${ARCH:=$(uname -m)}"
+: "${DEBUG:=}"
+: "${TASK:=}"
+: "${SRPM:=}"
+: "${OWNER:=}"
+: "${REPOFILENAME:=}"
+: "${REPODIR:=repodir}"
+: "${BREWHUB:=https://brewhub.engineering.redhat.com/brewhub}"
+: "${DOWNLOAD:=}"
+: "${BREWROOT:=http://download.eng.bos.redhat.com/brewroot}"
+: "${RECURSIVE:=}"
+: "${CREATEREPO:=}"
+: "${ONLYINREPO:=}"
+: "${CREATEREPO_BIN:=}"
+: "${INSTALLREPOFILE:=}"
 
-# http://wiki.bash-hackers.org/howto/getopts_tutorial
-opt_str="$@"
+#opt_str="$@"
 opt=$(getopt -n "$0" --options "hvrd:t:a:cis" --longoptions "help,verbose,repofilename:,download:,task:,arch:,createrepo,installrepofile,onlyinrepo,owner,recursive,srpm" -- "$@")
 eval set -- "$opt"
 while [[ $# -gt 0 ]]; do
@@ -579,14 +594,14 @@ if [ -z "$TASK" ]; then
   exit
 fi
 
-mkdir -p "$LOGS_DIR"
+mkdir -p "${LOGS_DIR:=mtps-logs}"
 LOGS_DIR="$(realpath "$LOGS_DIR")"
 while true; do
     TESTRUN_ID="$(date +%H%M%S)"
-    logfname="${LOGS_DIR%%/}/$TESTRUN_ID-$TASK-mtps-get-task.log"
+    logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-${TASK}-mtps-get-task.log"
     logfname_pass="$(dirname "$logfname")/PASS-$(basename "$logfname")"
     logfname_fail="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
-    if [ -e "$logfname" -o -e "$logfname_pass" -o -e "$logfname_fail" ]; then
+    if [[ -e "$logfname" || -e "$logfname_pass" || -e "$logfname_fail" ]]; then
         sleep 1
         continue
     fi
@@ -727,7 +742,7 @@ fi
 rpms_from_task_all="${rpms_from_task_all%%+( )}"
 rpms_from_task_noarch_all="${rpms_from_task_noarch_all%%+( )}"
 if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
-    echo "Brew repo doesn't have rpms for $ARCH and noarch"
+    echo "Brew repo doesn't have rpms for $ARCH/noarch"
     echo "Exit with special exit code: $RET_NO_PKG"
     exit "$RET_NO_PKG"
 fi
@@ -740,8 +755,8 @@ done
 
 if [ ${#urls[@]} -eq 0 ]; then
     echo "This build doesn't have packages for testing."
-    echo "Brew repo has next rpms for $ARCH and noarch: $rpms_from_task_all $rpms_from_task_noarch_all"
-    echo "No one of the above packages is present in current repos."
+    echo "${ARCH}/noarch rpms in the Brew repo: $rpms_from_task_all $rpms_from_task_noarch_all"
+    echo "None of the above packages is present in current repos."
     exit 1
 fi
 
@@ -751,7 +766,7 @@ for url in "${urls[@]}"; do
     download_rpm "$url"
 done
 
-if [ -z "$CREATEREPO" -o ! -d "$REPODIR" ]; then
+if [[ -z "$CREATEREPO" || ! -d "$REPODIR" ]]; then
     exit 0
 fi
 
@@ -773,12 +788,13 @@ echo "Repo file:"
 echo "$repo_file_text"
 id="$(id -u)"
 
-if [ -n "$INSTALLREPOFILE" -a "$id" = "0" ]; then
+if [[ -n "$INSTALLREPOFILE" && "$id" -eq 0 ]]; then
     if [ -n "$REPOFILENAME" ]; then
-        repofile="/etc/yum.repos.d/$REPOFILENAME.repo"
+        repofile="/etc/yum.repos.d/${REPOFILENAME}.repo"
     else
         repofile="/etc/yum.repos.d/brew-${TASK}.repo"
     fi
+
     echo "Create repo file: $repofile"
     echo "$repo_file_text" > "$repofile"
 fi
