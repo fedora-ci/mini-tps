@@ -27,44 +27,36 @@ Light version of TPS
 %build
 
 %install
-mkdir -p %{buildroot}%{_prefix}/local/bin/
-cp -rfp mtps* %{buildroot}%{_prefix}/local/bin/
-mkdir -p %{buildroot}%{_sysconfdir}/dnf/protected.d
-cp -pf mini-tps.conf %{buildroot}%{_sysconfdir}/dnf/protected.d/
-
+mkdir -p %{buildroot}%{_sbindir} # epel7
+install -pD -m 0755 --target-directory=%{buildroot}%{_sbindir} mtps-*
+install -pD -m 0644 mini-tps.conf %{buildroot}%{_sysconfdir}/dnf/protected.d/mini-tps.conf
 # viewer
-mkdir -p %{buildroot}%{_datarootdir}/mini-tps/viewer/
-cp -pf viewer/viewer.html %{buildroot}%{_datarootdir}/mini-tps/viewer/
-mkdir -p %{buildroot}%{_libexecdir}/mini-tps/viewer/
-cp -pf viewer/generate-result-json %{buildroot}%{_libexecdir}/mini-tps/viewer/
+install -pD -m 0755 viewer/generate-result-json %{buildroot}%{_libexecdir}/mini-tps/viewer/generate-result-json
+install -pD -m 0644 viewer/viewer.html %{buildroot}%{_datarootdir}/mini-tps/viewer/viewer.html
 
 # profiles
 mkdir -p %{buildroot}%{_datarootdir}/mini-tps/profiles/{rhel,centos-stream,fedora}/
-# rhel
 cp -rfp profiles/rhel/{repos,optrepos}/ %{buildroot}%{_datarootdir}/mini-tps/profiles/rhel/
-# centos-stream
 cp -rfp profiles/centos-stream/{repos,optrepos}/ %{buildroot}%{_datarootdir}/mini-tps/profiles/centos-stream/
-# fedora
 cp -rfp profiles/fedora/repos/ %{buildroot}%{_datarootdir}/mini-tps/profiles/fedora/
 
 # prepare scripts
-mkdir -p %{buildroot}%{_libexecdir}/mini-tps/{rhel,centos-stream,fedora}/
-# rhel
-cp -pf profiles/rhel/prepare-system %{buildroot}%{_libexecdir}/mini-tps/rhel/
-# centos-stream
-cp -pf profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps/centos-stream/
-# fedora
-cp -pf profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mini-tps/fedora/
+install -pD -m 0755 profiles/rhel/prepare-system %{buildroot}%{_libexecdir}/mini-tps/rhel/prepare-system
+install -pD -m 0755 profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps/centos-stream/prepare-system
+install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mini-tps/fedora/prepare-system
 
 %files
-%{_prefix}/local/bin/mtps*
-%{_sysconfdir}/dnf/protected.d/mini-tps.conf
+%{_sbindir}/mtps-*
+%config %{_sysconfdir}/dnf/protected.d/mini-tps.conf
 %{_datarootdir}/mini-tps/*
 %{_libexecdir}/mini-tps/*
+
 
 %changelog
 * Fri Nov 24 2023 Jiri Popelka <jpopelka@redhat.com> - 0.1-162
 - URL update
+- move mtps-* executables from /usr/local/bin/ to /usr/sbin/
+- use install instead of mkdir & cp
 
 * Mon Jul 31 2023 Andrei Stepanov <astepano@redhat.com> - 0.1-161
 - new build
