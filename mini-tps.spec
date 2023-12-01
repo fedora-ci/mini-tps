@@ -9,6 +9,8 @@ Source0: %{name}.tar.gz
 Requires: yum-utils
 # List of packages for wich do not run 'remove' test.
 Requires: openssh-server yum
+# mtps-mutils
+Requires: libmodulemd
 BuildArch: noarch
 
 %if 0%{?rhel} > 7
@@ -16,6 +18,13 @@ BuildArch: noarch
 Requires: rpm-plugin-selinux
 Requires: dnf-plugins-core
 Requires: libselinux-utils
+%endif
+
+# mtps-mutils
+%if 0%{?rhel} == 7
+Requires: python2-gobject-base
+%else
+Requires: python3-gobject-base
 %endif
 
 %description
@@ -57,6 +66,7 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 - URL update
 - move mtps-* executables from /usr/local/bin/ to /usr/sbin/
 - use install instead of mkdir & cp
+- mtps-mutils Requires: python-gobject-base
 
 * Mon Jul 31 2023 Andrei Stepanov <astepano@redhat.com> - 0.1-161
 - new build
