@@ -39,16 +39,18 @@ YUMDNFCMD="${MINITPSYUMDNFCMD:-}"
 PROTECTEDCFG="/etc/dnf/protected.d/mini-tps-old-dnf.conf"
 
 if [ -z "$YUMDNFCMD" ]; then
-    if [ -L "/usr/bin/yum" ]; then
+    if [ -f "/usr/bin/yum" ]; then
         YUMDNFCMD="yum"
-        YUMLINK="$(readlink "/usr/bin/yum")"
-        if [[ "$YUMLINK" == *dnf5* && -x "/usr/bin/dnf-3" ]]; then
-            YUMDNFCMD="/usr/bin/dnf-3"
-            if [ "$EUID" -eq 0 ]; then
-                if ! rpm -q python3-dnf >/dev/null; then
-                    dnf install -y python3-dnf
-                    if [ ! -e "$PROTECTEDCFG" ]; then
-                        echo "python3-dnf" >> "$PROTECTEDCFG"
+        if [ -L "/usr/bin/yum" ]; then
+            YUMLINK="$(readlink "/usr/bin/yum")"
+            if [[ "$YUMLINK" == *dnf5* && -x "/usr/bin/dnf-3" ]]; then
+                YUMDNFCMD="/usr/bin/dnf-3"
+                if [ "$EUID" -eq 0 ]; then
+                    if ! rpm -q python3-dnf >/dev/null; then
+                        dnf install -y python3-dnf
+                        if [ ! -e "$PROTECTEDCFG" ]; then
+                            echo "python3-dnf" >> "$PROTECTEDCFG"
+                        fi
                     fi
                 fi
             fi
