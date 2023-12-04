@@ -30,7 +30,7 @@ builds_from_answer() {
     echo "$builds"
 }
 
-build_from_answer() {
+build2id() {
     local xml="$1" && shift
     local build_id
     build_id="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
@@ -38,7 +38,7 @@ build_from_answer() {
     echo "$build_id"
 }
 
-tag_from_answer() {
+build2tag() {
     local xml="$1" && shift
     local brew_tag
     brew_tag="$(echo "$xml" | xmllint --xpath 'string(//member[name="content_koji_tag"]/value/string/text())' -)"
@@ -46,7 +46,7 @@ tag_from_answer() {
     echo "$brew_tag"
 }
 
-owner_from_answer() {
+build2owner() {
     local xml="$1" && shift
     local tmpfile
     tmpfile="$(mktemp)"
@@ -58,7 +58,7 @@ owner_from_answer() {
     echo "$owner"
 }
 
-mname_from_answer() {
+build2name() {
     local xml="$1" && shift
     local tmpfile
     tmpfile="$(mktemp)"
@@ -70,7 +70,7 @@ mname_from_answer() {
     echo "$name"
 }
 
-nvr_from_answer() {
+build2nvr() {
     local xml="$1" && shift
     local tmpfile
     tmpfile="$(mktemp)"
@@ -93,8 +93,8 @@ send_query() {
 
 # Use 'koji list-api' to get a list of available XMLRPC.
 
-mk_query_build() {
-    # listBuildRPMs query
+brew_get_build() {
+    # getBuild query
     # Build can be: NVR or build number.
     local build="$1" && shift
     local query="$(cat << EOF
@@ -109,12 +109,12 @@ mk_query_build() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for listBuildRPMs: ${query:0:200}...(truncated)"
-    echo "$query"
+    debug "Brew query for getBuild: ${query:0:200}...(truncated)"
+    send_query "$query"
 }
 
-mk_query_builds() {
-    # listBuildRPMs query
+brew_get_latest_builds() {
+    # getLatestBuilds query
     # Build can be: NVR or build number.
     local tag="$1" && shift
     local query="$(cat << EOF
@@ -130,7 +130,7 @@ mk_query_builds() {
 EOF
     )"
     debug "Brew query for getLatestBuilds: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
 from_module_name() {
@@ -404,13 +404,12 @@ if [[ -z "$BUILD" && -n "$MBSID" ]]; then
     fi
 fi
 
-query_m_build="$(mk_query_build $BUILD)"
-answer_m_build="$(send_query "$query_m_build")"
-m_tag="$(tag_from_answer "$answer_m_build")"
-m_nvr="$(nvr_from_answer "$answer_m_build")"
-m_name="$(mname_from_answer "$answer_m_build")"
-m_build_id="$(build_from_answer "$answer_m_build")"
-m_owner_name="$(owner_from_answer "$answer_m_build")"
+m_build="$(brew_get_build "$BUILD")"
+m_tag="$(build2tag "$m_build")"
+m_nvr="$(build2nvr "$m_build")"
+m_name="$(build2name "$m_build")"
+m_build_id="$(build2id "$m_build")"
+m_owner_name="$(build2owner "$m_build")"
 
 # It is better to use stream from modulemd file, because the one in the Brew NVR
 # contains "-" replaced with "_" and it is not possible to guess wheter the stream
@@ -442,9 +441,8 @@ if [ -n "$GETINFO" ]; then
     exit 0
 fi
 
-query_builds_in_m="$(mk_query_builds "$m_tag")"
-answer_builds="$(send_query "$query_builds_in_m")"
-builds_in_m="$(builds_from_answer "$answer_builds")"
+builds_in_m="$(brew_get_latest_builds "$m_tag")"
+builds_in_m="$(builds_from_answer "$builds_in_m")"
 builds_in_m="${builds_in_m// /}"
 
 if [[ -z "$builds_in_m" ]]; then

@@ -47,7 +47,7 @@ send_query() {
 
 # Use 'koji list-api' to get a list of available XMLRPC.
 
-mk_query_build_rpms() {
+brew_list_build_rpms() {
     # listBuildRPMs query
     # Build can be: NVR or build number.
     local build="$1" && shift
@@ -68,7 +68,7 @@ mk_query_build_rpms() {
 EOF
     )"
     debug "Brew query for listBuildRPMs: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
 
@@ -298,15 +298,14 @@ debug "Brew arch: $GB_ARCH"
 debug "Store RPMS at: $GB_REPODIR"
 debug "Create repo: $GB_CREATEREPO"
 
-query_build_rpms="$(mk_query_build_rpms $GB_BUILD)"
-answer_build_rpms="$(send_query "$query_build_rpms")"
+build_rpms="$(brew_list_build_rpms $GB_BUILD)"
 # rpms_from_build is a list of packages in form NVR: dhcp-relay-4.3.6-27.el8+7 dhcp-server-4.3.6-27.el8+7
-rpms_from_build="$(rpms_from_answer "$GB_ARCH" "$answer_build_rpms")"
+rpms_from_build="$(rpms_from_answer "$GB_ARCH" "$build_rpms")"
 rpms_from_build_all="$rpms_from_build"
-rpms_from_build_noarch="$(rpms_from_answer "noarch" "$answer_build_rpms")"
+rpms_from_build_noarch="$(rpms_from_answer "noarch" "$build_rpms")"
 rpms_from_build_noarch_all="$rpms_from_build_noarch"
-srpm="$(rpms_from_answer "src" "$answer_build_rpms").src.rpm"
-brew_build_id="$(build_from_answer "$answer_build_rpms")"
+srpm="$(rpms_from_answer "src" "$build_rpms").src.rpm"
+brew_build_id="$(build_from_answer "$build_rpms")"
 srpm_url="$(mk_url "$srpm" "${srpm%%.src.rpm}" "src")"
 
 echo "Brew build ID: $brew_build_id"
