@@ -26,9 +26,7 @@ builds_from_answer() {
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='build_id']/value/int/text()"
     builds="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Module has next builds:"
-    debug "$builds"
-    debug "---"
+    debug "Module builds:\n${builds}\n---"
     echo "$builds"
 }
 
@@ -56,9 +54,7 @@ owner_from_answer() {
     local cmd="cat //member[name='owner_name']/value/string/text()"
     local owner
     owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Context generated build in Brew has owner name:"
-    debug "$owner"
-    debug "---"
+    debug "Context generated build in Brew has owner name:\n${owner}\n---"
     echo "$owner"
 }
 
@@ -70,9 +66,7 @@ mname_from_answer() {
     local cmd="cat //member[name='package_name']/value/string/text()"
     local name
     name="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Module name:"
-    debug "$name"
-    debug "---"
+    debug "Module name:\n${name}\n---"
     echo "$name"
 }
 
@@ -84,9 +78,7 @@ nvr_from_answer() {
     local cmd="cat //member[name='nvr']/value/string/text()"
     local nvr
     nvr="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Module NVR for context build in Brew:"
-    debug "$nvr"
-    debug "---"
+    debug "Module NVR for context build in Brew:\n${nvr}\n---"
     echo "$nvr"
 }
 
@@ -388,7 +380,7 @@ debug "Brew build: $BUILD"
 debug "Brew tag: $TAG"
 debug "MBS build id: $MBSID"
 debug "Brew arch: $ARCH"
-debug "Store RPMS at: $DOWNLOAD"
+debug "Store RPMS at: $REPODIR"
 debug "Create repo: $CREATEREPO"
 
 # Test correct invocation

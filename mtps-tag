@@ -27,9 +27,7 @@ tasks_id_from_answer() {
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='task_id']//value/int/text()"
     local tasks="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:digit:]]/p')"
-    debug "Tag has next tasks:"
-    debug "$tasks"
-    debug "---"
+    debug "Tag tasks:\n${tasks}\n---"
     echo "$tasks"
 }
 
@@ -39,9 +37,7 @@ nvrs_from_answer() {
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='nvr']//value/string/text()"
     local nvrs="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Tag has next tasks:"
-    debug "$nvrs"
-    debug "---"
+    debug "Tag tasks:\n${nvrs}\n---"
     echo "$nvrs"
 }
 
@@ -56,8 +52,7 @@ tag_id_from_answer() {
 send_query() {
     local query="$1" && shift
     local answer="$(curl --silent -k --data "$query" "$BREWHUB")"
-    debug "Brew answer:"
-    debug "${answer}"
+    debug "Brew answer:\n${answer}"
     echo "$answer"
 }
 
@@ -83,8 +78,7 @@ mk_query_getTag() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for getTag:"
-    debug "${query}"
+    debug "Brew query for getTag:\n${query}"
     echo "$query"
 }
 

@@ -32,9 +32,7 @@ rpms_from_answer() {
     local cmd="cat //member[name='rpms']//value/string/text()"
     local rpm
     rpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.$arch\.rpm/p")"
-    debug "Arch $arch has next rpms:"
-    debug "$rpm"
-    debug "---"
+    debug "$arch rpms:\n${rpm}\n---"
     echo "$rpm"
 }
 
@@ -46,9 +44,7 @@ srpms_from_answer() {
     local cmd="cat //member[name='srpms']//value/string/text()"
     local srpm
     srpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.rpm/p")"
-    debug "Has next srpms:"
-    debug "$srpm"
-    debug "---"
+    debug "srpms:\n${srpm}\n---"
     echo "$srpm"
 }
 
@@ -89,7 +85,7 @@ buildid_from_answer() {
     local xml="$1" && shift
     local buildid
     buildid="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
-    debug "buildid: $buildid"
+    debug "build id: $buildid"
     echo "$buildid"
 }
 
@@ -101,9 +97,7 @@ buildtags_from_answer() {
     local cmd="cat //member[name='name']/value/string/text()"
     local tags
     tags="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Build has next tags:"
-    debug "$tags"
-    debug "---"
+    debug "Build tags:\n${tags}\n---"
     echo "$tags"
 }
 
@@ -115,9 +109,7 @@ children_from_answer() {
     local cmd="cat //member[name='id']/value/int/text()"
     local children
     children="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has next children:"
-    debug "$children"
-    debug "---"
+    debug "Task children:\n${children}\n---"
     echo "$children"
 }
 
@@ -289,9 +281,7 @@ taskinfo2owner() {
     local cmd="cat //member[name='owner']/value/int/text()"
     local owner
     owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has owner id:"
-    debug "$owner"
-    debug "---"
+    debug "Task owner id:\n${owner}\n---"
     echo "$owner"
 }
 
@@ -303,9 +293,7 @@ taskquery2target() {
     local cmd="cat //params/param[1]/value/array/data[1]/value[2]/string/text()"
     local target
     target="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has target:"
-    debug "$target"
-    debug "---"
+    debug "Task target:\n${target}\n---"
     echo "$target"
 }
 
@@ -317,9 +305,7 @@ ownerinfo2user() {
     local cmd="cat //member[name='name']/value/string/text()"
     local owner
     owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has owner name:"
-    debug "$owner"
-    debug "---"
+    debug "Task owner name:\n${owner}\n---"
     echo "$owner"
 }
 
@@ -331,9 +317,7 @@ ownerinfo2krb() {
     local cmd="cat //member[name='krb_principal']/value/string/text()"
     local email
     email="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has owner has email:"
-    debug "$email"
-    debug "---"
+    debug "Task owner email:\n${email}\n---"
     echo "$email"
 }
 
@@ -633,9 +617,9 @@ debug "Task: $TASK"
 debug "Arch: $ARCH"
 debug "Srpm: $SRPM"
 debug "Owner: $OWNER"
-debug "Store RPMS at: $DOWNLOAD"
+debug "Store RPMS at: ${REPODIR}"
 debug "Create repo: ${CREATEREPO:-no}"
-debug "Download recursive from children tasks: ${RECURSIVE:-no}"
+debug "Download recursively from children tasks: ${RECURSIVE:-no}"
 
 
 TASKS="$TASK"
@@ -714,7 +698,7 @@ for task in $TASKS; do
         # Purpose:
         #
         #   * Brew builds always have 1 input SRPM.
-        #   * Brew builds can have many PRM.
+        #   * Brew builds can have many RPMs.
         #
         # RCM team can choose only some RPM. And make AppStream / BaseOS / Compose
         # only from some RPMs, ignoring other RPMs from Brew build. This options

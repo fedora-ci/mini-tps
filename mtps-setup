@@ -62,6 +62,6 @@ fi
 
 debug() {
     if [ -n "${DEBUG:-}" ]; then
-        echo "$*" >&2
+        echo -e "$*" >&2
     fi
 }

@@ -26,9 +26,7 @@ rpms_from_answer() {
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[value/string='$arch']/../member[name='nvr']/value/string/text()"
     rpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Arch $arch has next rpms:"
-    debug "$rpm"
-    debug "---"
+    debug "${arch} rpms:\n${rpm}\n---"
     echo "$rpm"
 }
 
@@ -297,7 +295,7 @@ trap do_clean_exit SIGINT SIGTERM SIGABRT EXIT
 
 debug "Brew build: $GB_BUILD"
 debug "Brew arch: $GB_ARCH"
-debug "Store RPMS at: $GB_DOWNLOAD"
+debug "Store RPMS at: $GB_REPODIR"
 debug "Create repo: $GB_CREATEREPO"
 
 query_build_rpms="$(mk_query_build_rpms $GB_BUILD)"
@@ -335,7 +333,7 @@ fi
 
 if [ -z "${rpms_from_build}${rpms_from_build_noarch}" ]; then
     echo "This build doesn't have packages for testing."
-    echo "Brew repo has next rpms: $rpms_from_build_all $rpms_from_build_noarch_all"
+    echo "Brew repo rpms: $rpms_from_build_all $rpms_from_build_noarch_all"
     echo "None of the above packages is present in current repos."
     exit 111
 fi
