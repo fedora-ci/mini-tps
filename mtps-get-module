@@ -1,4 +1,4 @@
-#!/bin/bash -efu
+#!/usr/bin/bash -efu
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@ if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-set
 
 builds_from_answer() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='build_id']/value/int/text()"
     builds="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
@@ -33,7 +34,7 @@ builds_from_answer() {
 
 build_from_answer() {
     local xml="$1" && shift
-    local build_id=
+    local build_id
     build_id="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
     debug "Brew build id: $build_id"
     echo "$build_id"
@@ -41,7 +42,7 @@ build_from_answer() {
 
 tag_from_answer() {
     local xml="$1" && shift
-    local brew_tag=
+    local brew_tag
     brew_tag="$(echo "$xml" | xmllint --xpath 'string(//member[name="content_koji_tag"]/value/string/text())' -)"
     debug "Brew tag: $brew_tag"
     echo "$brew_tag"
@@ -49,10 +50,12 @@ tag_from_answer() {
 
 owner_from_answer() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='owner_name']/value/string/text()"
-    local owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local owner
+    owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Context generated build in Brew has owner name:"
     debug "$owner"
     debug "---"
@@ -61,10 +64,12 @@ owner_from_answer() {
 
 mname_from_answer() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='package_name']/value/string/text()"
-    local name="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local name
+    name="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Module name:"
     debug "$name"
     debug "---"
@@ -73,10 +78,12 @@ mname_from_answer() {
 
 nvr_from_answer() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
+    local tmpfile
+    tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='nvr']/value/string/text()"
-    local nvr="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local nvr
+    nvr="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Module NVR for context build in Brew:"
     debug "$nvr"
     debug "---"
@@ -85,7 +92,8 @@ nvr_from_answer() {
 
 send_query() {
     local query="$1" && shift
-    local answer="$(curl --silent -k --data "$query" "$BREWHUB")"
+    local answer
+    answer="$(curl --silent -k --data "$query" "$BREWHUB")"
     #debug "Brew answer: ${answer:0:200}...(truncated)"
     debug "Brew answer: ${answer}"
     echo "$answer"
@@ -186,48 +194,55 @@ mbsid2minfo() {
     local mbs_id="$1" && shift
     local url="$MBS/module-build-service/1/module-builds/$mbs_id"
     debug "URL to MBS: $url"
-    local minfo="$(curl --silent --retry 5 --insecure --location --fail --show-error "$url")"
+    local minfo
+    minfo="$(curl --silent --retry 5 --insecure --location --fail --show-error "$url")"
     echo "$minfo"
 }
 
 minfo2tag() {
     local minfo="$1" && shift
-    local tag="$(echo $minfo | sed -n -e '/component_builds/,/"koji_tag"/ s/^.\+"koji_tag":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    local tag
+    tag="$(echo "$minfo" | sed -n -e '/component_builds/,/"koji_tag"/ s/^.\+"koji_tag":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
     debug "MBS build has tag: $tag"
     echo "$tag"
 }
 
 minfo2name() {
     local minfo="$1" && shift
-    local name="$(echo "$minfo" | sed -n -e '/component_builds/,/"name"/ s/^.\+"name":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    local name
+    name="$(echo "$minfo" | sed -n -e '/component_builds/,/"name"/ s/^.\+"name":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
     debug "MBS build has name: $name"
     echo "$name"
 }
 
 minfo2stream() {
     local minfo="$1" && shift
-    local stream="$(echo "$minfo" | sed -n -e '/component_builds/,/"stream"/ s/^.\+"stream":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    local stream
+    stream="$(echo "$minfo" | sed -n -e '/component_builds/,/"stream"/ s/^.\+"stream":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
     debug "MBS build has stream: $stream"
     echo "$stream"
 }
 
 minfo2version() {
     local minfo="$1" && shift
-    local version="$(echo "$minfo" | sed -n -e '/component_builds/,/"version"/ s/^.\+"version":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    local version
+    version="$(echo "$minfo" | sed -n -e '/component_builds/,/"version"/ s/^.\+"version":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
     debug "MBS build has version: $version"
     echo "$version"
 }
 
 minfo2context() {
     local minfo="$1" && shift
-    local context="$(echo "$minfo" | sed -n -e '/component_builds/,/"context"/ s/^.\+"context":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    local context
+    context="$(echo "$minfo" | sed -n -e '/component_builds/,/"context"/ s/^.\+"context":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
     debug "MBS build has context: $context"
     echo "$context"
 }
 
 minfo2platformtag() {
     local minfo="$1" && shift
-    local koji_tag="$(echo "$minfo" | sed -n -e '/"platform"/,/koji_tag/ s/^.\+"koji_tag":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    local koji_tag
+    koji_tag="$(echo "$minfo" | sed -n -e '/"platform"/,/koji_tag/ s/^.\+"koji_tag":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
     debug "MBS build has platform module koji_tag: $koji_tag"
     echo "$koji_tag"
 }
@@ -235,7 +250,8 @@ minfo2platformtag() {
 # https://docs.fedoraproject.org/en-US/modularity/making-modules/updating-modules/
 tag2nvr() {
     local tag="$1" && shift
-    local nvr="$(echo "$tag" | sed -n -e "s/-\([[:alnum:]]\+\)$/\.\1/; s/^module-//p")"
+    local nvr
+    nvr="$(echo "$tag" | sed -n -e "s/-\([[:alnum:]]\+\)$/\.\1/; s/^module-//p")"
     debug "Brew '$tag' tag has module content build id: $nvr"
     echo "$nvr"
 }
@@ -282,29 +298,27 @@ EOF
 
 # Entry
 
-PROG="${PROG:-${0##*/}}"
-DEBUG="${DEBUG:-}"
-BREWHUB="${BREWHUB:-https://brewhub.engineering.redhat.com/brewhub}"
-BREWPKGS="${BREWPKGS:-http://download.eng.bos.redhat.com/brewroot/packages}"
-MBS="${MBS:-https://mbs.engineering.redhat.com}"
-TAG="${TAG:-}"
-GETINFO="${GETINFO:-}"
-BREWINFO="${BREWINFO:-https://brewweb.engineering.redhat.com/brew/buildinfo?buildID=}"
-BUILD="${BUILD:-}"
-MBSID="${MBSID:-}"
-PLATFORM_TAG="${PLATFORM_TAG:-}"
-RHEL_XYZ="${RHEL_XYZ:-}"
-ARCH="${ARCH:-$(uname -m)}"
-REPODIR="${REPODIR:-repodir}"
-DOWNLOAD="${DOWNLOAD:-}"
-CREATEREPO="${CREATEREPO:-}"
-CREATEREPO_BIN="${CREATEREPO_BIN:-}"
-MODIFYREPO_BIN="${MODIFYREPO_BIN:-}"
-ONLYINREPO="${ONLYINREPO:-}"
-INSTALLREPOFILE="${INSTALLREPOFILE:-}"
-LOGS_DIR="${LOGS_DIR:-mtps-logs}"
+: "${PROG:=${0##*/}}"
+: "${DEBUG:=}"
+: "${BREWHUB:=https://brewhub.engineering.redhat.com/brewhub}"
+: "${BREWPKGS:=http://download.eng.bos.redhat.com/brewroot/packages}"
+: "${MBS:=https://mbs.engineering.redhat.com}"
+: "${TAG:=}"
+: "${GETINFO:=}"
+: "${BREWINFO:=https://brewweb.engineering.redhat.com/brew/buildinfo?buildID=}"
+: "${BUILD:=}"
+: "${MBSID:=}"
+: "${PLATFORM_TAG:=}"
+: "${RHEL_XYZ:=}"
+: "${ARCH:=$(uname -m)}"
+: "${REPODIR:=repodir}"
+: "${DOWNLOAD:=}"
+: "${CREATEREPO:=}"
+: "${CREATEREPO_BIN:=}"
+: "${MODIFYREPO_BIN:=}"
+: "${ONLYINREPO:=}"
+: "${INSTALLREPOFILE:=}"
 
-# http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
 opt=$(getopt -n "$0" --options "hvd:b:a:m:t:cio" --longoptions "help,verbose,download:,build:,arch:,mbsid:,tag:,getinfo,createrepo,installrepofile,onlyinrepo" -- "$@")
 eval set -- "$opt"
@@ -364,9 +378,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-mkdir -p "$LOGS_DIR"
+mkdir -p "${LOGS_DIR:=mtps-logs}"
 TESTRUN_ID="$(date +%H%M%S)"
-logfname="${LOGS_DIR%%/}/$TESTRUN_ID-mtps-get-module.log"
+logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-mtps-get-module.log"
 exec &> >(tee -a "$logfname")
 exec 2>&1
 
@@ -383,7 +397,7 @@ if [ -z "${BUILD}${MBSID}${TAG}" ]; then
   exit
 fi
 MSTREAM=""
-if [ -z "$BUILD" -a -n "$MBSID" ]; then
+if [[ -z "$BUILD" && -n "$MBSID" ]]; then
     MINFO="$(mbsid2minfo "$MBSID")"
     MNAME="$(minfo2name "$MINFO")"
     MSTREAM="$(minfo2stream "$MINFO")"
@@ -409,7 +423,7 @@ m_owner_name="$(owner_from_answer "$answer_m_build")"
 # It is better to use stream from modulemd file, because the one in the Brew NVR
 # contains "-" replaced with "_" and it is not possible to guess wheter the stream
 # contained "-" which were changed to "_" or it really contained "_" characters.
-if [ -z "$MSTREAM" ]; then
+if [[ -z "$MSTREAM" ]]; then
     m_stream="$(from_module_name "$m_nvr" "stream")"
 else
     m_stream="$MSTREAM"
@@ -441,7 +455,7 @@ answer_builds="$(send_query "$query_builds_in_m")"
 builds_in_m="$(builds_from_answer "$answer_builds")"
 builds_in_m="${builds_in_m// /}"
 
-if [ -z "$builds_in_m" ]; then
+if [[ -z "$builds_in_m" ]]; then
     echo "This module build doesn't have builds."
     exit 0
 fi
@@ -479,7 +493,7 @@ for f in "${PKG_FILES[@]}"; do
     fi
 done
 
-if [ -z "$CREATEREPO" -o ! -d "$REPODIR" ]; then
+if [[ -z "$CREATEREPO" || ! -d "$REPODIR" ]]; then
     exit 0
 fi
 
@@ -489,7 +503,7 @@ which 'createrepo' >/dev/null 2>&1 && CREATEREPO_BIN="createrepo" || :
 which 'createrepo_c' >/dev/null 2>&1 && CREATEREPO_BIN="createrepo_c" || :
 which 'modifyrepo' >/dev/null 2>&1 && MODIFYREPO_BIN="modifyrepo" || :
 which 'modifyrepo_c' >/dev/null 2>&1 && MODIFYREPO_BIN="modifyrepo_c" || :
-if [ -z "$CREATEREPO_BIN" -o -z "$MODIFYREPO_BIN" ]; then
+if [[ -z "$CREATEREPO_BIN" || -z "$MODIFYREPO_BIN" ]]; then
     echo "Install createrepo[_c] to create repositories."
     exit 0
 fi
@@ -502,7 +516,7 @@ echo "Repo file:"
 echo "$repo_file_text"
 id="$(id -u)"
 
-if [ -n "$INSTALLREPOFILE" -a "$id" = "0" ]; then
+if [[ -n "$INSTALLREPOFILE" && "$id" -eq 0 ]]; then
     repofile="/etc/yum.repos.d/brew-${m_build_id}.repo"
     echo "Create repo file: $repofile"
     echo "$repo_file_text" > "$repofile"

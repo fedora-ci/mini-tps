@@ -1,4 +1,4 @@
-#!/bin/bash -efu
+#!/usr/bin/bash -efu
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 # Author: Andrei Stepanov <astepano@redhat.com>
 
 
-PROG="${PROG:-${0##*/}}"
+: "${PROG:=${0##*/}}"
 
 # Source `mtps-setup' from $PATH
 if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
@@ -48,7 +48,6 @@ box_out() {
     echo -e "| ${b//?/ } |\n-${b//?/-}-"
 }
 
-# http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
 opt=$(getopt -n "$0" --options "hvt:s:m:" --longoptions "help,verbose,mmd:,test:,selinux:" -- "$@")
 eval set -- "$opt"
@@ -78,12 +77,9 @@ done
 
 # Entry
 
-DEBUG="${DEBUG:-}"
-MMD="${MMD:-}"
-# Put logs by default at CDIR/mtps-logs
-LOGS_DIR="${LOGS_DIR:-mtps-logs}"
+: "${DEBUG:=}"
 
-debug "MMD: $MMD"
+debug "MMD: ${MMD:=}"
 debug "Use ${YUMDNFCMD}"
 
 # Test correct invocation
@@ -107,7 +103,9 @@ box_out "# DEPENDENCY" "" "Modules to be enabled:" "" "${requires_list[@]:-}"
 
 # Prefix all files with common suffix
 TESTRUN_ID="$(date +%H%M%S)"
-mkdir -p "$LOGS_DIR"
+
+# Put logs by default at CWD/mtps-logs
+mkdir -p "${LOGS_DIR:=mtps-logs}"
 
 for require in "${requires[@]}"; do
     ret=1
@@ -127,7 +125,7 @@ for require in "${requires[@]}"; do
             "" \
             "  Name:        $name" \
             "  Stream:      $stream"
-        logfname="${LOGS_DIR%%/}/$TESTRUN_ID-enable-$name-$stream.log"
+        logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-enable-${name}-${stream}.log"
         echo "Reset module: $name" | tee -a "$logfname"
         "${YUMDNFCMD}" -y module reset "$name" 2>&1 | tee -a "$logfname"
         test_status="${PIPESTATUS[0]}"
@@ -150,7 +148,7 @@ for require in "${requires[@]}"; do
         fi
     done
     if [ "$ret" -ne "0" ]; then
-        echo "Fail to meet module dependecy. No one can be enabled from: ${require// / or }"
+        echo "Fail to meet module dependency. No one can be enabled from: ${require// / or }"
         exit 1
     fi
 done

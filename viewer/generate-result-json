@@ -4,11 +4,7 @@ import os
 import sys
 import json
 
-RESULTS_MAPPING = {
-    "PASS": "OK",
-    "WARN": "INFO",
-    "FAIL": "BAD"
-}
+RESULTS_MAPPING = {"PASS": "OK", "WARN": "INFO", "FAIL": "BAD"}
 
 mtps_log_dir = sys.argv[1]
 
@@ -16,7 +12,7 @@ results = {}
 for log_file in os.listdir(mtps_log_dir):
     # For example:
     # FAIL-045051-install-systemd-standalone-sysusers-0:252-2.el9.x86_64.log
-    result, test_run_id, test_name, test_object = log_file[:-len(".log")].split("-", 3)
+    result, test_run_id, test_name, test_object = log_file[: -len(".log")].split("-", 3)
     if result not in RESULTS_MAPPING:
         # This is probably some file we do not want to handle.
         continue
@@ -24,7 +20,9 @@ for log_file in os.listdir(mtps_log_dir):
     # Selinux test has the "selinux" infix, for example:
     # FAIL-selinux-045051-install-systemd-container-0:252-2.el9.x86_64.log
     if test_run_id == "selinux":
-        result, _, test_run_id, test_name, test_object = log_file[:-len(".log")].split("-", 4)
+        result, _, test_run_id, test_name, test_object = log_file[: -len(".log")].split(
+            "-", 4
+        )
         test_object += " (selinux AVCs)"
 
     # The mtps log file with mtps-get-task object contains information about
@@ -46,10 +44,12 @@ for log_file in os.listdir(mtps_log_dir):
     if test_object:
         message += ": " + test_object
 
-    results[test_name].append({
-        "result": RESULTS_MAPPING[result],
-        "message": message,
-        "details": details,
-    })
+    results[test_name].append(
+        {
+            "result": RESULTS_MAPPING[result],
+            "message": message,
+            "details": details,
+        }
+    )
 
 print(json.dumps(results))

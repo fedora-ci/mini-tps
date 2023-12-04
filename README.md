@@ -3,10 +3,11 @@
 This is a lightweight version of the TPS.
 
 Installability test checks that given RPMs can be:
-* installed
-* removed
-* updated
-* downgraded
+
+- installed
+- removed
+- updated
+- downgraded
 
 mini-tps has no external dependencies. The original TPS runs on Red Hat products, mini-tps
 was designed to be triggered early in the development process. It runs on Koji/Brew builds.
@@ -46,4 +47,4 @@ See `mtps-prepare-system --list` for the list of available profiles.
 ```
 
 5. If you wish to test another package, remove `/etc/yum.repos.d/brew-${TASK_ID}.repo`
-and the files in `/var/lib/brew-repo` and repeat from the step 3.
+   and the files in `/var/lib/brew-repo` and repeat from the step 3.

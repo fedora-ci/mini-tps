@@ -1,4 +1,4 @@
-#!/bin/bash -efu
+#!/usr/bin/bash -efu
 
 DEBUG="${DEBUG:-}"
 
@@ -9,7 +9,7 @@ DEBUG="${DEBUG:-}"
 # aa < 10
 
 debug() {
-    if [ -n "$DEBUG" ]; then
+    if [ -n "${DEBUG:-}" ]; then
         echo "$*" >&2
     fi
 }

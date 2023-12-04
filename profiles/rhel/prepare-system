@@ -1,8 +1,8 @@
-INT_CERTS="${INT_CERTS:-http://download.eng.bos.redhat.com/brewroot/vol/rhel-7/packages/redhat-internal-cert-install/0.1/9.el7.csb/noarch/redhat-internal-cert-install-0.1-9.el7.csb.noarch.rpm}"
+#!/usr/bin/bash -efu
 
 if ! rpm -q redhat-internal-cert-install >/dev/null 2>&1; then
-    echo "Deploy internal certs."
-    yum install -y "$INT_CERTS"
+    echo "Deploying internal certs"
+    yum install -y "${INT_CERTS:-https://hdn.corp.redhat.com/rhel8-csb/RPMS/noarch/redhat-internal-cert-install-0.1-31.el7.noarch.rpm}"
 fi
 
 echo "Setting up RHEL internal YUM repos for selected profile"
@@ -52,7 +52,7 @@ if [ -n "$ENABLE_BUILD_ROOT" ]; then
 fi
 
 # repoquery util acts not on live system, but rather on set of enabled repos. mini-tps hold personal list of protected packages, such as openssh-server
-yum config-manager --set-enabled astepano-mini-tps || :
+# yum config-manager --set-enabled astepano-mini-tps || :
 
 echo "Installing required packages for testing"
 yum install -y createrepo_c

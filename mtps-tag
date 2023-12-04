@@ -1,4 +1,4 @@
-#!/bin/bash -efu
+#!/usr/bin/bash -efu
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ tasks_id_from_answer() {
     local xml="$1" && shift
     local tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='task_id']//value/int/text()" 
+    local cmd="cat //member[name='task_id']//value/int/text()"
     local tasks="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:digit:]]/p')"
     debug "Tag has next tasks:"
     debug "$tasks"
@@ -37,7 +37,7 @@ nvrs_from_answer() {
     local xml="$1" && shift
     local tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='nvr']//value/string/text()" 
+    local cmd="cat //member[name='nvr']//value/string/text()"
     local nvrs="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Tag has next tasks:"
     debug "$nvrs"
@@ -185,7 +185,7 @@ fi
 
 debug "Tag: $TAG_NAME"
 
-if [ -n "$GET_NVRS" -o -n "$GET_TASKS" ]; then
+if [[ -n "$GET_NVRS" || -n "$GET_TASKS" ]]; then
     query_listTagged="$(mk_query_listTagged "$TAG_NAME")"
     answer_listTagged="$(send_query "$query_listTagged")"
     if [ -n "$GET_NVRS" ]; then

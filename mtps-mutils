@@ -22,69 +22,81 @@
 #
 # https://github.com/fedora-modularity/libmodulemd
 
-import os
-import sys
+import argparse
+import gi
 import gzip
 import logging
-import argparse
+import sys
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-import gi
+
 md1 = None
 md2 = None
 
 # gi doesn't allow load two Modulemd at the same time
 
 try:
-    gi.require_version('Modulemd', '2.0') # noqa
+    gi.require_version("Modulemd", "2.0")  # noqa
     from gi.repository import Modulemd as md2
-except:
+except Exception:
     pass
 
 try:
-    gi.require_version('Modulemd', '1.0') # noqa
+    gi.require_version("Modulemd", "1.0")  # noqa
     from gi.repository import Modulemd as md1
-except:
+except Exception:
     pass
 
 if not md1 and not md2:
     logger.debug("Cannot load modulemd library.")
     sys.exit(1)
 
-parser = argparse.ArgumentParser(
-    description='A set of utils for mtps..')
+parser = argparse.ArgumentParser(description="A set of utils for mtps..")
 group = parser.add_mutually_exclusive_group(required=True)
-parser.add_argument("-m", "--modulemd", help="Modulemd file path. Can be .gz",
-                   default="modulemd.txt", metavar='FILE')
-group.add_argument("-f", "--getfiltered", action="store_true",
-                   help="Print filtered packages from module.")
-group.add_argument("-a", "--getfartifacts", action="store_true",
-                   help="Print artifacts from module.")
-group.add_argument("--getprofiles", action="store_true",
-                   help="Print profiles from module.")
-group.add_argument("--getstream", action="store_true",
-                   help="Print stream from module.")
-group.add_argument("--getcontext", action="store_true",
-                   help="Print context from module.")
-group.add_argument("--getversion", action="store_true",
-                   help="Print version from module.")
-group.add_argument("--getnsvc", action="store_true",
-                   help="Print n:s:v:c from module.")
-group.add_argument("--getrequires", action="store_true",
-                   help="Print list n:s required modules.")
+parser.add_argument(
+    "-m",
+    "--modulemd",
+    help="Modulemd file path. Can be .gz",
+    default="modulemd.txt",
+    metavar="FILE",
+)
+group.add_argument(
+    "-f",
+    "--getfiltered",
+    action="store_true",
+    help="Print filtered packages from module.",
+)
+group.add_argument(
+    "-a", "--getfartifacts", action="store_true", help="Print artifacts from module."
+)
+group.add_argument(
+    "--getprofiles", action="store_true", help="Print profiles from module."
+)
+group.add_argument("--getstream", action="store_true", help="Print stream from module.")
+group.add_argument(
+    "--getcontext", action="store_true", help="Print context from module."
+)
+group.add_argument(
+    "--getversion", action="store_true", help="Print version from module."
+)
+group.add_argument("--getnsvc", action="store_true", help="Print n:s:v:c from module.")
+group.add_argument(
+    "--getrequires", action="store_true", help="Print list n:s required modules."
+)
 args = parser.parse_args()
 mmds = []
 
 if args.modulemd:
     if args.modulemd.endswith(".gz"):
-        f = gzip.open(args.modulemd, 'rb')
+        f = gzip.open(args.modulemd, "rb")
     else:
-        f = open(args.modulemd, 'rb')
-    md = f.read().decode(encoding='utf-8')
+        f = open(args.modulemd, "rb")
+    md = f.read().decode(encoding="utf-8")
     f.close()
 
 if md2:
+
     def get_nsvc(module):
         nsvc = "%s:%s:%s:%s" % (
             module.get_module_name(),
@@ -93,6 +105,7 @@ if md2:
             module.get_all_streams()[0].get_context(),
         )
         return nsvc
+
     # 1 brew build == 1 stream
     index = md2.ModuleIndex.new()
     ret, failures = index.update_from_string(md, True)
@@ -102,15 +115,13 @@ if md2:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                filtered = stream.get_rpm_filters()
-                for filtered in filtered:
+                for filtered in stream.get_rpm_filters():
                     print(filtered)
     if args.getfartifacts:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                artifacts = stream.get_rpm_artifacts()
-                for artifact in artifacts:
+                for artifact in stream.get_rpm_artifacts():
                     print(artifact)
     if args.getprofiles:
         for name in module_names:
@@ -127,40 +138,35 @@ if md2:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                context = stream.get_context()
-                print(context)
+                print(stream.get_context())
     if args.getversion:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                version = stream.get_version()
-                print(version)
+                print(stream.get_version())
     if args.getnsvc:
         for name in module_names:
             module = index.get_module(name)
-            nsvc = get_nsvc(module)
-            print(nsvc)
+            print(get_nsvc(module))
     if args.getrequires:
         for name in module_names:
             module = index.get_module(name)
             for stream in module.get_all_streams():
-                deps = stream.get_dependencies()
-                for dep in deps:
-                    req_modules =  dep.get_runtime_modules()
-                    for req_module in req_modules:
-                        if req_module == 'platform':
+                for dep in stream.get_dependencies():
+                    for req_module in dep.get_runtime_modules():
+                        if req_module == "platform":
                             continue
-                        req_streams = dep.get_runtime_streams(req_module)
                         line = ""
-                        for req_stream in req_streams:
+                        for req_stream in dep.get_runtime_streams(req_module):
                             line += " " + req_module + ":" + req_stream
                         line = line.strip()
                         if line:
                             print(line)
-                            #[expression(i) for i in old_list if filter(i)]
-                            #[print("md_st") for req_stream in req_streams 
+                            # [expression(i) for i in old_list if filter(i)]
+                            # [print("md_st") for req_stream in req_streams
 
 if md1 and not md2:
+
     def get_nsvc(mmd):
         nsvc = "%s:%s:%s:%s" % (
             mmd.peek_name(),
@@ -169,35 +175,30 @@ if md1 and not md2:
             mmd.peek_context(),
         )
         return nsvc
+
     mmds = md1.objects_from_string(md)
     logger.debug("Found modules in {}: {}".format(args.modulemd, len(mmds)))
     if args.getfiltered:
         for mmd in mmds:
-            filtered = mmd.peek_rpm_filter().get()
-            for filtered in filtered:
+            for filtered in mmd.peek_rpm_filter().get():
                 print(filtered)
     if args.getfartifacts:
         for mmd in mmds:
-            artifacts = mmd.peek_rpm_artifacts().get()
-            for artifact in artifacts:
+            for artifact in mmd.peek_rpm_artifacts().get():
                 print(artifact)
     if args.getprofiles:
         for mmd in mmds:
-            profiles = mmd.peek_profiles().keys()
-            for profile in profiles:
+            for profile in mmd.peek_profiles().keys():
                 print(profile)
     if args.getstream:
         for mmd in mmds:
-            stream = mmd.peek_stream()
-            print(stream)
+            print(mmd.peek_stream())
     if args.getcontext:
         for mmd in mmds:
-            context = mmd.peek_context()
-            print(context)
+            print(mmd.peek_context())
     if args.getversion:
         for mmd in mmds:
-            version = mmd.peek_version()
-            print(version)
+            print(mmd.peek_version())
     if args.getnsvc:
         for mmd in mmds:
             nsvc = get_nsvc(mmd)
@@ -205,19 +206,16 @@ if md1 and not md2:
             print(nsvc)
     if args.getrequires:
         for mmd in mmds:
-            deps = mmd.peek_dependencies()
-            for dep in deps:
+            for dep in mmd.peek_dependencies():
                 req_modules = dep.peek_requires()
                 for req_module in req_modules:
-                    if req_module == 'platform':
+                    if req_module == "platform":
                         continue
-                    req_streams = req_modules[req_module].get()
                     line = ""
-                    for req_stream in req_streams:
+                    for req_stream in req_modules[req_module].get():
                         line += " " + req_module + ":" + req_stream
                     line = line.strip()
                     if line:
                         print(line)
-                        #[expression(i) for i in old_list if filter(i)]
-                        #[print("md_st") for req_stream in req_streams 
-
+                        # [expression(i) for i in old_list if filter(i)]
+                        # [print("md_st") for req_stream in req_streams

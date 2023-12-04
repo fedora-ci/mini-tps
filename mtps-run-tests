@@ -1,4 +1,4 @@
-#!/bin/bash -efu
+#!/usr/bin/bash -efu
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 # Copyright: Red Hat Inc. 2018, 2022, 2023
 # Author: Andrei Stepanov <astepano@redhat.com>
 
-PROG="${PROG:-${0##*/}}"
+: "${PROG:=${0##*/}}"
 
 # Source `mtps-setup' from $PATH
 if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
@@ -54,7 +54,6 @@ box_out() {
     echo -e "| ${b//?/ } |\n-${b//?/-}-"
 }
 
-# http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
 opt=$(getopt -n "$0" --options "hvct:r:s:l:x:f" --longoptions "help,verbose,skiplangpack,scriptletcheck,rpmverify,critical,test:,repo:,selinux:" -- "$@")
 eval set -- "$opt"
@@ -108,23 +107,21 @@ done
 
 # Entry
 
-DEBUG="${DEBUG:-}"
-TEST="${TEST:-}"
-REPONAME="${REPONAME:-}"
-SELINUX="${SELINUX:-}"
-CRITICAL="${CRITICAL:-}"
-SKIPLANGPACK="${SKIPLANGPACK:-}"
-CHECK_SCRIPTLETS="${CHECK_SCRIPTLETS:-}"
-RPM_VERIFY="${RPM_VERIFY:-}"
-# Put logs by default at CDIR/mtps-logs
-LOGS_DIR="${LOGS_DIR:-mtps-logs}"
+: "${DEBUG:=}"
+: "${TEST:=}"
+: "${REPONAME:=}"
+: "${SELINUX:=}"
+: "${CRITICAL:=}"
+: "${SKIPLANGPACK:=}"
+: "${CHECK_SCRIPTLETS:=}"
+: "${RPM_VERIFY:=}"
 
 debug "TEST: $TEST"
 debug "REPONAME: $REPONAME"
 debug "SELINUX: $SELINUX"
 
 # Test correct invocation
-if [ -z "$TEST" ] || [ -z "$REPONAME" ]; then
+if [[ -z "$TEST" || -z "$REPONAME" ]]; then
     echo "Use: $PROG -h for help."
     exit
 fi
@@ -132,7 +129,7 @@ fi
 START_DATE="$(date '+%x')"
 START_TIME="$(date '+%T')"
 if [ -n "$SELINUX" ]; then
-    if ! [ "$SELINUX" -eq "0" -o "$SELINUX" -eq "1" ]; then
+    if ! [[ "$SELINUX" -eq 0 || "$SELINUX" -eq 1 ]]; then
         echo "Use: $PROG -h for help."
         exit
     fi
@@ -166,17 +163,18 @@ for i in $nevras_in_repo; do
 done
 box_out "# $(echo $TEST | tr '[:lower:]' '[:upper:]') TEST" "" "Packages:" "" "${pkgs_list[@]}"
 
-mkdir -p "$LOGS_DIR"
+# Put logs by default at CDIR/mtps-logs
+mkdir -p "${LOGS_DIR:=mtps-logs}"
 TESTRUN_ID="$(date +%H%M%S)"
 if [ -z "${nevras_in_repo// /}" ]; then
-    logfname="${LOGS_DIR%%/}/FAIL-$TESTRUN_ID-$TEST.log"
+    logfname="${LOGS_DIR%%/}/FAIL-${TESTRUN_ID}-${TEST}.log"
     echo "Test '$TEST' failed due no packages for testing in repo '$REPONAME:'." | tee -a "$logfname"
-    echo "Output for: ${YUMDNFCMD} repo-pkgs "$REPONAME" list --showduplicates" | tee -a "$logfname"
+    echo "Output for: ${YUMDNFCMD} repo-pkgs $REPONAME list --showduplicates" | tee -a "$logfname"
     "$YUMDNFCMD" repo-pkgs "$REPONAME" list --showduplicates 2>&1 | tee -a "$logfname"
     exit 1
 fi
 
-# Prefixe all files with common suffix
+# Prefix all files with common suffix
 ret=0
 for nevra in $nevras_in_repo; do
     # Make 1 sec between audit entries
@@ -196,7 +194,7 @@ for nevra in $nevras_in_repo; do
         "  NEVRA:       $nevra" \
         "  SELINUX:     $(getenforce || echo "unknown")" \
         "  ${YUMDNFCMD} HISTORY: $START"
-    logfname="${LOGS_DIR%%/}/$TESTRUN_ID-$TEST-$nevra.log"
+    logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-${TEST}-${nevra}.log"
     mtps-pkg-test --test="$TEST" ${CHECK_SCRIPTLETS:+--scriptletcheck} ${RPM_VERIFY:+--rpmverify} --nevra="$nevra" 2>&1 | tee "$logfname"
     test_status="${PIPESTATUS[0]}"
     #box_out \

@@ -1,4 +1,4 @@
-#!/bin/bash -efu
+#!/usr/bin/bash -efu
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ debug "NSVC: $NSVC"
 debug "PROFILE: $PROFILE"
 
 # Test correct invocation
-if [ -z "$NSVC" ] || ! [ "$TEST" = "install" -o "$TEST" = "remove" ]; then
+if [ -z "$NSVC" ] || ! [[ "$TEST" == "install" || "$TEST" == "remove" ]]; then
   echo "Use: $PROG -h for help."
   exit
 fi
