@@ -721,13 +721,6 @@ for pkg in $rpms_from_task_all $rpms_from_task_noarch_all; do
     urls+=("$url")
 done
 
-if [ ${#urls[@]} -eq 0 ]; then
-    echo "This build doesn't have packages for testing."
-    echo "${ARCH}/noarch rpms in the Brew repo: $rpms_from_task_all $rpms_from_task_noarch_all"
-    echo "None of the above packages is present in current repos."
-    exit 1
-fi
-
 # Download RPMs
 for url in "${urls[@]}"; do
     echo "$url"
