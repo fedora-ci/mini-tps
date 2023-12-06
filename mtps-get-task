@@ -689,21 +689,12 @@ for task in $TASKS; do
         build_source="$(build2build_source "$build")"
         srpm_url="$(mk_url "$srpm" "$srpm_pkg_file" "$is_scratch")"
     fi
-    if [ -n "$ONLYINREPO" ]; then
-        # Purpose:
-        #
-        #   * Brew builds always have 1 input SRPM.
-        #   * Brew builds can have many RPMs.
-        #
-        # RCM team can choose only some RPM. And make AppStream / BaseOS / Compose
-        # only from some RPMs, ignoring other RPMs from Brew build. This options
-        # says to ignore RPMs that are absent.
-        rpms_from_task="$(filter_available "$ARCH" "$rpms_from_task")"
-        rpms_from_task_noarch="$(filter_available "noarch" "$rpms_from_task_noarch")"
-    fi
     rpms_from_task_all+=" $rpms_from_task"
     rpms_from_task_noarch_all+=" $rpms_from_task_noarch"
 done
+# remove trailing whitespaces and deduplicate
+rpms_from_task_all=$(deduplicate "${rpms_from_task_all%%+( )}")
+rpms_from_task_noarch_all=$(deduplicate "${rpms_from_task_noarch_all%%+( )}")
 
 echo "NVR: $nvr"
 echo "BUILD ID: $buildid"
@@ -718,8 +709,19 @@ if [ -n "$SRPM" ]; then
     exit 0
 fi
 
-rpms_from_task_all=$(deduplicate "${rpms_from_task_all%%+( )}")
-rpms_from_task_noarch_all=$(deduplicate "${rpms_from_task_noarch_all%%+( )}")
+if [ -n "$ONLYINREPO" ]; then
+    # Purpose:
+    #
+    #   * Brew builds always have 1 input SRPM.
+    #   * Brew builds can have many RPMs.
+    #
+    # RCM team can choose only some RPM. And make AppStream / BaseOS / Compose
+    # only from some RPMs, ignoring other RPMs from Brew build. This options
+    # says to ignore RPMs that are absent.
+    rpms_from_task_all="$(filter_available "$ARCH" "$rpms_from_task_all")"
+    rpms_from_task_noarch_all="$(filter_available "noarch" "$rpms_from_task_noarch_all")"
+fi
+
 if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
     echo "Brew repo doesn't have rpms for $ARCH/noarch"
     echo "Exit with special exit code: $RET_NO_PKG"
