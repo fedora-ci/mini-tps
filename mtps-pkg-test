@@ -694,7 +694,7 @@ case $TEST in
         pkg_update_to_new_if_present "$NEVRA"
         pkg_install_new_if_absent "$NEVRA"
 
-        # OSCI-4333: We have to check again if the pakage can be removed
+        # OSCI-4333: We have to check again if the package can be removed
         # now after we installed its latest version. It can happen that
         # the update introduced new /etc/yum/protected.d/* file which makes
         # it uninstallable.

@@ -19,6 +19,9 @@ if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
 if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
+RET_NO_RPMS_IN_BREW=7
+RET_NO_RPMS_IN_REPOS=8
+
 builds_from_answer() {
     local xml="$1" && shift
     local tmpfile
@@ -86,8 +89,7 @@ send_query() {
     local query="$1" && shift
     local answer
     answer="$(curl --silent -k --data "$query" "$BREWHUB")"
-    #debug "Brew answer: ${answer:0:200}...(truncated)"
-    debug "Brew answer: ${answer}"
+    debug "Brew answer: ${answer:0:200}...(truncated)"
     echo "$answer"
 }
 
@@ -422,7 +424,7 @@ fi
 m_context="$(from_module_name "$m_nvr" "context")"
 m_version="$(from_module_name "$m_nvr" "version")"
 
-# Do not change text messages. Next text messages are necessary for Jenkins pipleline.
+# Do not change these text messages, they're necessary for Jenkins pipeline.
 echo "Module tag: $m_tag"
 echo "Module name: $m_name"
 echo "Module stream: $m_stream"
@@ -466,7 +468,7 @@ for build in $builds_in_m; do
     set -e
     if [ "$ret" = "0" ]; then
         echo "Fetch build: $build success"
-    elif [ "$ret" = "111" ]; then
+    elif [[ "$ret" -eq $RET_NO_RPMS_IN_BREW || "$ret" -eq $RET_NO_RPMS_IN_REPOS ]]; then
         echo "Fetch build: $build doesn't have RPMs for test."
     else
         echo "Fetch build: $build failed."
@@ -508,6 +510,6 @@ id="$(id -u)"
 
 if [[ -n "$INSTALLREPOFILE" && "$id" -eq 0 ]]; then
     repofile="/etc/yum.repos.d/brew-${m_build_id}.repo"
-    echo "Create repo file: $repofile"
+    echo "Creating repo file: $repofile"
     echo "$repo_file_text" > "$repofile"
 fi

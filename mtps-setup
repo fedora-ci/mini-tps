@@ -61,7 +61,7 @@ if [ -z "$YUMDNFCMD" ]; then
 fi
 
 debug() {
-    if [ -n "${DEBUG:-}" ]; then
+    if [[ -n "${DEBUG:-}" || -n "${GB_DEBUG:-}" ]]; then
         echo -e "$*" >&2
     fi
 }

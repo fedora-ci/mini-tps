@@ -21,7 +21,8 @@ if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
 if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
-RET_NO_PKG=7
+RET_NO_RPMS_IN_BREW=7
+RET_NO_RPMS_IN_REPOS=8
 
 task_result2rpms() {
     local arch="$1" && shift
@@ -692,6 +693,7 @@ for task in $TASKS; do
     rpms_from_task_all+=" $rpms_from_task"
     rpms_from_task_noarch_all+=" $rpms_from_task_noarch"
 done
+
 # remove trailing whitespaces and deduplicate
 rpms_from_task_all=$(deduplicate "${rpms_from_task_all%%+( )}")
 rpms_from_task_noarch_all=$(deduplicate "${rpms_from_task_noarch_all%%+( )}")
@@ -709,6 +711,11 @@ if [ -n "$SRPM" ]; then
     exit 0
 fi
 
+if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
+    echo "There are no x86_64/noarch RPMs for Brew task $TASK"
+    exit "$RET_NO_RPMS_IN_BREW"
+fi
+
 if [ -n "$ONLYINREPO" ]; then
     # Purpose:
     #
@@ -723,9 +730,9 @@ if [ -n "$ONLYINREPO" ]; then
 fi
 
 if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
-    echo "Brew repo doesn't have rpms for $ARCH/noarch"
-    echo "Exit with special exit code: $RET_NO_PKG"
-    exit "$RET_NO_PKG"
+    # all packages have been filtered out above
+    echo "None of the packages is available in repos. Is it a new package?"
+    exit "$RET_NO_RPMS_IN_REPOS"
 fi
 
 urls=()
@@ -741,6 +748,7 @@ for url in "${urls[@]}"; do
 done
 
 if [[ -z "$CREATEREPO" || ! -d "$REPODIR" ]]; then
+    echo "Not creating repo"
     exit 0
 fi
 
@@ -769,6 +777,6 @@ if [[ -n "$INSTALLREPOFILE" && "$id" -eq 0 ]]; then
         repofile="/etc/yum.repos.d/brew-${TASK}.repo"
     fi
 
-    echo "Create repo file: $repofile"
+    echo "Creating repo file: $repofile"
     echo "$repo_file_text" > "$repofile"
 fi
