@@ -32,8 +32,15 @@ task_result2rpms() {
     local cmd="cat //member[name='rpms']//value/string/text()"
     local rpms
     rpms="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.$arch\.rpm/p")"
-    debug "$arch rpms:\n${rpms}\n---"
-    echo "$rpms"
+    local rpm_filenames=
+    for rpm in $rpms; do
+      # take only the rpm filename
+      # tasks/7171/57387171/libcap-static-2.48-9.el9_0.x86_64.rpm -> libcap-static-2.48-9.el9_0.x86_64.rpm
+      rpm_name="$(basename "$rpm")"
+      rpm_filenames="${rpm_filenames:+$rpm_filenames }${rpm_name}"
+    done
+    debug "$arch rpms:\n${rpm_filenames}\n---"
+    echo "$rpm_filenames"
 }
 
 task_result2srpm() {
@@ -44,7 +51,8 @@ task_result2srpm() {
     local cmd="cat //member[name='srpms']//value/string/text()"
     local srpm
     srpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.rpm/p")"
-    debug "srpms:\n${srpm}\n---"
+    srpm="$(basename "$srpm")"
+    debug "srpm: ${srpm}\n---"
     echo "$srpm"
 }
 
@@ -443,8 +451,7 @@ filter_available() {
     local rpms_filtered=
     local name=
     for rpm in $rpms; do
-        rpm_file="$(basename "$rpm")"
-        name="$(from_rpm_name "${rpm_file}" "name")"
+        name="$(from_rpm_name "${rpm}" "name")"
         "$YUMDNFCMD" info "${name}.${arch}" >/dev/null 2>&1
         ret="$?"
         if [ "$ret" -ne 0 ]; then
@@ -476,8 +483,6 @@ mk_url() {
     if [ "$is_scratch" == "no" ]; then
         # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/s390x/ghostscript-9.25-2.el8_0.1.s390x.rpm
         # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/src/ghostscript-9.25-2.el8_0.1.src.rpm
-        filename=$(basename "$filename")
-        srpm_filename=$(basename "$srpm_filename")
         name="$(from_rpm_name "${srpm_filename}" "name")"
         rel="$(from_rpm_name "${srpm_filename}" "rel")"
         ver="$(from_rpm_name "${srpm_filename}" "ver")"
@@ -668,7 +673,7 @@ for task in $TASKS; do
     rpms_from_task_noarch="$(task_result2rpms "noarch" "$task_result")"
     srpm="$(task_result2srpm "$task_result")"
     if [ -n "$srpm" ]; then
-        srpm_pkg_file="$(basename "$srpm")"
+        srpm_pkg_file="$srpm"
         srpm_pkg_name="$(from_rpm_name "${srpm_pkg_file}" "name")"
         if [ -z "$nvr" ]; then
             nvr="${srpm_pkg_file%%.src.rpm}"
