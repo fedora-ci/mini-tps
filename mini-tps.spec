@@ -1,16 +1,13 @@
 Name: mini-tps
 Version: 0.1
-Release: 162%{?dist}
+Release: 163%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
 URL:     https://github.com/fedora-ci/mini-tps
 Source0: %{name}.tar.gz
-Requires: yum-utils
-# List of packages for wich do not run 'remove' test.
-Requires: openssh-server yum
-# mtps-mutils
-Requires: libmodulemd
+# 'remove' test won't be run for these packages
+Requires: yum yum-utils openssh-server
 BuildArch: noarch
 
 %if 0%{?rhel} > 7
@@ -18,13 +15,6 @@ BuildArch: noarch
 Requires: rpm-plugin-selinux
 Requires: dnf-plugins-core
 Requires: libselinux-utils
-%endif
-
-# mtps-mutils
-%if 0%{?rhel} == 7
-Requires: python2-gobject-base
-%else
-Requires: python3-gobject-base
 %endif
 
 %description
@@ -38,7 +28,9 @@ Light version of TPS
 %install
 mkdir -p %{buildroot}%{_sbindir} # epel7
 install -pD -m 0755 --target-directory=%{buildroot}%{_sbindir} mtps-*
-install -pD -m 0644 mini-tps.conf %{buildroot}%{_sysconfdir}/dnf/protected.d/mini-tps.conf
+mkdir -p %{buildroot}%{_sysconfdir}/dnf/protected.d/
+# Make mini-tps (and all packages mini-tps requires) protected (from removal)
+echo mini-tps > %{buildroot}%{_sysconfdir}/dnf/protected.d/mini-tps.conf
 # viewer
 install -pD -m 0755 viewer/generate-result-json %{buildroot}%{_libexecdir}/mini-tps/viewer/generate-result-json
 install -pD -m 0644 viewer/viewer.html %{buildroot}%{_datarootdir}/mini-tps/viewer/viewer.html
@@ -62,6 +54,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Thu Dec 07 2023 Jiri Popelka <jpopelka@redhat.com> - 0.1-163
+- remove the Requires: python-gobject-base
+
 * Fri Nov 24 2023 Jiri Popelka <jpopelka@redhat.com> - 0.1-162
 - URL update
 - move mtps-* executables from /usr/local/bin/ to /usr/sbin/
