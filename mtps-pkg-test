@@ -72,8 +72,7 @@ from_nevra() {
     [[ $req_info == 'name' ]] && echo "$name" && return
 }
 
-# rpm --define "pkg1 a1" --define "pkg2 a1"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}'
-# https://rpm.org/user_doc/lua.html
+# Is the first arg (nevra) older than the second arg (nevra)?
 nevra_older_then() {
     # Verify with: rpmdev-vercmp
     local nevra1="$1" && shift
@@ -91,8 +90,10 @@ nevra_older_then() {
     nevra1="${name1}-${epoch1}:${version1}-${release1}"
     nevra2="${name2}-${epoch2}:${version2}-${release2}"
     local rcmp
+    # https://rpm-software-management.github.io/rpm/manual/lua
+    # rpm.vercmp(v1, v2) returns -1, 0 or 1 if v1 is smaller, equal or larger than v2
     rcmp="$(rpm --define "pkg1 $nevra1" --define "pkg2 $nevra2"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}')"
-    if [ "x$rcmp" = "x-1" ]; then
+    if [[ "$rcmp" == "-1" ]]; then
         # True
         return 0
     fi
@@ -176,13 +177,13 @@ run_with_scriptlet_check() {
 pkg_can_be_removed() {
     local nevra="$1" && shift
     local name="$(from_nevra "$nevra" "name")"
-    debug "${FUNCNAME[0]}: checking '$name' can be removed with help of ${YUMDNFCMD}."
+    debug "${FUNCNAME[0]}: checking whether $name can be removed with help of ${YUMDNFCMD}."
     "$YUMDNFCMD" --assumeyes --setopt "tsflags=test" "remove" "$name" >"$DEBUG_OUT" 2>&1
     if [ ${PIPESTATUS[0]} -eq 0 ]; then
-        echo "${FUNCNAME[0]}: $name can be removed."
+        debug "${FUNCNAME[0]}: $name can be removed."
         return 0
     fi
-    echo "${FUNCNAME[0]}: $name cannot be removed."
+    debug "${FUNCNAME[0]}: $name cannot be removed."
     return 1
 }
 
@@ -191,7 +192,7 @@ pkg_remove_any() {
     local name="$(from_nevra "$nevra" "name")"
     debug "${FUNCNAME[0]}: $name"
     if pkg_is_absent "$name"; then
-        debug "${FUNCNAME[0]}: $name is not installed. Do nothing."
+        debug "${FUNCNAME[0]}: $name is not installed. Not removing."
         return 0
     fi
     # yum remove --allowerasing kernel-rt-kvm
@@ -213,18 +214,18 @@ pkg_install_new_if_absent() {
     local name="$(from_nevra "$nevra" "name")"
     debug "${FUNCNAME[0]}: $name"
     if pkg_is_present "$name"; then
-        echo "${FUNCNAME[0]}: package $name is present. Not installing $nevra."
+        debug "${FUNCNAME[0]}: package $name is present. Not installing $nevra."
         return 0
     fi
     local ret=0
     "$YUMDNFCMD" -y install --allowerasing "$nevra" || ret=1
-    if [ "$ret" != "0" ]; then
+    if [ "$ret" -ne 0 ]; then
         echo "Installation of $nevra failed."
-        echo "See $YUMDNFCMD command output above for more information"
+        echo "See $YUMDNFCMD command output above for more information."
         exit 1
     fi
     if pkg_is_absent "$name"; then
-        echo "Package $name is absent."
+        echo "Package $name is absent after installation."
         return 1
     fi
     return 0
@@ -283,8 +284,8 @@ rpm_db_verify() {
     return $ret
 }
 
-get_installed_nevra_new() {
-    # Sytem can have a few same packages installed
+get_installed_nevra_newest() {
+    # More packages with the same name can be installed
     # rpm -q "kernel-rt-kvm"
     # kernel-rt-kvm-4.18.0-37.rt9.80.el8.x86_64
     # kernel-rt-kvm-4.18.0-39.rt9.82.el8.x86_64
@@ -294,34 +295,34 @@ get_installed_nevra_new() {
     nevra="${nevras[0]}"
     for n in "${nevras[@]}"; do
         if nevra_older_then "$nevra" "$n"; then
-            debug "get_installed_nevra_new: $nevra < $n"
+            debug "${FUNCNAME[0]}: $nevra < $n"
             nevra="$n"
         else
-            debug "get_installed_nevra_new: $nevra > $n. Skipp"
+            debug "${FUNCNAME[0]}: $nevra > $n. Skip"
         fi
     done
-    debug "Current the newest package: $nevra"
+    debug "Newest package: $nevra"
     echo "$nevra"
 }
 
-get_installed_nevra_old() {
-    # Sytem can have a few same packages installed
+get_installed_nevra_oldest() {
+    # More packages with the same name can be installed
     # rpm -q "kernel-rt-kvm"
     # kernel-rt-kvm-4.18.0-37.rt9.80.el8.x86_64
     # kernel-rt-kvm-4.18.0-39.rt9.82.el8.x86_64
-    # Return the newest one.
+    # Return the oldest one.
     local name="$1" && shift
     local nevras=($(rpm -q --qf "%{name}-%{epochnum}:%{version}-%{release}.%{arch}\n" "$name"))
     nevra="${nevras[0]}"
     for n in "${nevras[@]}"; do
         if ! nevra_older_then "$nevra" "$n"; then
-            debug "get_installed_nevra_old: $nevra > $n"
+            debug "${FUNCNAME[0]}: $nevra > $n"
             nevra="$n"
         else
-            debug "get_installed_nevra_new: $nevra < $n. Skipp"
+            debug "${FUNCNAME[0]}: $nevra < $n. Skip"
         fi
     done
-    debug "Current the oldest package: $nevra"
+    debug "Oldest package: $nevra"
     echo "$nevra"
 }
 
@@ -329,14 +330,14 @@ pkg_downgrade_if_present() {
     local nevra="$1" && shift
     local name="$(from_nevra "$nevra" "name")"
     if pkg_is_absent "$name"; then
-        echo "Package $nevra absent. No downgrade."
+        echo "Package $nevra is absent. Not downgrading."
         return 0
     fi
     # installonlypkg(foo) case
-    local installed_nevra_old="$(get_installed_nevra_old "$name")"
-    echo "The oldest installed nevra: $installed_nevra_old"
+    local installed_nevra_old="$(get_installed_nevra_oldest "$name")"
+    echo "The oldest installed package: $installed_nevra_old"
     if nevra_older_then "$installed_nevra_old" "$nevra"; then
-        echo "Do not downgrade package: $nevra. There is already installed old package: $installed_nevra_old"
+        echo "Not downgrading package: $nevra. There is already installed old package: $installed_nevra_old"
         return 0
     fi
     "$YUMDNFCMD" -y downgrade --allowerasing "$name"
@@ -363,28 +364,27 @@ get_old_nevra() {
     local old_nevra="${old_nevras[0]}"
     for n in "${old_nevras[@]}"; do
         if ! nevra_older_then "$old_nevra" "$n"; then
-            debug "get_old_nevra: $old_nevra > $n"
+            debug "${FUNCNAME[0]}: $old_nevra > $n"
             old_nevra="$n"
         else
-            debug "get_old_nevra: $old_nevra < $n. Skipp"
+            debug "${FUNCNAME[0]}: $old_nevra < $n. Skip"
         fi
     done
     if ! nevra_older_then "$old_nevra" "$nevra"; then
         debug "Cannot find older version for $nevra."
         return 1
     fi
-    debug "${FUNCNAME[0]}: older for $nevra is : $old_nevra"
+    debug "${FUNCNAME[0]}: older for $nevra is: $old_nevra"
     echo "$old_nevra"
 }
 
-pkg_remove_and_any_never() {
+pkg_remove_any_newer() {
     local nevra="$1" && shift
     local name="$(from_nevra "$nevra" "name")"
     local installed_nevra=($(rpm -q --qf "%{name}-%{epochnum}:%{version}-%{release}.%{arch}\n" "$name"))
     for to_remove in "${installed_nevra[@]}"; do
-        debug "Test if remove: $to_remove"
         if nevra_older_then "$to_remove" "$nevra"; then
-            echo "Do not remove older $to_remove"
+            debug "Not removing older package: $to_remove"
             continue
         fi
         echo "Removing package: $to_remove"
@@ -397,17 +397,16 @@ pkg_remove_any_older() {
     local name="$(from_nevra "$nevra" "name")"
     local installed_nevra=($(rpm -q --qf "%{name}-%{epochnum}:%{version}-%{release}.%{arch}\n" "$name"))
     for to_remove in "${installed_nevra[@]}"; do
-        debug "Test if remove: $to_remove"
         if ! pkg_can_be_removed "$to_remove"; then
             # RHBZ: 1698145
-            echo "Skipping remove: $to_remove. Package cannot be clearly removed."
+            echo "Package $to_remove cannot be removed. Skipping."
             continue
         fi
         if nevra_older_then "$to_remove" "$nevra"; then
             echo "Removing older package: $to_remove"
             "$YUMDNFCMD" -y remove --allowerasing "$to_remove" || :
         else
-            echo "Do not remove newer package: $to_remove"
+            debug "Not removing newer package: $to_remove"
             continue
         fi
     done
@@ -419,7 +418,7 @@ pkg_install_old_if_absent() {
     local nevra="$1" && shift
     local name="$(from_nevra "$nevra" "name")"
     if pkg_is_present "$name"; then
-        echo "Package $name is present. No install."
+        debug "Package $name is present. Not installing."
         return 0
     fi
     local old_nevra="$(get_old_nevra "$nevra")"
@@ -437,19 +436,19 @@ pkg_update_to_new_if_present() {
     local name="$(from_nevra "$nevra" "name")"
     debug "${FUNCNAME[0]}: $name"
     if pkg_is_absent "$name"; then
-        debug "Package $name is absent. No update."
+        debug "Package $name is absent. Not updating."
         return 0
     fi
-    # Update only if NEVRA installed package < NEVRA requested.
-    local installed_nevra_new="$(get_installed_nevra_new "$name")"
-    echo "The newest installed nevra: $installed_nevra_new"
+    # Skip update if installed package is not older than requested
+    local installed_nevra_new="$(get_installed_nevra_newest "$name")"
+    debug "(Newest) installed package: $installed_nevra_new"
     if ! nevra_older_then "$installed_nevra_new" "$nevra"; then
-        echo "Do not update a new package: $installed_nevra_new."
+        debug "Installed package $installed_nevra_new is not older. Not updating."
         return 0
     fi
     "$YUMDNFCMD" -y upgrade --allowerasing "$nevra"
     if pkg_is_absent "$nevra"; then
-        echo "Could not update to: $nevra."
+        echo "Could not update to: $nevra"
         return 1
     fi
     return 0
@@ -459,16 +458,16 @@ pkg_downgrade_to_old() {
     local nevra="$1" && shift
     local name="$(from_nevra "$nevra" "name")"
     if pkg_is_absent "$name"; then
-        debug "Package $name is absent. No downgrade."
+        debug "Package $name is absent. Not downgrading."
         return 1
     fi
-    local installed_nevra_old="$(get_installed_nevra_old "$name")"
+    local installed_nevra_old="$(get_installed_nevra_oldest "$name")"
     if rpm -q --provides "$installed_nevra_old" | grep -q -s "installonlypkg"; then
-        echo "Skipping downgrade test, because the oldest package: $installed_nevra_old has RPM flag: installonlypkg"
+        echo "Installed $installed_nevra_old has RPM flag: installonlypkg. Not downgrading."
         return 0
     fi
     if nevra_older_then "$installed_nevra_old" "$nevra"; then
-        echo "Do not downgrade package: ${installed_nevra_old}."
+        echo "Not downgrading package: ${installed_nevra_old}."
         return 1
     fi
     # dnf returns 1 if no downgrade available
@@ -493,14 +492,14 @@ msg_prepare() {
     local action="$1" && shift
     local nevra="$1" && shift
     box_out \
-        "  Prepare for $action $nevra "
+        "  Preparing for $action $nevra "
 }
 
 msg_run() {
     local action="$1" && shift
     local nevra="$1" && shift
     box_out \
-        "  Run $action test for $nevra "
+        "  Running $action test for $nevra "
 }
 
 # rpm -q --qf "%{NEVRA}\n" openssl
@@ -631,12 +630,10 @@ case $TEST in
             pkg_install_new_if_absent "$NEVRA"
         fi
         ret=$?
-        if [ -n "$RPM_VERIFY" ]; then
-            if [ "$ret" = "0" ]; then
-                # The "install" test succeeded so we can proceed and rpm-verify the results
-                rpm_db_verify "$NEVRA"
-                ret=$?
-            fi
+        if [[ "$ret" -eq 0 && -n "$RPM_VERIFY" ]]; then
+            # The "install" test succeeded so we can proceed and rpm-verify the results
+            rpm_db_verify "$NEVRA"
+            ret=$?
         fi
         exit $ret
         ;;
@@ -644,16 +641,16 @@ case $TEST in
         msg_prepare "updating" "$NEVRA"
         old_nevra="$(get_old_nevra "$NEVRA" || true)"
         if [ -z "$old_nevra" ]; then
-            echo "Cannot find older package than: $NEVRA. Skipping test."
+            echo "Cannot find older package than $NEVRA. Skipping test."
             # Skipping test
             exit 0
         fi
         echo "Found available older package: $old_nevra"
-        # At this point there is available in repo an old nevra
+        # At this point an old pkg is available in repo
         pkg_downgrade_if_present "$NEVRA"
         pkg_install_old_if_absent "$NEVRA"
         # At this point pkg is installed, but can be many installonlypkg(foo) packages
-        pkg_remove_and_any_never "$NEVRA"
+        pkg_remove_any_newer "$NEVRA"
         msg_run "update" "$NEVRA"
         if [ -n "$CHECK_SCRIPTLETS" ]; then
             run_with_scriptlet_check pkg_update_to_new_if_present "$NEVRA"
@@ -661,24 +658,22 @@ case $TEST in
             pkg_update_to_new_if_present "$NEVRA"
         fi
         ret=$?
-        if [ -n "$RPM_VERIFY" ]; then
-            if [ "$ret" = "0" ]; then
-                # The "update" test succeeded so we can proceed and rpm-verify the results
-                rpm_db_verify "$NEVRA"
-                ret=$?
-            fi
+        if [[ "$ret" -eq 0 && -n "$RPM_VERIFY" ]]; then
+            # The "update" test succeeded so we can proceed and rpm-verify the results
+            rpm_db_verify "$NEVRA"
+            ret=$?
         fi
         exit $ret
         ;;
     downgrade)
         msg_prepare "downgrading" "$NEVRA"
         old_nevra="$(get_old_nevra "$NEVRA" || true)"
-        echo "Older package than $NEVRA is: $old_nevra"
         if [ -z "$old_nevra" ]; then
-            echo "Cannot find older package than: $NEVRA. Skipping test."
+            echo "Cannot find older package than $NEVRA. Skipping test."
             # Skipping test
             exit 0
         fi
+        echo "Older available package is: $old_nevra"
         pkg_update_to_new_if_present "$NEVRA"
         pkg_install_new_if_absent "$NEVRA"
         pkg_remove_any_older "$NEVRA" # This is for installonlypkg(foo) packages, like kernel

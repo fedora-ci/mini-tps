@@ -67,6 +67,7 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 * Thu Dec 07 2023 Jiri Popelka <jpopelka@redhat.com> - 0.1-163
 - Remove the Requires: python-gobject-base
 - Move Requires: to mini-tps.conf
+- Improve messages
 
 * Fri Nov 24 2023 Jiri Popelka <jpopelka@redhat.com> - 0.1-162
 - URL update
