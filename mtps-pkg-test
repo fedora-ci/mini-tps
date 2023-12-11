@@ -102,12 +102,12 @@ nevra_older_then() {
 
 run_with_scriptlet_check() {
     # Run a command and check if the output doesn't contain certain keywords.
-    # The return code from the command is preserved. If the comand failed,
+    # The return code from the command is preserved. If the command failed,
     # we don't bother checking the output. If the command succeeded, we check
     # the output and return "1" if any of the keywords were found in the output.
     #
     # Example usage:
-    # run_with_scriptlet_check dnf install -y mypackage
+    # run_with_scriptlet_check dnf -y install mypackage
 
     local cmd_output
     cmd_output=$(mktemp)
@@ -201,7 +201,7 @@ pkg_remove_any() {
     #Removing:
     # kernel-rt-kvm   x86_64  4.18.0-39.rt9.82.el8   @rhel-8-buildroot      361 k
     # kernel-rt-kvm   x86_64  4.18.0-37.rt9.80.el8   @rhel-8-buildroot-old  361 k
-    "$YUMDNFCMD" remove -y --allowerasing "$name" || :
+    "$YUMDNFCMD" -y remove --allowerasing "$name" || :
     # yum returns 1 for removing non-existing package for yum4/dnf
     local ret=0
     pkg_is_present "$name" && ret=1
@@ -213,11 +213,11 @@ pkg_install_new_if_absent() {
     local name="$(from_nevra "$nevra" "name")"
     debug "${FUNCNAME[0]}: $name"
     if pkg_is_present "$name"; then
-        echo "${FUNCNAME[0]}: package $name is present. Do nothing."
+        echo "${FUNCNAME[0]}: package $name is present. Not installing $nevra."
         return 0
     fi
     local ret=0
-    "$YUMDNFCMD" install -y --allowerasing "$nevra" || ret=1
+    "$YUMDNFCMD" -y install --allowerasing "$nevra" || ret=1
     if [ "$ret" != "0" ]; then
         echo "Installation of $nevra failed."
         echo "See $YUMDNFCMD command output above for more information"
@@ -339,7 +339,7 @@ pkg_downgrade_if_present() {
         echo "Do not downgrade package: $nevra. There is already installed old package: $installed_nevra_old"
         return 0
     fi
-    "$YUMDNFCMD" downgrade -y --allowerasing "$name"
+    "$YUMDNFCMD" -y downgrade --allowerasing "$name"
 }
 
 get_old_nevra() {
@@ -387,8 +387,8 @@ pkg_remove_and_any_never() {
             echo "Do not remove older $to_remove"
             continue
         fi
-        echo "Remove nevra: $to_remove"
-        "$YUMDNFCMD" remove -y --allowerasing "$to_remove" || :
+        echo "Removing package: $to_remove"
+        "$YUMDNFCMD" -y remove --allowerasing "$to_remove" || :
     done
 }
 
@@ -404,8 +404,8 @@ pkg_remove_any_older() {
             continue
         fi
         if nevra_older_then "$to_remove" "$nevra"; then
-            echo "Remove older nevra: $to_remove"
-            "$YUMDNFCMD" remove -y --allowerasing "$to_remove" || :
+            echo "Removing older package: $to_remove"
+            "$YUMDNFCMD" -y remove --allowerasing "$to_remove" || :
         else
             echo "Do not remove newer package: $to_remove"
             continue
@@ -423,8 +423,8 @@ pkg_install_old_if_absent() {
         return 0
     fi
     local old_nevra="$(get_old_nevra "$nevra")"
-    echo "Install an older version for $nevra: $old_nevra"
-    "$YUMDNFCMD" install -y --allowerasing "$old_nevra"
+    echo "Installing older $old_nevra for $nevra"
+    "$YUMDNFCMD" -y install --allowerasing "$old_nevra"
     if pkg_is_absent "$old_nevra"; then
         echo "Could not install: $old_nevra."
         return 1
@@ -447,7 +447,7 @@ pkg_update_to_new_if_present() {
         echo "Do not update a new package: $installed_nevra_new."
         return 0
     fi
-    "$YUMDNFCMD" update -y --allowerasing "$nevra"
+    "$YUMDNFCMD" -y upgrade --allowerasing "$nevra"
     if pkg_is_absent "$nevra"; then
         echo "Could not update to: $nevra."
         return 1
@@ -471,8 +471,8 @@ pkg_downgrade_to_old() {
         echo "Do not downgrade package: ${installed_nevra_old}."
         return 1
     fi
-    # dnf return 1 if no downgrade available
-    "$YUMDNFCMD" downgrade -y --allowerasing "$name"
+    # dnf returns 1 if no downgrade available
+    "$YUMDNFCMD" -y downgrade --allowerasing "$name"
 }
 
 box_out() {

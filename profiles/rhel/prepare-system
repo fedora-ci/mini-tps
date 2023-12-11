@@ -2,7 +2,7 @@
 
 if ! rpm -q redhat-internal-cert-install >/dev/null 2>&1; then
     echo "Deploying internal certs"
-    yum install -y "${INT_CERTS:-https://hdn.corp.redhat.com/rhel8-csb/RPMS/noarch/redhat-internal-cert-install-0.1-31.el7.noarch.rpm}"
+    yum -y install "${INT_CERTS:-https://hdn.corp.redhat.com/rhel8-csb/RPMS/noarch/redhat-internal-cert-install-0.1-31.el7.noarch.rpm}"
 fi
 
 echo "Setting up RHEL internal YUM repos for selected profile"
@@ -55,8 +55,8 @@ fi
 # yum config-manager --set-enabled astepano-mini-tps || :
 
 echo "Installing required packages for testing"
-yum install -y createrepo_c which procps-ng
+yum -y install createrepo_c which procps-ng
 
-yum update -y
+yum -y upgrade
 yum clean all
 yum makecache
