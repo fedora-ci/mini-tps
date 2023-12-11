@@ -21,31 +21,27 @@ if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
 if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
-tasks_id_from_answer() {
+tagged2tasks() {
     local xml="$1" && shift
     local tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='task_id']//value/int/text()"
     local tasks="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:digit:]]/p')"
-    debug "Tag has next tasks:"
-    debug "$tasks"
-    debug "---"
+    debug "Tag tasks:\n${tasks}\n---"
     echo "$tasks"
 }
 
-nvrs_from_answer() {
+tagged2nvrs() {
     local xml="$1" && shift
     local tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='nvr']//value/string/text()"
     local nvrs="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Tag has next tasks:"
-    debug "$nvrs"
-    debug "---"
+    debug "Tag tasks:\n${nvrs}\n---"
     echo "$nvrs"
 }
 
-tag_id_from_answer() {
+tag2tag_id() {
     local xml="$1" && shift
     local task=
     volume_name="$(echo "$xml" | xmllint --xpath 'string(//member[name="id"]/value/int/text())' -)"
@@ -55,9 +51,9 @@ tag_id_from_answer() {
 
 send_query() {
     local query="$1" && shift
-    local answer="$(curl --silent -k --data "$query" "$BREWHUB")"
-    debug "Brew answer:"
-    debug "${answer}"
+    local answer
+    answer="$(curl --silent -k --data "$query" "$BREWHUB")"
+    debug "Brew answer:\n${answer}"
     echo "$answer"
 }
 
@@ -67,7 +63,7 @@ send_query() {
 #     'brew --debug-xmlrpc' to get XML
 #
 
-mk_query_getTag() {
+brew_get_tag() {
     local tag="$1" && shift
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -83,13 +79,12 @@ mk_query_getTag() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for getTag:"
-    debug "${query}"
-    echo "$query"
+    debug "Brew query for getTag: ${query:0:200}...(truncated)"
+    send_query "$query"
 }
 
 
-mk_query_listTagged() {
+brew_list_tagged() {
     local tag="$1" && shift
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -105,9 +100,8 @@ mk_query_listTagged() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for listTagged:"
-    debug "${query}"
-    echo "$query"
+    debug "Brew query for listTagged: ${query:0:200}...(truncated)"
+    send_query "$query"
 }
 
 msg_usage() {
@@ -186,22 +180,20 @@ fi
 debug "Tag: $TAG_NAME"
 
 if [[ -n "$GET_NVRS" || -n "$GET_TASKS" ]]; then
-    query_listTagged="$(mk_query_listTagged "$TAG_NAME")"
-    answer_listTagged="$(send_query "$query_listTagged")"
+    list_tagged="$(brew_list_tagged "$TAG_NAME")"
     if [ -n "$GET_NVRS" ]; then
-        nvrs="$(nvrs_from_answer "$answer_listTagged")"
+        nvrs="$(tagged2nvrs "$list_tagged")"
         echo "$nvrs"
     elif [ -n "$GET_TASKS" ]; then
-        tasks_id="$(tasks_id_from_answer "$answer_listTagged")"
+        tasks_id="$(tagged2tasks "$list_tagged")"
         echo "$tasks_id"
     fi
     exit 0
 fi
 
 if [ -n "$GET_TAG_ID" ]; then
-    query_getTag="$(mk_query_getTag "$TAG_NAME")"
-    answer_getTag="$(send_query "$query_getTag")"
-    tag_id="$(tag_id_from_answer "$answer_getTag")"
+    tag="$(brew_get_tag "$TAG_NAME")"
+    tag_id="$(tag2tag_id "$tag")"
     echo "$tag_id"
     exit 0
 fi

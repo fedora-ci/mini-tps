@@ -19,6 +19,9 @@ if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
 if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
+RET_NO_RPMS_IN_BREW=7
+RET_NO_RPMS_IN_REPOS=8
+
 rpms_from_answer() {
     local arch="$1" && shift
     local xml="$1" && shift
@@ -26,9 +29,7 @@ rpms_from_answer() {
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[value/string='$arch']/../member[name='nvr']/value/string/text()"
     rpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Arch $arch has next rpms:"
-    debug "$rpm"
-    debug "---"
+    debug "${arch} rpms:\n${rpm}\n---"
     echo "$rpm"
 }
 
@@ -49,7 +50,7 @@ send_query() {
 
 # Use 'koji list-api' to get a list of available XMLRPC.
 
-mk_query_build_rpms() {
+brew_list_build_rpms() {
     # listBuildRPMs query
     # Build can be: NVR or build number.
     local build="$1" && shift
@@ -70,7 +71,7 @@ mk_query_build_rpms() {
 EOF
     )"
     debug "Brew query for listBuildRPMs: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
 
@@ -206,7 +207,6 @@ GB_CREATEREPO_BIN="${GB_CREATEREPO_BIN:-}"
 GB_ONLYINREPO="${GB_ONLYINREPO:-}"
 GB_INSTALLREPOFILE="${GB_INSTALLREPOFILE:-}"
 
-# http://wiki.bash-hackers.org/howto/getopts_tutorial
 opt_str="$@"
 opt=$(getopt -n "$0" --options "hvd:b:a:cio" --longoptions "help,verbose,download:,build:,arch:,createrepo,installrepofile,onlyinrepo" -- "$@")
 eval set -- "$opt"
@@ -280,7 +280,7 @@ do_clean_exit() {
     rc=$?
     trap - SIGINT SIGTERM SIGABRT EXIT # clear the trap
     new_logfname="$logfname_fail"
-    if [[ "$rc" -eq 0 || "$rc" -eq 111 ]]; then
+    if [[ "$rc" -eq 0 || "$rc" -eq $RET_NO_RPMS_IN_REPOS ]]; then
         new_logfname="$logfname_pass"
     fi
     # Close tee pipes
@@ -297,18 +297,17 @@ trap do_clean_exit SIGINT SIGTERM SIGABRT EXIT
 
 debug "Brew build: $GB_BUILD"
 debug "Brew arch: $GB_ARCH"
-debug "Store RPMS at: $GB_DOWNLOAD"
+debug "Store RPMS at: $GB_REPODIR"
 debug "Create repo: $GB_CREATEREPO"
 
-query_build_rpms="$(mk_query_build_rpms $GB_BUILD)"
-answer_build_rpms="$(send_query "$query_build_rpms")"
+build_rpms="$(brew_list_build_rpms $GB_BUILD)"
 # rpms_from_build is a list of packages in form NVR: dhcp-relay-4.3.6-27.el8+7 dhcp-server-4.3.6-27.el8+7
-rpms_from_build="$(rpms_from_answer "$GB_ARCH" "$answer_build_rpms")"
+rpms_from_build="$(rpms_from_answer "$GB_ARCH" "$build_rpms")"
 rpms_from_build_all="$rpms_from_build"
-rpms_from_build_noarch="$(rpms_from_answer "noarch" "$answer_build_rpms")"
+rpms_from_build_noarch="$(rpms_from_answer "noarch" "$build_rpms")"
 rpms_from_build_noarch_all="$rpms_from_build_noarch"
-srpm="$(rpms_from_answer "src" "$answer_build_rpms").src.rpm"
-brew_build_id="$(build_from_answer "$answer_build_rpms")"
+srpm="$(rpms_from_answer "src" "$build_rpms").src.rpm"
+brew_build_id="$(build_from_answer "$build_rpms")"
 srpm_url="$(mk_url "$srpm" "${srpm%%.src.rpm}" "src")"
 
 echo "Brew build ID: $brew_build_id"
@@ -316,8 +315,8 @@ echo "URL: ${GB_BREWINFO}${brew_build_id}"
 echo "SRPM: $srpm_url"
 
 if [ -z "${rpms_from_build_all}${rpms_from_build_noarch_all}" ]; then
-    echo "This build doesn't have packages for testing for arch: x86_64/noarch. Skiping test."
-    exit
+    echo "Build doesn't have x86_64/noarch packages for testing."
+    exit $RET_NO_RPMS_IN_BREW
 fi
 
 if [ -n "$GB_ONLYINREPO" ]; then
@@ -335,9 +334,9 @@ fi
 
 if [ -z "${rpms_from_build}${rpms_from_build_noarch}" ]; then
     echo "This build doesn't have packages for testing."
-    echo "Brew repo has next rpms: $rpms_from_build_all $rpms_from_build_noarch_all"
+    echo "Brew repo rpms: $rpms_from_build_all $rpms_from_build_noarch_all"
     echo "None of the above packages is present in current repos."
-    exit 111
+    exit $RET_NO_RPMS_IN_REPOS
 fi
 
 # Download RPMs with specified arch
@@ -347,7 +346,7 @@ for pkg in $rpms_from_build; do
     download_rpm "$url"
 done
 
-# Download always 'noarch' packages
+# Download 'noarch' packages
 for pkg in $rpms_from_build_noarch; do
     url="$(mk_url "$srpm" "$pkg" "noarch")"
     echo "$url"
@@ -374,6 +373,6 @@ id="$(id -u)"
 
 if [[ -n "$GB_INSTALLREPOFILE" && "$id" -eq 0 ]]; then
     repofile="/etc/yum.repos.d/brew-${brew_build_id}.repo"
-    echo "Create repo file: $repofile"
+    echo "Creating repo file: $repofile"
     echo "$repo_file_text" > "$repofile"
 fi

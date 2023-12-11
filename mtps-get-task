@@ -21,24 +21,30 @@ if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
 if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
-RET_NO_PKG=7
+RET_NO_RPMS_IN_BREW=7
+RET_NO_RPMS_IN_REPOS=8
 
-rpms_from_answer() {
+task_result2rpms() {
     local arch="$1" && shift
     local xml="$1" && shift
     local tmpfile
     tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[name='rpms']//value/string/text()"
-    local rpm
-    rpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.$arch\.rpm/p")"
-    debug "Arch $arch has next rpms:"
-    debug "$rpm"
-    debug "---"
-    echo "$rpm"
+    local rpms
+    rpms="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.$arch\.rpm/p")"
+    local rpm_filenames=
+    for rpm in $rpms; do
+      # take only the rpm filename
+      # tasks/7171/57387171/libcap-static-2.48-9.el9_0.x86_64.rpm -> libcap-static-2.48-9.el9_0.x86_64.rpm
+      rpm_name="$(basename "$rpm")"
+      rpm_filenames="${rpm_filenames:+$rpm_filenames }${rpm_name}"
+    done
+    debug "$arch rpms:\n${rpm_filenames}\n---"
+    echo "$rpm_filenames"
 }
 
-srpms_from_answer() {
+task_result2srpm() {
     local xml="$1" && shift
     local tmpfile
     tmpfile="$(mktemp)"
@@ -46,13 +52,12 @@ srpms_from_answer() {
     local cmd="cat //member[name='srpms']//value/string/text()"
     local srpm
     srpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.rpm/p")"
-    debug "Has next srpms:"
-    debug "$srpm"
-    debug "---"
+    srpm="$(basename "$srpm")"
+    debug "srpm: ${srpm}\n---"
     echo "$srpm"
 }
 
-is_scratch_from_answer() {
+task_request2is_scratch() {
     local xml="$1" && shift
     local is_scratch
     is_scratch="$(echo "$xml" | xmllint --xpath 'string(//member[name="scratch"]/value/boolean/text())' -)"
@@ -61,7 +66,7 @@ is_scratch_from_answer() {
     echo "$is_scratch"
 }
 
-volume_name_from_answer() {
+build2volume_name() {
     local xml="$1" && shift
     local volume_name
     volume_name="$(echo "$xml" | xmllint --xpath 'string(//member[name="volume_name"]/value/string/text())' -)"
@@ -69,7 +74,7 @@ volume_name_from_answer() {
     echo "$volume_name"
 }
 
-build_source_from_answer() {
+build2build_source() {
     local xml="$1" && shift
     local build_source
     build_source="$(echo "$xml" | xmllint --xpath 'string(//member[name="source"]/value/string/text())' -)"
@@ -77,7 +82,7 @@ build_source_from_answer() {
     echo "$build_source"
 }
 
-nvr_from_answer() {
+builds2nvr() {
     local xml="$1" && shift
     local nvr
     nvr="$(echo "$xml" | xmllint --xpath 'string(//member[name="nvr"]/value/string/text())' -)"
@@ -85,11 +90,11 @@ nvr_from_answer() {
     echo "$nvr"
 }
 
-buildid_from_answer() {
+builds2build_id() {
     local xml="$1" && shift
     local buildid
     buildid="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
-    debug "buildid: $buildid"
+    debug "build id: $buildid"
     echo "$buildid"
 }
 
@@ -101,9 +106,7 @@ buildtags_from_answer() {
     local cmd="cat //member[name='name']/value/string/text()"
     local tags
     tags="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Build has next tags:"
-    debug "$tags"
-    debug "---"
+    debug "Build tags:\n${tags}\n---"
     echo "$tags"
 }
 
@@ -115,9 +118,7 @@ children_from_answer() {
     local cmd="cat //member[name='id']/value/int/text()"
     local children
     children="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has next children:"
-    debug "$children"
-    debug "---"
+    debug "Task children:\n${children}\n---"
     echo "$children"
 }
 
@@ -129,13 +130,19 @@ send_query() {
     echo "$answer"
 }
 
+deduplicate() {
+    # Remove duplicated words
+    # from a string with whitespace separated words
+    echo "$1" | tr ' ' '\n' | sort | uniq | paste -sd " " -
+}
+
 # Use:
 #
 #     'koji list-api' to get a list of available XMLRPC.
 #     'brew --debug-xmlrpc' to get XML
 #
 
-mk_query_build() {
+brew_get_build() {
     # getBuild query
     # Build can be: NVR or build number.
     local build="$1" && shift
@@ -152,10 +159,10 @@ mk_query_build() {
 EOF
     )"
     debug "Brew query for listBuildRPMs: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
-mk_query_listbuildtags() {
+brew_list_build_tags() {
     # listTags query
     # Build can be: build number.
     local build="$1" && shift
@@ -172,11 +179,11 @@ mk_query_listbuildtags() {
 EOF
     )"
     debug "Brew query for listTags: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
 
-mk_query_listbuilds() {
+brew_list_builds() {
     # listBuilds query
     local task="$1" && shift
     local query="$(cat << EOF
@@ -201,10 +208,10 @@ mk_query_listbuilds() {
 EOF
     )"
     debug "Brew query for listBuilds: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
-mk_query_task_result() {
+brew_get_task_result() {
     # getTaskResult query
     # Build can be: NVR or build number.
     local task="$1" && shift
@@ -221,10 +228,10 @@ mk_query_task_result() {
 EOF
     )"
     debug "Brew query for getTaskResult: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
-mk_query_get_user() {
+brew_get_user() {
     # getUser query
     local user_id="$1" && shift
     local query="$(cat << EOF
@@ -240,10 +247,10 @@ mk_query_get_user() {
 EOF
     )"
     debug "Brew query for getUser: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
-mk_query_task_info() {
+brew_get_task_info() {
     # getTaskInfo query
     local task="$1" && shift
     local query="$(cat << EOF
@@ -259,11 +266,11 @@ mk_query_task_info() {
 EOF
     )"
     debug "Brew query for getTaskInfo: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
-mk_query_task_request() {
-    # getTaskInfo query
+brew_get_task_request() {
+    # getTaskRequest query
     local task="$1" && shift
     local query="$(cat << EOF
 <?xml version='1.0'?>
@@ -278,7 +285,7 @@ mk_query_task_request() {
 EOF
     )"
     debug "Brew query for getTaskRequest: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
 taskinfo2owner() {
@@ -289,13 +296,11 @@ taskinfo2owner() {
     local cmd="cat //member[name='owner']/value/int/text()"
     local owner
     owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has owner id:"
-    debug "$owner"
-    debug "---"
+    debug "Task owner id:\n${owner}\n---"
     echo "$owner"
 }
 
-taskquery2target() {
+task_request2target() {
     local xml="$1" && shift
     local tmpfile
     tmpfile="$(mktemp)"
@@ -303,9 +308,7 @@ taskquery2target() {
     local cmd="cat //params/param[1]/value/array/data[1]/value[2]/string/text()"
     local target
     target="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has target:"
-    debug "$target"
-    debug "---"
+    debug "Task target:\n${target}\n---"
     echo "$target"
 }
 
@@ -317,9 +320,7 @@ ownerinfo2user() {
     local cmd="cat //member[name='name']/value/string/text()"
     local owner
     owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has owner name:"
-    debug "$owner"
-    debug "---"
+    debug "Task owner name:\n${owner}\n---"
     echo "$owner"
 }
 
@@ -331,13 +332,11 @@ ownerinfo2krb() {
     local cmd="cat //member[name='krb_principal']/value/string/text()"
     local email
     email="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task has owner has email:"
-    debug "$email"
-    debug "---"
+    debug "Task owner email:\n${email}\n---"
     echo "$email"
 }
 
-mk_query_task_children() {
+brew_get_task_children() {
     # getTaskChildren query
     # Build can be: NVR or build number.
     local task="$1" && shift
@@ -354,7 +353,7 @@ mk_query_task_children() {
 EOF
     )"
     debug "Brew query for getTaskChildren: ${query:0:200}...(truncated)"
-    echo "$query"
+    send_query "$query"
 }
 
 
@@ -429,27 +428,27 @@ from_rpm_name() {
     filename="${filename%%.rpm}"
     # Arch
     local arch="${filename##*.}"
-    debug "$filename arch: $arch"
+    debug "${filename} arch: ${arch}"
     [[ $req_info == 'arch' ]] && echo "$arch" && return
     # Release
     local rel="${filename##*-}"
     rel="${rel%.*}"
-    debug "$filename rel: $rel"
+    debug "${filename} rel: ${rel}"
     [[ $req_info == 'rel' ]] && echo "$rel" && return
     # Version
     local ver="${filename%-${rel}.${arch}}"
     ver="${ver##*-}"
-    debug "$filename ver: $ver"
+    debug "${filename} ver: ${ver}"
     [[ $req_info == 'ver' ]] && echo "$ver" && return
     # Name
     local epoch_name="${filename%-${ver}-${rel}.${arch}}"
     name="${epoch_name##*:}"
-    debug "$filename name: $name"
+    debug "${filename} name: ${name}"
     [[ $req_info == 'name' ]] && echo "$name" && return
     # Epoch
     local epoch="${epoch_name%${name}}"
     epoch="${epoch//:/}"
-    debug "$filename epoch: ${epoch:-none}"
+    debug "${filename} epoch: ${epoch:-none}"
     [[ $req_info == 'epoch' ]] && echo "$epoch" && return
 }
 
@@ -459,8 +458,7 @@ filter_available() {
     local rpms_filtered=
     local name=
     for rpm in $rpms; do
-        rpm_file="$(basename "$rpm")"
-        name="$(from_rpm_name "${rpm_file}" "name")"
+        name="$(from_rpm_name "${rpm}" "name")"
         "$YUMDNFCMD" info "${name}.${arch}" >/dev/null 2>&1
         ret="$?"
         if [ "$ret" -ne 0 ]; then
@@ -492,8 +490,6 @@ mk_url() {
     if [ "$is_scratch" == "no" ]; then
         # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/s390x/ghostscript-9.25-2.el8_0.1.s390x.rpm
         # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/src/ghostscript-9.25-2.el8_0.1.src.rpm
-        filename=$(basename "$filename")
-        srpm_filename=$(basename "$srpm_filename")
         name="$(from_rpm_name "${srpm_filename}" "name")"
         rel="$(from_rpm_name "${srpm_filename}" "rel")"
         ver="$(from_rpm_name "${srpm_filename}" "ver")"
@@ -502,7 +498,7 @@ mk_url() {
     else
         url="${BREWROOT}/work/${filename}"
     fi
-    debug "URL for $filename: $url"
+    debug "URL for ${filename}: ${url}"
     echo "$url"
 }
 
@@ -633,31 +629,19 @@ debug "Task: $TASK"
 debug "Arch: $ARCH"
 debug "Srpm: $SRPM"
 debug "Owner: $OWNER"
-debug "Store RPMS at: $DOWNLOAD"
+debug "Store RPMS at: ${REPODIR}"
 debug "Create repo: ${CREATEREPO:-no}"
-debug "Download recursive from children tasks: ${RECURSIVE:-no}"
+debug "Download recursively from children tasks: ${RECURSIVE:-no}"
 
+task_info="$(brew_get_task_info "$TASK")"
+task_owner_id="$(taskinfo2owner "$task_info")"
+owner_info="$(brew_get_user "$task_owner_id")"
+task_request="$(brew_get_task_request "$TASK")"
+is_scratch="$(task_request2is_scratch "$task_request")"
 
-TASKS="$TASK"
-
-query_task_info="$(mk_query_task_info $TASK)"
-# requested created task
-answer_task_info="$(send_query "$query_task_info")"
-task_owner_id="$(taskinfo2owner "$answer_task_info")"
-
-query_task_request="$(mk_query_task_request $TASK)"
-answer_task_request="$(send_query "$query_task_request")"
-is_scratch="$(is_scratch_from_answer "$answer_task_request")"
-task_build_target="$(taskquery2target "$answer_task_request")"
-
-query_owner_info="$(mk_query_get_user $task_owner_id)"
-answer_owner_info="$(send_query "$query_owner_info")"
-OWNERUSER="$(ownerinfo2user "$answer_owner_info")"
-OWNERKRB="$(ownerinfo2krb "$answer_owner_info")"
-
-echo "Owner user: $OWNERUSER"
-echo "Owner krb: $OWNERKRB"
-echo "Task target: $task_build_target"
+echo "Owner user: $(ownerinfo2user "$owner_info")"
+echo "Owner krb: $(ownerinfo2krb "$owner_info")"
+echo "Task target: $(task_request2target "$task_request")"
 echo "Is scratch build: $is_scratch"
 
 if [ -n "$OWNER" ]; then
@@ -666,20 +650,18 @@ if [ -n "$OWNER" ]; then
 fi
 
 # Works only for parent task
-query_listbuilds="$(mk_query_listbuilds "$TASK")"
-answer_listbuilds="$(send_query "$query_listbuilds")"
-nvr="$(nvr_from_answer "$answer_listbuilds")"
-buildid="$(buildid_from_answer "$answer_listbuilds")"
-query_listbuildtags="$(mk_query_listbuildtags "$buildid")"
-answer_listbuildtags="$(send_query "$query_listbuildtags")"
-buildtags="$(buildtags_from_answer "$answer_listbuildtags")"
+listbuilds="$(brew_list_builds "$TASK")"
+nvr="$(builds2nvr "$listbuilds")"
+buildid="$(builds2build_id "$listbuilds")"
+listbuildtags="$(brew_list_build_tags "$buildid")"
+buildtags="$(buildtags_from_answer "$listbuildtags")"
 buildtags="$(echo "$buildtags" | tr '\n' ' ')"
 buildtags="${buildtags%% }"
 
+TASKS="$TASK"
 if [ -n "$RECURSIVE" ]; then
-    query_task_children="$(mk_query_task_children $TASK)"
-    answer_task_children="$(send_query "$query_task_children")"
-    task_children="$(children_from_answer "$answer_task_children")"
+    task_children="$(brew_get_task_children "$TASK")"
+    task_children="$(children_from_answer "$task_children")"
     TASKS="$TASKS $task_children"
     TASKS="${TASKS%% }"
 fi
@@ -693,38 +675,28 @@ rpms_from_task_all=""
 rpms_from_task_noarch_all=""
 for task in $TASKS; do
     debug "Process task: $task"
-    query_task_files="$(mk_query_task_result $task)" # Holds plain XML
-    answer_task_result="$(send_query "$query_task_files")"
-    rpms_from_task="$(rpms_from_answer "$ARCH" "$answer_task_result")"
-    rpms_from_task_noarch="$(rpms_from_answer "noarch" "$answer_task_result")"
-    srpm="$(srpms_from_answer "$answer_task_result")"
+    task_result="$(brew_get_task_result "$task")" # Holds plain XML
+    rpms_from_task="$(task_result2rpms "$ARCH" "$task_result")"
+    rpms_from_task_noarch="$(task_result2rpms "noarch" "$task_result")"
+    srpm="$(task_result2srpm "$task_result")"
     if [ -n "$srpm" ]; then
-        srpm_pkg_file="$(basename $srpm)"
+        srpm_pkg_file="$srpm"
         srpm_pkg_name="$(from_rpm_name "${srpm_pkg_file}" "name")"
         if [ -z "$nvr" ]; then
             nvr="${srpm_pkg_file%%.src.rpm}"
         fi
-        query_build="$(mk_query_build "$nvr")"
-        answer_build="$(send_query "$query_build")"
-        volume_name="$(volume_name_from_answer "$answer_build")"
-        build_source="$(build_source_from_answer "$answer_build")"
+        build="$(brew_get_build "$nvr")"
+        volume_name="$(build2volume_name "$build")"
+        build_source="$(build2build_source "$build")"
         srpm_url="$(mk_url "$srpm" "$srpm_pkg_file" "$is_scratch")"
-    fi
-    if [ -n "$ONLYINREPO" ]; then
-        # Purpose:
-        #
-        #   * Brew builds always have 1 input SRPM.
-        #   * Brew builds can have many PRM.
-        #
-        # RCM team can choose only some RPM. And make AppStream / BaseOS / Compose
-        # only from some RPMs, ignoring other RPMs from Brew build. This options
-        # says to ignore RPMs that are absent.
-        rpms_from_task="$(filter_available "$ARCH" "$rpms_from_task")"
-        rpms_from_task_noarch="$(filter_available "noarch" "$rpms_from_task_noarch")"
     fi
     rpms_from_task_all+=" $rpms_from_task"
     rpms_from_task_noarch_all+=" $rpms_from_task_noarch"
 done
+
+# remove trailing whitespaces and deduplicate
+rpms_from_task_all=$(deduplicate "${rpms_from_task_all%%+( )}")
+rpms_from_task_noarch_all=$(deduplicate "${rpms_from_task_noarch_all%%+( )}")
 
 echo "NVR: $nvr"
 echo "BUILD ID: $buildid"
@@ -739,12 +711,28 @@ if [ -n "$SRPM" ]; then
     exit 0
 fi
 
-rpms_from_task_all="${rpms_from_task_all%%+( )}"
-rpms_from_task_noarch_all="${rpms_from_task_noarch_all%%+( )}"
 if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
-    echo "Brew repo doesn't have rpms for $ARCH/noarch"
-    echo "Exit with special exit code: $RET_NO_PKG"
-    exit "$RET_NO_PKG"
+    echo "There are no x86_64/noarch RPMs for Brew task $TASK"
+    exit "$RET_NO_RPMS_IN_BREW"
+fi
+
+if [ -n "$ONLYINREPO" ]; then
+    # Purpose:
+    #
+    #   * Brew builds always have 1 input SRPM.
+    #   * Brew builds can have many RPMs.
+    #
+    # RCM team can choose only some RPM. And make AppStream / BaseOS / Compose
+    # only from some RPMs, ignoring other RPMs from Brew build. This options
+    # says to ignore RPMs that are absent.
+    rpms_from_task_all="$(filter_available "$ARCH" "$rpms_from_task_all")"
+    rpms_from_task_noarch_all="$(filter_available "noarch" "$rpms_from_task_noarch_all")"
+fi
+
+if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
+    # all packages have been filtered out above
+    echo "None of the packages is available in repos. Is it a new package?"
+    exit "$RET_NO_RPMS_IN_REPOS"
 fi
 
 urls=()
@@ -753,13 +741,6 @@ for pkg in $rpms_from_task_all $rpms_from_task_noarch_all; do
     urls+=("$url")
 done
 
-if [ ${#urls[@]} -eq 0 ]; then
-    echo "This build doesn't have packages for testing."
-    echo "${ARCH}/noarch rpms in the Brew repo: $rpms_from_task_all $rpms_from_task_noarch_all"
-    echo "None of the above packages is present in current repos."
-    exit 1
-fi
-
 # Download RPMs
 for url in "${urls[@]}"; do
     echo "$url"
@@ -767,6 +748,7 @@ for url in "${urls[@]}"; do
 done
 
 if [[ -z "$CREATEREPO" || ! -d "$REPODIR" ]]; then
+    echo "Not creating repo"
     exit 0
 fi
 
@@ -795,6 +777,6 @@ if [[ -n "$INSTALLREPOFILE" && "$id" -eq 0 ]]; then
         repofile="/etc/yum.repos.d/brew-${TASK}.repo"
     fi
 
-    echo "Create repo file: $repofile"
+    echo "Creating repo file: $repofile"
     echo "$repo_file_text" > "$repofile"
 fi

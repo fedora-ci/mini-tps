@@ -1,44 +1,46 @@
 Name: mini-tps
 Version: 0.1
-Release: 162%{?dist}
+Release: 163%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
 URL:     https://github.com/fedora-ci/mini-tps
-Source0: %{name}.tar.gz
-Requires: yum-utils
-# List of packages for wich do not run 'remove' test.
-Requires: openssh-server yum
-# mtps-mutils
-Requires: libmodulemd
+Source0: mini-tps.tar.gz
 BuildArch: noarch
-
-%if 0%{?rhel} > 7
-# bug: https://bugzilla.redhat.com/show_bug.cgi?id=1641631
-Requires: rpm-plugin-selinux
-Requires: dnf-plugins-core
-Requires: libselinux-utils
-%endif
-
-# mtps-mutils
-%if 0%{?rhel} == 7
-Requires: python2-gobject-base
-%else
-Requires: python3-gobject-base
-%endif
+# Don't add any Requires here because those would become protected, see mini-tps.conf
 
 %description
 Light version of TPS
 
 %prep
-%autosetup -n %{name}
+%autosetup -n mini-tps
 
 %build
 
 %install
 mkdir -p %{buildroot}%{_sbindir} # epel7
 install -pD -m 0755 --target-directory=%{buildroot}%{_sbindir} mtps-*
-install -pD -m 0644 mini-tps.conf %{buildroot}%{_sysconfdir}/dnf/protected.d/mini-tps.conf
+
+mkdir -p %{buildroot}%{_sysconfdir}/dnf/protected.d/
+cat > %{buildroot}%{_sysconfdir}/dnf/protected.d/mini-tps.conf <<EOF
+# Packages for which mini-tps won't run the 'remove' test (i.e. won't try to remove them).
+
+mini-tps
+openssh-server
+yum
+yum-utils
+EOF
+%if 0%{?rhel} > 7
+cat >> %{buildroot}%{_sysconfdir}/dnf/protected.d/mini-tps.conf <<EOF
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1641631
+dnf-plugins-core
+libselinux-utils
+rpm-plugin-selinux
+EOF
+
+%endif
+
 # viewer
 install -pD -m 0755 viewer/generate-result-json %{buildroot}%{_libexecdir}/mini-tps/viewer/generate-result-json
 install -pD -m 0644 viewer/viewer.html %{buildroot}%{_datarootdir}/mini-tps/viewer/viewer.html
@@ -62,10 +64,14 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Thu Dec 07 2023 Jiri Popelka <jpopelka@redhat.com> - 0.1-163
+- Remove the Requires: python-gobject-base
+- Move Requires: to mini-tps.conf
+
 * Fri Nov 24 2023 Jiri Popelka <jpopelka@redhat.com> - 0.1-162
 - URL update
-- move mtps-* executables from /usr/local/bin/ to /usr/sbin/
-- use install instead of mkdir & cp
+- Move mtps-* executables from /usr/local/bin/ to /usr/sbin/
+- Use install instead of mkdir & cp
 - mtps-mutils Requires: python-gobject-base
 
 * Mon Jul 31 2023 Andrei Stepanov <astepano@redhat.com> - 0.1-161
