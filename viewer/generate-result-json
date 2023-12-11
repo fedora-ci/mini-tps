@@ -1,18 +1,19 @@
 #!/usr/bin/python3
 
-import os
 import sys
 import json
+from collections import defaultdict
+from pathlib import Path
 
 RESULTS_MAPPING = {"PASS": "OK", "WARN": "INFO", "FAIL": "BAD"}
 
-mtps_log_dir = sys.argv[1]
+mtps_log_dir = Path(sys.argv[1])
 
-results = {}
-for log_file in os.listdir(mtps_log_dir):
+results = defaultdict(list)
+for log in mtps_log_dir.iterdir():
     # For example:
     # FAIL-045051-install-systemd-standalone-sysusers-0:252-2.el9.x86_64.log
-    result, test_run_id, test_name, test_object = log_file[: -len(".log")].split("-", 3)
+    result, test_run_id, test_name, test_object = log.name[: -len(".log")].split("-", 3)
     if result not in RESULTS_MAPPING:
         # This is probably some file we do not want to handle.
         continue
@@ -20,9 +21,7 @@ for log_file in os.listdir(mtps_log_dir):
     # Selinux test has the "selinux" infix, for example:
     # FAIL-selinux-045051-install-systemd-container-0:252-2.el9.x86_64.log
     if test_run_id == "selinux":
-        result, _, test_run_id, test_name, test_object = log_file[: -len(".log")].split(
-            "-", 4
-        )
+        result, _, _, test_name, test_object = log.name[: -len(".log")].split("-", 4)
         test_object += " (selinux AVCs)"
 
     # The mtps log file with mtps-get-task object contains information about
@@ -32,23 +31,11 @@ for log_file in os.listdir(mtps_log_dir):
         test_name = "download build"
         test_object = None
 
-    if test_name not in results:
-        results[test_name] = []
-
-    # Read the content of the log file to so we can store it in results.json.
-    log_path = os.path.join(mtps_log_dir, log_file)
-    with open(log_path) as f:
-        details = f.read()
-
-    message = test_name
-    if test_object:
-        message += ": " + test_object
-
     results[test_name].append(
         {
             "result": RESULTS_MAPPING[result],
-            "message": message,
-            "details": details,
+            "message": f"{test_name}: {test_object}" if test_object else test_name,
+            "details": log.read_text(),
         }
     )
 
