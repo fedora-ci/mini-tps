@@ -124,12 +124,6 @@ send_query() {
     echo "$answer"
 }
 
-deduplicate() {
-    # Remove duplicated words
-    # from a string with whitespace separated words
-    echo "$1" | tr ' ' '\n' | sort | uniq | paste -sd " " -
-}
-
 # Use:
 #
 #     'koji list-api' to get a list of available XMLRPC.
@@ -481,7 +475,6 @@ mk_url() {
     local filename="$1" && shift
     local srpm_filename="$1" && shift
     local is_scratch="$1" && shift
-
     if [ "$is_scratch" == "no" ]; then
         # http://download.eng.bos.redhat.com/brewroot/packages/curl/7.61.1/34.el8/x86_64/curl-7.61.1-34.el8.x86_64.rpm
         # https://kojipkgs.fedoraproject.org//packages/packit/0.87.1/1.fc40/src/packit-0.87.1-1.fc40.src.rpm
@@ -693,9 +686,9 @@ for task in $TASKS; do
     rpms_from_task_noarch_all+=" $rpms_from_task_noarch"
 done
 
-# remove trailing whitespaces and deduplicate
-rpms_from_task_all=$(deduplicate "${rpms_from_task_all%%+( )}")
-rpms_from_task_noarch_all=$(deduplicate "${rpms_from_task_noarch_all%%+( )}")
+# remove trailing whitespaces
+rpms_from_task_all="${rpms_from_task_all%%+( )}"
+rpms_from_task_noarch_all="${rpms_from_task_noarch_all%%+( )}"
 
 echo "NVR: $nvr"
 echo "BUILD ID: $buildid"
@@ -734,14 +727,14 @@ if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
     exit "$RET_NO_RPMS_IN_REPOS"
 fi
 
-urls=()
+declare -A urls # associative array (dictionary, map)
 for pkg in $rpms_from_task_all $rpms_from_task_noarch_all; do
     url="$(mk_url "$pkg" "$srpm_pkg_file" "$is_scratch")"
-    urls+=("$url")
+    urls["$url"]=1 # in order to deduplicate, store url as key, value is unimportant
 done
 
-# Download RPMs
-for url in "${urls[@]}"; do
+# Iterate over keys
+for url in "${!urls[@]}"; do
     echo "$url"
     download_rpm "$url"
 done
