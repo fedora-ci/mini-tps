@@ -33,15 +33,9 @@ task_result2rpms() {
     local cmd="cat //member[name='rpms']//value/string/text()"
     local rpms
     rpms="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.$arch\.rpm/p")"
-    local rpm_filenames=
-    for rpm in $rpms; do
-      # take only the rpm filename
-      # tasks/7171/57387171/libcap-static-2.48-9.el9_0.x86_64.rpm -> libcap-static-2.48-9.el9_0.x86_64.rpm
-      rpm_name="$(basename "$rpm")"
-      rpm_filenames="${rpm_filenames:+$rpm_filenames }${rpm_name}"
-    done
-    debug "$arch rpms:\n${rpm_filenames}\n---"
-    echo "$rpm_filenames"
+    # e.g. tasks/7171/57387171/libcap-static-2.48-9.el9_0.x86_64.rpm. Don't strip the prefix off here, we need it.
+    debug "$arch rpms:\n${rpms}\n---"
+    echo "$rpms"
 }
 
 task_result2srpm() {
@@ -52,7 +46,7 @@ task_result2srpm() {
     local cmd="cat //member[name='srpms']//value/string/text()"
     local srpm
     srpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.rpm/p")"
-    srpm="$(basename "$srpm")"
+    # e.g. tasks/3126/110193126/keyutils-1.6.3-1.fc40.src.rpm. Don't strip the prefix off here, we need it.
     debug "srpm: ${srpm}\n---"
     echo "$srpm"
 }
@@ -458,7 +452,8 @@ filter_available() {
     local rpms_filtered=
     local name=
     for rpm in $rpms; do
-        name="$(from_rpm_name "${rpm}" "name")"
+        rpm_file="$(basename "$rpm")"
+        name="$(from_rpm_name "${rpm_file}" "name")"
         "$YUMDNFCMD" info "${name}.${arch}" >/dev/null 2>&1
         ret="$?"
         if [ "$ret" -ne 0 ]; then
@@ -488,14 +483,18 @@ mk_url() {
     local is_scratch="$1" && shift
 
     if [ "$is_scratch" == "no" ]; then
-        # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/s390x/ghostscript-9.25-2.el8_0.1.s390x.rpm
-        # http://download.eng.bos.redhat.com/brewroot/packages/ghostscript/9.25/2.el8_0.1/src/ghostscript-9.25-2.el8_0.1.src.rpm
+        # http://download.eng.bos.redhat.com/brewroot/packages/curl/7.61.1/34.el8/x86_64/curl-7.61.1-34.el8.x86_64.rpm
+        # https://kojipkgs.fedoraproject.org//packages/packit/0.87.1/1.fc40/src/packit-0.87.1-1.fc40.src.rpm
+        filename=$(basename "$filename")
+        srpm_filename=$(basename "$srpm_filename")
         name="$(from_rpm_name "${srpm_filename}" "name")"
         rel="$(from_rpm_name "${srpm_filename}" "rel")"
         ver="$(from_rpm_name "${srpm_filename}" "ver")"
         arch="$(from_rpm_name "${filename}" "arch")"
         url="${BREWROOT}/packages/${srpm_pkg_name}/${ver}/${rel}/${arch}/$filename"
     else
+        # https://download.eng.bos.redhat.com/brewroot/work/tasks/237/57520237/curl-7.61.1-34.el8.x86_64.rpm
+        # https://kojipkgs.fedoraproject.org//work/tasks/9873/109769873/packit-0.87.1-1.fc40.src.rpm
         url="${BREWROOT}/work/${filename}"
     fi
     debug "URL for ${filename}: ${url}"
@@ -680,7 +679,7 @@ for task in $TASKS; do
     rpms_from_task_noarch="$(task_result2rpms "noarch" "$task_result")"
     srpm="$(task_result2srpm "$task_result")"
     if [ -n "$srpm" ]; then
-        srpm_pkg_file="$srpm"
+        srpm_pkg_file="$(basename "$srpm")"
         srpm_pkg_name="$(from_rpm_name "${srpm_pkg_file}" "name")"
         if [ -z "$nvr" ]; then
             nvr="${srpm_pkg_file%%.src.rpm}"
