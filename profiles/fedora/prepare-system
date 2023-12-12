@@ -56,7 +56,7 @@ echo "Recreating the DNF cache..."
 "$YUMDNFCMD" makecache
 
 echo "Installing packages required for testing..."
-"$YUMDNFCMD" install -y createrepo_c
+"$YUMDNFCMD" install -y createrepo_c which procps-ng
 
 echo "Updating the system..."
 "$YUMDNFCMD" update -y
