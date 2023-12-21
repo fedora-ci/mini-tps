@@ -120,17 +120,17 @@ for require in "${requires[@]}"; do
         fi
         START_TIME="$NEW_START_TIME"
         box_out \
-            "Enable required module" \
+            "Enabling required module" \
             "======================" \
             "" \
             "  Name:        $name" \
             "  Stream:      $stream"
         logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-enable-${name}-${stream}.log"
-        echo "Reset module: $name" | tee -a "$logfname"
+        debug "Resetting module: $name" | tee -a "$logfname"
         "${YUMDNFCMD}" -y module reset "$name" 2>&1 | tee -a "$logfname"
         test_status="${PIPESTATUS[0]}"
         if [ "$test_status" -eq "0" ]; then
-            echo "Enable module: ${name}:${stream}" | tee -a "$logfname"
+            debug "Enabling module: ${name}:${stream}" | tee -a "$logfname"
             "${YUMDNFCMD}" -y module enable "${name}:${stream}" 2>&1 | tee -a "$logfname"
             test_status="${PIPESTATUS[0]}"
         fi

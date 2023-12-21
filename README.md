@@ -22,7 +22,7 @@ Run the following commands in the VM:
 
 ```
     dnf copr enable @osci/mini-tps
-    dnf install -y mini-tps
+    dnf -y install mini-tps
 ```
 
 2. Prepare the system.

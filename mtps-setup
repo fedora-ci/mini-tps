@@ -47,7 +47,7 @@ if [ -z "$YUMDNFCMD" ]; then
                 YUMDNFCMD="/usr/bin/dnf-3"
                 if [ "$EUID" -eq 0 ]; then
                     if ! rpm -q python3-dnf >/dev/null; then
-                        dnf install -y python3-dnf
+                        dnf -y install python3-dnf
                         if [ ! -e "$PROTECTEDCFG" ]; then
                             echo "python3-dnf" >> "$PROTECTEDCFG"
                         fi
