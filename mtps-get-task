@@ -587,6 +587,7 @@ LOGS_DIR="$(realpath "$LOGS_DIR")"
 while true; do
     TESTRUN_ID="$(date +%H%M%S)"
     logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-${TASK}-mtps-get-task.log"
+    logfname_skip="$(dirname "$logfname")/SKIP-$(basename "$logfname")"
     logfname_pass="$(dirname "$logfname")/PASS-$(basename "$logfname")"
     logfname_fail="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
     if [[ -e "$logfname" || -e "$logfname_pass" || -e "$logfname_fail" ]]; then
@@ -602,8 +603,10 @@ do_clean_exit() {
     rc=$?
     trap - SIGINT SIGTERM SIGABRT EXIT # clear the trap
     new_logfname="$logfname_fail"
-    if [ "$rc" = "0" ]; then
+    if [[ "$rc" -eq 0 ]]; then
         new_logfname="$logfname_pass"
+    elif [[ "$rc" -eq $RET_NO_RPMS_IN_BREW || "$rc" -eq $RET_NO_RPMS_IN_REPOS ]]; then
+        new_logfname="$logfname_skip"
     fi
     # Close tee pipes
     for pid in $(ps -o pid --no-headers --ppid $$); do
@@ -704,7 +707,7 @@ if [ -n "$SRPM" ]; then
 fi
 
 if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
-    echo "There are no x86_64/noarch RPMs for Brew task $TASK"
+    echo "There are no x86_64/noarch RPMs for Brew/Koji task $TASK"
     exit "$RET_NO_RPMS_IN_BREW"
 fi
 
