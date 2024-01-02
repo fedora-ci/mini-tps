@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 163%{?dist}
+Release: 164%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -64,6 +64,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Tue Jan 02 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-164
+- viewer (generate-result-json) related updates
+
 * Thu Dec 07 2023 Jiri Popelka <jpopelka@redhat.com> - 0.1-163
 - Remove the Requires: python-gobject-base
 - Move Requires: to mini-tps.conf
