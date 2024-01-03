@@ -39,4 +39,4 @@ for log in mtps_log_dir.iterdir():
         }
     )
 
-print(json.dumps(results))
+print(json.dumps(results, indent=2))
