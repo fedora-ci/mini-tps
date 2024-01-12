@@ -1,7 +1,7 @@
 ###### BASE OS ###########
 [rhel-8-base]
 name=RHEL-8 BaseOS
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/BaseOS/x86_64/os/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/BaseOS/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -15,7 +15,7 @@ skip_if_unavailable=True
 
 [rhel-8-base-debug]
 name=RHEL-8 BaseOS Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/BaseOS/x86_64/debug/tree/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/BaseOS/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -23,14 +23,14 @@ skip_if_unavailable=True
 ########### APPSTREAM ##################
 [rhel-8-appstream]
 name=RHEL-8 AppStream
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/AppStream/x86_64/os/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/AppStream/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-appstream-debug]
 name=RHEL-8 AppStream Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/AppStream/x86_64/debug/tree/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/AppStream/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -45,14 +45,14 @@ skip_if_unavailable=True
 ########### CRB ##################
 [rhel-8-crb]
 name=RHEL-8 CRB
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/CRB/x86_64/os/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/CRB/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-crb-debug]
 name=RHEL-8 CRB Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/CRB/x86_64/debug/tree/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/CRB/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -67,14 +67,14 @@ skip_if_unavailable=True
 ########### HighAvailability ##################
 [rhel-8-highavailability]
 name=RHEL-8 HighAvailability
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/HighAvailability/x86_64/os/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/HighAvailability/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-highavailability-debug]
 name=RHEL-8 HighAvailability Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/HighAvailability/x86_64/debug/tree/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/HighAvailability/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -136,14 +136,14 @@ skip_if_unavailable=True
 ########### ResilientStorage ##################
 [rhel-8-resilientstorage]
 name=RHEL-8 ResilientStorage
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/ResilientStorage/x86_64/os/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/ResilientStorage/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-resilientstorage-debug]
 name=RHEL-8 ResilientStorage Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/ResilientStorage/x86_64/debug/tree/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.2.0/compose/ResilientStorage/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True

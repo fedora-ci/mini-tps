@@ -1,7 +1,7 @@
 ###### BASE OS ###########
 [baseos]
 name=CentOS Stream 9 - BaseOS
-baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/BaseOS/x86_64/os/
+baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/BaseOS/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -12,7 +12,7 @@ skip_if_unavailable=True
 
 [baseos-debug]
 name=CentOS Stream 9 - BaseOS - Debug
-baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/BaseOS/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/BaseOS/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -34,7 +34,7 @@ skip_if_unavailable=True
 ########### APPSTREAM ##################
 [appstream]
 name=CentOS Stream 9 - AppStream
-baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/AppStream/x86_64/os/
+baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/AppStream/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -45,7 +45,7 @@ skip_if_unavailable=True
 
 [appstream-debug]
 name=CentOS Stream 9 - AppStream - Debug
-baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/AppStream/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/AppStream/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -67,7 +67,7 @@ skip_if_unavailable=True
 ########### CRB ##################
 [crb]
 name=CentOS Stream 9 - CRB
-baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/CRB/x86_64/os/
+baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/CRB/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -78,7 +78,7 @@ skip_if_unavailable=True
 
 [crb-debug]
 name=CentOS Stream 9 - CRB - Debug
-baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/CRB/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/CRB/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -100,7 +100,7 @@ skip_if_unavailable=True
 ########### HighAvailability ##################
 [highavailability]
 name=CentOS Stream 9 - HighAvailability
-baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/HighAvailability/x86_64/os/
+baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/HighAvailability/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -111,7 +111,7 @@ skip_if_unavailable=True
 
 [highavailability-debug]
 name=CentOS Stream 9 - HighAvailability - Debug
-baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/HighAvailability/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/production/latest-CentOS-Stream/compose/HighAvailability/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
