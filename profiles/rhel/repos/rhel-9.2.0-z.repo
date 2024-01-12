@@ -1,14 +1,14 @@
 ###### BASE OS ###########
 [rhel-9-base]
 name=RHEL-9 BaseOS
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/BaseOS/x86_64/os/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/BaseOS/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-base-debug]
 name=RHEL-9 BaseOS Debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/BaseOS/x86_64/debug/tree/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/BaseOS/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -24,14 +24,14 @@ skip_if_unavailable=True
 ########### APPSTREAM ##################
 [rhel-9-appstream]
 name=RHEL-9 AppStream
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/AppStream/x86_64/os/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/AppStream/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-appstream-debug]
 name=RHEL-9 AppStream-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/AppStream/x86_64/debug/tree/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/AppStream/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -47,14 +47,14 @@ skip_if_unavailable=True
 ########### CRB ##################
 [rhel-9-crb]
 name=RHEL-9 CRB
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/CRB/x86_64/os/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/CRB/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-crb-debug]
 name=RHEL-9 CRB-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/CRB/x86_64/debug/tree/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/CRB/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -70,14 +70,14 @@ skip_if_unavailable=True
 ########### HighAvailability ##################
 [rhel-9-highavailability]
 name=RHEL-9 HighAvailability
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/HighAvailability/x86_64/os/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/HighAvailability/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-highavailability-debug]
 name=RHEL-9 HighAvailability-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/HighAvailability/x86_64/debug/tree/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/HighAvailability/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -139,14 +139,14 @@ skip_if_unavailable=True
 ########### ResilientStorage ##################
 [rhel-9-resilientstorage]
 name=RHEL-9 ResilientStorage
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/ResilientStorage/x86_64/os/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/ResilientStorage/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-resilientstorage-debug]
 name=RHEL-9 ResilientStorage-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/ResilientStorage/x86_64/debug/tree/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.2.0/compose/ResilientStorage/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
