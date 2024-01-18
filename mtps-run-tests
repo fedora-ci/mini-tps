@@ -16,6 +16,8 @@
 
 : "${PROG:=${0##*/}}"
 
+EXIT_CODE_SKIP=7
+
 # Source `mtps-setup' from $PATH
 if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
@@ -205,18 +207,19 @@ for nevra in $nevras_in_repo; do
     ## Ignore errors on rollback due to: https://bugzilla.redhat.com/show_bug.cgi?id=1614346
     ## Rollback fails after Downgrade / Update tests
     #yum -y history rollback "$START" || echo "Ignoring rollback error: RHBZ#1614346"
-    if [ "$test_status" -ne "0" ]; then
+    if [ "$test_status" -eq $EXIT_CODE_SKIP ]; then
+        new_logfname="$(dirname "$logfname")/SKIP-$(basename "$logfname")"
+    elif [ "$test_status" -ne 0 ]; then
         ret=1
         if [ -n "$CRITICAL" ]; then
             new_logfname="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
         else
             new_logfname="$(dirname "$logfname")/WARN-$(basename "$logfname")"
         fi
-        mv "$logfname" "$new_logfname"
     else
         new_logfname="$(dirname "$logfname")/PASS-$(basename "$logfname")"
-        mv "$logfname" "$new_logfname"
     fi
+    mv "$logfname" "$new_logfname"
     if [ -n "$SELINUX" ] && rpm --quiet -q audit; then
         selinux_status=0
         ausearch --format raw -m avc,user_avc,selinux_err,user_selinux_err -ts "$START_DATE" "$START_TIME" 2>&1 | sed -e '/received policyload notice/d' | grep -s -o '^' && selinux_status=1

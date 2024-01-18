@@ -35,6 +35,8 @@
 
 : "${PROG:=${0##*/}}"
 
+EXIT_CODE_SKIP=7
+
 # Source `mtps-setup' from $PATH
 if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
@@ -594,7 +596,7 @@ fi
 if [[ "$TEST" == "install" || "$TEST" == "remove" ]]; then
     if ! pkg_can_be_removed "$NEVRA"; then
         echo "Skipping test: $TEST for $NEVRA. Package cannot be clearly removed."
-        exit 0
+        exit $EXIT_CODE_SKIP
     fi
 fi
 
@@ -621,7 +623,7 @@ case $TEST in
         old_nevra="$(get_old_nevra "$NEVRA" || true)"
         if [ -z "$old_nevra" ]; then
             echo "Cannot find older package than $NEVRA. Skipping test."
-            exit 0
+            exit $EXIT_CODE_SKIP
         fi
         # If there's a bug preventing the old package from installing
         # the dnf downgrade fails but we can't say whether it's because
@@ -635,7 +637,7 @@ case $TEST in
         fi
         if ! pkg_install_if_absent "$old_nevra"; then
             echo "Failed to install $old_nevra. Skipping test."
-            exit 0
+            exit $EXIT_CODE_SKIP
         fi
         # At this point pkg is installed, but can be many installonlypkg(foo) packages
         pkg_remove_any_newer "$NEVRA"
@@ -658,13 +660,13 @@ case $TEST in
         old_nevra="$(get_old_nevra "$NEVRA" || true)"
         if [ -z "$old_nevra" ]; then
             echo "Cannot find older package than $NEVRA. Skipping test."
-            exit 0
+            exit $EXIT_CODE_SKIP
         fi
         echo "Older available package is: $old_nevra"
         pkg_update_to_new_if_present "$NEVRA"
         if ! pkg_install_if_absent "$NEVRA"; then
             echo "Failed to install $NEVRA. Skipping test."
-            exit 0
+            exit $EXIT_CODE_SKIP
         fi
         pkg_remove_any_older "$NEVRA" # This is for installonlypkg(foo) packages, like kernel
         msg_run "downgrade" "$NEVRA"
@@ -685,7 +687,7 @@ case $TEST in
         # it uninstallable.
         if ! pkg_can_be_removed "$NEVRA"; then
             echo "Skipping test: $TEST for $NEVRA. Package cannot be clearly removed."
-            exit 0
+            exit $EXIT_CODE_SKIP
         fi
 
         msg_run "remove" "$NEVRA"
