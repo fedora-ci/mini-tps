@@ -315,7 +315,7 @@ echo "URL: ${GB_BREWINFO}${brew_build_id}"
 echo "SRPM: $srpm_url"
 
 if [ -z "${rpms_from_build_all}${rpms_from_build_noarch_all}" ]; then
-    echo "Build doesn't have x86_64/noarch packages for testing."
+    echo "Build doesn't have ${GB_ARCH}/noarch packages for testing."
     exit $RET_NO_RPMS_IN_BREW
 fi
 

@@ -707,7 +707,7 @@ if [ -n "$SRPM" ]; then
 fi
 
 if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
-    echo "There are no x86_64/noarch RPMs for Brew/Koji task $TASK"
+    echo "There are no ${ARCH}/noarch RPMs for Brew/Koji task ${TASK}"
     exit "$RET_NO_RPMS_IN_BREW"
 fi
 
