@@ -625,6 +625,7 @@ case $TEST in
             echo "Cannot find older package than $NEVRA. Skipping test."
             exit $EXIT_CODE_SKIP
         fi
+        echo "Found available older package: $old_nevra"
         # If there's a bug preventing the old package from installing
         # the dnf downgrade fails but we can't say whether it's because
         # of the new package or the old one.
