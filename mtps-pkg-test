@@ -35,6 +35,8 @@
 
 : "${PROG:=${0##*/}}"
 
+EXIT_CODE_SKIP=7
+
 # Source `mtps-setup' from $PATH
 if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
@@ -209,7 +211,7 @@ pkg_remove_any() {
     return $ret
 }
 
-pkg_install_new_if_absent() {
+pkg_install_if_absent() {
     local nevra="$1" && shift
     local name="$(from_nevra "$nevra" "name")"
     debug "${FUNCNAME[0]}: $name"
@@ -217,12 +219,10 @@ pkg_install_new_if_absent() {
         debug "${FUNCNAME[0]}: package $name is present. Not installing $nevra."
         return 0
     fi
-    local ret=0
-    "$YUMDNFCMD" -y install --allowerasing "$nevra" || ret=1
-    if [ "$ret" -ne 0 ]; then
+    if ! "$YUMDNFCMD" -y install --allowerasing "$nevra"; then
         echo "Installation of $nevra failed."
         echo "See $YUMDNFCMD command output above for more information."
-        exit 1
+        return 1
     fi
     if pkg_is_absent "$name"; then
         echo "Package $name is absent after installation."
@@ -335,7 +335,7 @@ pkg_downgrade_if_present() {
     fi
     # installonlypkg(foo) case
     local installed_nevra_old="$(get_installed_nevra_oldest "$name")"
-    echo "The oldest installed package: $installed_nevra_old"
+    echo "The (oldest) installed package: $installed_nevra_old"
     if nevra_older_then "$installed_nevra_old" "$nevra"; then
         echo "Not downgrading package: $nevra. There is already installed old package: $installed_nevra_old"
         return 0
@@ -410,25 +410,6 @@ pkg_remove_any_older() {
             continue
         fi
     done
-}
-
-pkg_install_old_if_absent() {
-    # Installs package < nevra, if pkg with name is absent.
-    # 2nd column yum output: 12:4.3.6-25.el8+7
-    local nevra="$1" && shift
-    local name="$(from_nevra "$nevra" "name")"
-    if pkg_is_present "$name"; then
-        debug "Package $name is present. Not installing."
-        return 0
-    fi
-    local old_nevra="$(get_old_nevra "$nevra")"
-    echo "Installing older $old_nevra for $nevra"
-    "$YUMDNFCMD" -y install --allowerasing "$old_nevra"
-    if pkg_is_absent "$old_nevra"; then
-        echo "Could not install: $old_nevra."
-        return 1
-    fi
-    return 0
 }
 
 pkg_update_to_new_if_present() {
@@ -615,7 +596,7 @@ fi
 if [[ "$TEST" == "install" || "$TEST" == "remove" ]]; then
     if ! pkg_can_be_removed "$NEVRA"; then
         echo "Skipping test: $TEST for $NEVRA. Package cannot be clearly removed."
-        exit 0
+        exit $EXIT_CODE_SKIP
     fi
 fi
 
@@ -625,9 +606,9 @@ case $TEST in
         pkg_remove_any "$NEVRA"
         msg_run "install" "$NEVRA"
         if [ -n "$CHECK_SCRIPTLETS" ]; then
-            run_with_scriptlet_check pkg_install_new_if_absent "$NEVRA"
+            run_with_scriptlet_check pkg_install_if_absent "$NEVRA"
         else
-            pkg_install_new_if_absent "$NEVRA"
+            pkg_install_if_absent "$NEVRA"
         fi
         ret=$?
         if [[ "$ret" -eq 0 && -n "$RPM_VERIFY" ]]; then
@@ -642,13 +623,22 @@ case $TEST in
         old_nevra="$(get_old_nevra "$NEVRA" || true)"
         if [ -z "$old_nevra" ]; then
             echo "Cannot find older package than $NEVRA. Skipping test."
-            # Skipping test
-            exit 0
+            exit $EXIT_CODE_SKIP
         fi
-        echo "Found available older package: $old_nevra"
-        # At this point an old pkg is available in repo
-        pkg_downgrade_if_present "$NEVRA"
-        pkg_install_old_if_absent "$NEVRA"
+        # If there's a bug preventing the old package from installing
+        # the dnf downgrade fails but we can't say whether it's because
+        # of the new package or the old one.
+        # So rather, remove the package, install old version, and if that fails
+        # skip the test.
+        if pkg_can_be_removed "$NEVRA"; then
+            pkg_remove_any "$NEVRA"
+        else
+            pkg_downgrade_if_present "$NEVRA"
+        fi
+        if ! pkg_install_if_absent "$old_nevra"; then
+            echo "Failed to install $old_nevra. Skipping test."
+            exit $EXIT_CODE_SKIP
+        fi
         # At this point pkg is installed, but can be many installonlypkg(foo) packages
         pkg_remove_any_newer "$NEVRA"
         msg_run "update" "$NEVRA"
@@ -670,12 +660,14 @@ case $TEST in
         old_nevra="$(get_old_nevra "$NEVRA" || true)"
         if [ -z "$old_nevra" ]; then
             echo "Cannot find older package than $NEVRA. Skipping test."
-            # Skipping test
-            exit 0
+            exit $EXIT_CODE_SKIP
         fi
         echo "Older available package is: $old_nevra"
         pkg_update_to_new_if_present "$NEVRA"
-        pkg_install_new_if_absent "$NEVRA"
+        if ! pkg_install_if_absent "$NEVRA"; then
+            echo "Failed to install $NEVRA. Skipping test."
+            exit $EXIT_CODE_SKIP
+        fi
         pkg_remove_any_older "$NEVRA" # This is for installonlypkg(foo) packages, like kernel
         msg_run "downgrade" "$NEVRA"
         if [ -n "$CHECK_SCRIPTLETS" ]; then
@@ -687,7 +679,7 @@ case $TEST in
     remove)
         msg_prepare "removing" "$NEVRA"
         pkg_update_to_new_if_present "$NEVRA"
-        pkg_install_new_if_absent "$NEVRA"
+        pkg_install_if_absent "$NEVRA" || exit 1
 
         # OSCI-4333: We have to check again if the package can be removed
         # now after we installed its latest version. It can happen that
@@ -695,7 +687,7 @@ case $TEST in
         # it uninstallable.
         if ! pkg_can_be_removed "$NEVRA"; then
             echo "Skipping test: $TEST for $NEVRA. Package cannot be clearly removed."
-            exit 0
+            exit $EXIT_CODE_SKIP
         fi
 
         msg_run "remove" "$NEVRA"
