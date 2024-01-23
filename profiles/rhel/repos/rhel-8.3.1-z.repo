@@ -136,14 +136,14 @@ skip_if_unavailable=True
 ########### ResilientStorage ##################
 [rhel-8-resilientstorage]
 name=RHEL-8 ResilientStorage
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.3.1/compose/ResilientStorage/$basearch/os/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.3.1/compose/ResilientStorage/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-resilientstorage-debug]
 name=RHEL-8 ResilientStorage Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.3.1/compose/ResilientStorage/$basearch/debug/tree/
+baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.3.1/compose/ResilientStorage/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True

@@ -139,14 +139,14 @@ skip_if_unavailable=True
 ########### ResilientStorage ##################
 [rhel-9-resilientstorage]
 name=RHEL-9 ResilientStorage
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.8.0/compose/ResilientStorage/$basearch/os/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.8.0/compose/ResilientStorage/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-resilientstorage-debug]
 name=RHEL-9 ResilientStorage-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.8.0/compose/ResilientStorage/$basearch/debug/tree/
+baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/updates/RHEL-9/latest-RHEL-9.8.0/compose/ResilientStorage/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
