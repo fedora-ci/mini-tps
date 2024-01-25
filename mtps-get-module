@@ -21,6 +21,7 @@ if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-set
 
 RET_NO_RPMS_IN_BREW=7
 RET_NO_RPMS_IN_REPOS=8
+RET_NO_MODULE_ARCH=9
 
 builds_from_answer() {
     local xml="$1" && shift
@@ -172,6 +173,17 @@ mk_url_mmd() {
     url="${BREWPKGS}/${name}/${stream//-/_}/${version}.${context}/files/module/modulemd.${arch}.txt"
     debug "URL for modulemd: $url"
     echo "$url"
+}
+
+url_exists() {
+    local url="$1" && shift
+    response=$(curl --silent --head "$url" | grep HTTP)
+    if [[ $response != *" 404 "* && $response != *" 403 "* ]]; then
+        return 0
+    else
+        echo "$url does not exist"
+        return 1
+    fi
 }
 
 download_artifact() {
@@ -453,6 +465,10 @@ if [[ -z "$builds_in_m" ]]; then
 fi
 
 mmd_url="$(mk_url_mmd "$m_nvr" "$ARCH")"
+if ! url_exists "$mmd_url"; then
+  echo "$m_nvr has probably not been built for $ARCH"
+  exit $RET_NO_MODULE_ARCH
+fi
 mmd_file="$(basename "$mmd_url")"
 mmd_dir="$(mktemp --directory)"
 download_artifact "$mmd_url" "$mmd_dir"
