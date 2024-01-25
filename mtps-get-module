@@ -385,10 +385,42 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p "${LOGS_DIR:=mtps-logs}"
-TESTRUN_ID="$(date +%H%M%S)"
-logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-mtps-get-module.log"
+LOGS_DIR="$(realpath "$LOGS_DIR")"
+while true; do
+    TESTRUN_ID="$(date +%H%M%S)"
+    logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-${MBSID}-mtps-get-module.log"
+    logfname_skip="$(dirname "$logfname")/SKIP-$(basename "$logfname")"
+    logfname_pass="$(dirname "$logfname")/PASS-$(basename "$logfname")"
+    logfname_fail="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
+    if [[ -e "$logfname" || -e "$logfname_pass" || -e "$logfname_fail" ]]; then
+        sleep 1
+        continue
+    fi
+    break
+done
 exec &> >(tee -a "$logfname")
 exec 2>&1
+
+do_clean_exit() {
+    rc=$?
+    trap - SIGINT SIGTERM SIGABRT EXIT # clear the trap
+    new_logfname="$logfname_fail"
+    if [[ "$rc" -eq 0 ]]; then
+        new_logfname="$logfname_pass"
+    elif [[ "$rc" -eq $RET_NO_RPMS_IN_BREW || "$rc" -eq $RET_NO_RPMS_IN_REPOS || "$rc" -eq $RET_NO_MODULE_ARCH ]]; then
+        new_logfname="$logfname_skip"
+    fi
+    # Close tee pipes
+    for pid in $(ps -o pid --no-headers --ppid $$); do
+        if [ -n "$(ps -p $pid -o pid=)" ]; then
+            kill -s HUP $pid
+        fi
+    done
+    mv -f "$logfname" "$new_logfname"
+    exit $rc
+}
+
+trap do_clean_exit SIGINT SIGTERM SIGABRT EXIT
 
 debug "Brew build: $BUILD"
 debug "Brew tag: $TAG"
