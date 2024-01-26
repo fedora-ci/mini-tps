@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 166%{?dist}
+Release: 167%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -64,6 +64,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Thu Jan 25 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-167
+- mtps-get-module improvements
+
 * Fri Jan 19 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-166
 - Skip update if old package can't be installed
 - Separate exit code for skipped tests
