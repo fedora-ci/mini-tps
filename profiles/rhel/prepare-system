@@ -1,5 +1,7 @@
 #!/usr/bin/bash -efu
 
+RET_NO_COMPOSE_ID=10
+
 if ! rpm -q redhat-internal-cert-install >/dev/null 2>&1; then
     echo "Deploying internal certs"
     yum -y install "${INT_CERTS:-https://hdn.corp.redhat.com/rhel8-csb/RPMS/noarch/redhat-internal-cert-install-0.1-31.el7.noarch.rpm}"
@@ -27,14 +29,19 @@ if [ ${#OPTREPOS[@]} -ne 0 ]; then
 fi
 if [ -n "$FIXREPO" ]; then
     for repofile in "${INSTALLED_REPO_FILES[@]}"; do
-        COMPOSEID="$(cat "$repofile" | \
+        composeid_url="$(cat "$repofile" | \
             sed -n -e '0,/baseurl/{ /baseurl/ s/^baseurl[[:space:]]*=[[:space:]]*//p }' | \
-            sed -n -e 's/\(latest[^/]\+\).*$/\1\/COMPOSE_ID/p' | \
-            xargs -n1 curl --retry 5 --insecure --fail --location --show-error  --remote-header-name)"
+            sed -n -e 's/\(latest[^/]\+\).*$/\1\/COMPOSE_ID/p')"
+        set +e
+        COMPOSEID="$(curl --retry 5 --insecure --fail --location --show-error  --remote-header-name "$composeid_url")"
+        set -e
+        if [[ -z "$COMPOSEID" ]]; then
+            echo "Failed to get compose id from $composeid_url"
+            exit $RET_NO_COMPOSE_ID
+        fi
         echo "Compose ID: $COMPOSEID"
         THELATESTDIR="$(cat "$repofile" | sed -n -e '0,/baseurl/{ /baseurl/ s/^baseurl[[:space:]]*=[[:space:]]*//p }' | grep -oE 'latest-[^/]+')"
-        echo "Using the latest dir: $THELATESTDIR"
-        echo "Replace $THELATESTDIR with $COMPOSEID in $repofile"
+        echo "Replacing $THELATESTDIR with $COMPOSEID in $repofile"
         sed -i -e "s/$THELATESTDIR/$COMPOSEID/g" "$repofile"
     done
 fi
