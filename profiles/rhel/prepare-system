@@ -9,9 +9,8 @@ fi
 
 echo "Setting up RHEL internal YUM repos for selected profile"
 find "/etc/yum.repos.d/" -name "${REPOFILE_OPT_PREFIX}*.repo" -exec rm --verbose -f '{}' ';'
-declare -a INSTALLED_REPO_FILES=()
+declare -a INSTALLED_REPO_FILES=("$REPOFILE")
 cp -f "$PFILE" "$REPOFILE"
-INSTALLED_REPO_FILES+=("$REPOFILE")
 if [ ${#OPTREPOS[@]} -ne 0 ]; then
     declare -i optindex=0
     for opt in "${OPTREPOS[@]}"; do

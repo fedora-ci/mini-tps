@@ -23,7 +23,7 @@ if [ -n "$FIXREPO" ]; then
     echo "Ignoring \"--fixrepo\" option as it has no effect on CentOS Stream profiles"
 fi
 
-# Replace system repositories with mini-tps repositories
+# Replace system repositories with a profile repo
 find "/etc/yum.repos.d/" -name "*.repo" -delete
 cp -f "$PFILE" "$REPOFILE"
 
