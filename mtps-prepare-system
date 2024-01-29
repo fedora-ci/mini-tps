@@ -53,16 +53,10 @@ EOF
 : "${FIXREPO:=}"
 : "${PFILE:=}"
 
-declare -a OPTREPOS
-OPTREPOS=()
-
-# shellcheck disable=SC2034
-REPOFILE="/etc/yum.repos.d/mini-tps.repo"
-# shellcheck disable=SC2034
-REPOFILE_OPT_PREFIX="mini-tps-opt"
+declare -a OPTREPOS=()
 
 if ! [ -d "${PROFILES_TOPDIR:=$(rpm --eval %_datarootdir)/mini-tps/profiles/}" ]; then
-    debug "Use dir for profiles: ${PROFILES_TOPDIR:="$PWD/profiles/"}"
+    debug "Profiles dir: ${PROFILES_TOPDIR:="$PWD/profiles/"}"
 fi
 
 #opt_str="$@"
@@ -150,6 +144,11 @@ if [ "$(id -u)" != "0" ]; then
     echo "Run $PROG with root privileges."
     exit 1
 fi
+
+# shellcheck disable=SC2034
+REPOFILE="/etc/yum.repos.d/profile.repo"
+# shellcheck disable=SC2034
+REPOFILE_OPT_PREFIX="mini-tps-opt"
 
 debug "Running prepare script: ${PREPARE_SYSTEM_SCRIPT:=$(rpm --eval %_libexecdir)/mini-tps/${OS_ID}/prepare-system}"
 # shellcheck disable=SC1090

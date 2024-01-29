@@ -5,7 +5,14 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-RESULTS_MAPPING = {"SKIP": "SKIP", "PASS": "OK", "WARN": "INFO", "FAIL": "BAD"}
+RESULTS_MAPPING = {
+    "SKIP": "SKIP",
+    "PASS": "OK",
+    "INFO": "INFO",
+    "WARN": "VERIFY",
+    "FAIL": "BAD",
+    "ERROR": "BAD",
+}
 
 mtps_log_dir = Path(sys.argv[1])
 
