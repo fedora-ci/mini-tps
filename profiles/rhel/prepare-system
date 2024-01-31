@@ -57,8 +57,13 @@ if [ -n "$ENABLE_BUILD_ROOT" ]; then
     yum config-manager --set-enabled "$buildroot_repo"
 fi
 
-# repoquery util acts not on live system, but rather on set of enabled repos. mini-tps hold personal list of protected packages, such as openssh-server
-# yum config-manager --set-enabled astepano-mini-tps || :
+# Disable python36 module on RHEL 8
+RHEL_VER_MAJOR=$(echo "${PROFILE}" | cut -d'-' -f2 | cut -c1)
+if [[ "$RHEL_VER_MAJOR" -eq 8 ]]; then
+  if dnf module list --enabled | grep -q python36; then
+    dnf -y module disable python36
+  fi
+fi
 
 echo "Installing required packages for testing"
 yum -y install createrepo_c which procps-ng
