@@ -1,6 +1,6 @@
 Name: mini-tps
 Version: 0.1
-Release: 168%{?dist}
+Release: 169%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -64,6 +64,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Thu Feb 01 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-169
+- rebuilt
+
 * Mon Jan 29 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-168
 - Handle missing compose (id)
 

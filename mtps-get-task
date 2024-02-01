@@ -23,6 +23,7 @@ if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-set
 
 RET_NO_RPMS_IN_BREW=7
 RET_NO_RPMS_IN_REPOS=8
+RET_EMPTY_REPOQUERY=11
 
 task_result2rpms() {
     local arch="$1" && shift
@@ -590,6 +591,7 @@ while true; do
     logfname_skip="$(dirname "$logfname")/SKIP-$(basename "$logfname")"
     logfname_pass="$(dirname "$logfname")/PASS-$(basename "$logfname")"
     logfname_fail="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
+    logfname_warn="$(dirname "$logfname")/WARN-$(basename "$logfname")"
     if [[ -e "$logfname" || -e "$logfname_pass" || -e "$logfname_fail" ]]; then
         sleep 1
         continue
@@ -605,8 +607,10 @@ do_clean_exit() {
     new_logfname="$logfname_fail"
     if [[ "$rc" -eq 0 ]]; then
         new_logfname="$logfname_pass"
-    elif [[ "$rc" -eq $RET_NO_RPMS_IN_BREW || "$rc" -eq $RET_NO_RPMS_IN_REPOS ]]; then
+    elif [[ "$rc" -eq $RET_NO_RPMS_IN_BREW ]]; then
         new_logfname="$logfname_skip"
+    elif [[ "$rc" -eq $RET_NO_RPMS_IN_REPOS || "$rc" -eq $RET_EMPTY_REPOQUERY ]]; then
+        new_logfname="$logfname_warn"
     fi
     # Close tee pipes
     for pid in $(ps -o pid --no-headers --ppid $$); do
@@ -758,8 +762,10 @@ echo "Using $CREATEREPO_BIN"
 
 if [ -n "$REPOFILENAME" ]; then
     repo_file_text="$(mk_named_repo "$REPOFILENAME" "$REPODIR" "1")"
+    repo_name="$REPOFILENAME"
 else
     repo_file_text="$(mk_repo "$TASK" "$REPODIR" "1")"
+    repo_name="brew-${TASK}"
 fi
 echo "Repo file:"
 echo "$repo_file_text"
@@ -774,4 +780,22 @@ if [[ -n "$INSTALLREPOFILE" && "$id" -eq 0 ]]; then
 
     echo "Creating repo file: $repofile"
     echo "$repo_file_text" > "$repofile"
+fi
+
+# Query packages in the created repo
+nevras_in_repo="$(
+    "$YUMDNFCMD" repoquery \
+        --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}" \
+        --repo "$repo_name" 2>&1 | \
+        sed -n -e "/^${repo_name}[[:space:]]/ s/^${repo_name}[[:space:]]//p"
+)"
+# Exclude SRPMs
+nevras_in_repo="$(echo "$nevras_in_repo" | sed -n -e "/\.src$/d;p")"
+
+if [ -z "${nevras_in_repo// /}" ]; then
+    # Yum/dnf thinks there are no packages in the testing repo.
+    # This usually happens when the packages are filtered out
+    # because they (different version-release) are included
+    # in an (enabled) module.
+    exit "$RET_EMPTY_REPOQUERY"
 fi
