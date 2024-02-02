@@ -42,6 +42,10 @@ for log in mtps_log_dir.iterdir():
         test_name = "module info"
         test_object = None
 
+    if test_object == "mtps-run-tests":
+        test_name = "tests"
+        test_object = None
+
     results[test_name].append(
         {
             "result": RESULTS_MAPPING[result],
