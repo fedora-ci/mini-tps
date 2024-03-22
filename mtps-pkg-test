@@ -34,6 +34,7 @@
 #
 
 : "${PROG:=${0##*/}}"
+: "${ALLOWERASING:=--allowerasing}"
 
 EXIT_CODE_SKIP=7
 EXIT_CODE_WARN=8
@@ -42,6 +43,9 @@ EXIT_CODE_WARN=8
 if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
 if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
+
+YUM_VERSION=`$YUMDNFCMD --version`
+[ ${YUM_VERSION:0:1} == "3" ] && ALLOWERASING=""
 
 from_nevra() {
     # Input: foo-1.0-1.i386 or foo-1:1.0-1.i386
@@ -205,7 +209,7 @@ pkg_remove_any() {
     #Removing:
     # kernel-rt-kvm   x86_64  4.18.0-39.rt9.82.el8   @rhel-8-buildroot      361 k
     # kernel-rt-kvm   x86_64  4.18.0-37.rt9.80.el8   @rhel-8-buildroot-old  361 k
-    "$YUMDNFCMD" -y remove --allowerasing "$name" || :
+    "$YUMDNFCMD" -y remove ${ALLOWERASING} "$name" || :
     # yum returns 1 for removing non-existing package for yum4/dnf
     local ret=0
     pkg_is_present "$name" && ret=1
@@ -220,7 +224,7 @@ pkg_install_if_absent() {
         debug "${FUNCNAME[0]}: package $name is present. Not installing $nevra."
         return 0
     fi
-    if ! "$YUMDNFCMD" -y install --allowerasing "$nevra"; then
+    if ! "$YUMDNFCMD" -y install ${ALLOWERASING} "$nevra"; then
         echo "Installation of $nevra failed."
         echo "See $YUMDNFCMD command output above for more information."
         return 1
@@ -341,7 +345,7 @@ pkg_downgrade_if_present() {
         echo "Not downgrading package: $nevra. There is already installed old package: $installed_nevra_old"
         return 0
     fi
-    "$YUMDNFCMD" -y downgrade --allowerasing "$name"
+    "$YUMDNFCMD" -y downgrade ${ALLOWERASING} "$name"
 }
 
 get_old_nevra() {
@@ -353,7 +357,7 @@ get_old_nevra() {
     local arch="$(from_nevra "$nevra" "arch")"
     # Find previous version of the package.
     local old_nevras=($(
-        "$YUMDNFCMD" repoquery -q $name.$arch --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" | \
+        repoquery -q $name.$arch --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" | \
         tr -s ' ' | \
         grep $arch | \
         sed -n -e "/^${name}-${epoch}:${version}-${release}.${arch}$/"'!p'
@@ -389,7 +393,7 @@ pkg_remove_any_newer() {
             continue
         fi
         echo "Removing package: $to_remove"
-        "$YUMDNFCMD" -y remove --allowerasing "$to_remove" || :
+        "$YUMDNFCMD" -y remove ${ALLOWERASING} "$to_remove" || :
     done
 }
 
@@ -405,7 +409,7 @@ pkg_remove_any_older() {
         fi
         if nevra_older_then "$to_remove" "$nevra"; then
             echo "Removing older package: $to_remove"
-            "$YUMDNFCMD" -y remove --allowerasing "$to_remove" || :
+            "$YUMDNFCMD" -y remove ${ALLOWERASING} "$to_remove" || :
         else
             debug "Not removing newer package: $to_remove"
             continue
@@ -428,7 +432,7 @@ pkg_update_to_new_if_present() {
         debug "Installed package $installed_nevra_new is not older. Not updating."
         return 0
     fi
-    "$YUMDNFCMD" -y upgrade --allowerasing "$nevra"
+    "$YUMDNFCMD" -y upgrade ${ALLOWERASING} "$nevra"
     if pkg_is_absent "$nevra"; then
         echo "Could not update to: $nevra"
         return 1
@@ -453,7 +457,7 @@ pkg_downgrade_to_old() {
         return 1
     fi
     # dnf returns 1 if no downgrade available
-    "$YUMDNFCMD" -y downgrade --allowerasing "$name"
+    "$YUMDNFCMD" -y downgrade ${ALLOWERASING} "$name"
 }
 
 box_out() {
