@@ -359,7 +359,7 @@ get_old_nevra() {
     local old_nevras=($(
         repoquery -q "$name"."$arch" --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" | \
         tr -s ' ' | \
-        grep $arch | \
+        grep "$arch" | \
         sed -n -e "/^${name}-${epoch}:${version}-${release}.${arch}$/"'!p'
         ))
     if [ ${#old_nevras[@]} -eq 0 ]; then
@@ -457,7 +457,7 @@ pkg_downgrade_to_old() {
         return 1
     fi
     # dnf returns 1 if no downgrade available
-    "$YUMDNFCMD" -y downgrade ${ALLOWERASING} "$name"
+    "$YUMDNFCMD" -y downgrade "$ALLOWERASING" "$name"
 }
 
 box_out() {
