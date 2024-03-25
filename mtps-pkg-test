@@ -44,7 +44,7 @@ if command -v "mtps-setup" >/dev/null; then source "mtps-setup"; fi
 # If previous fails source `mtps-setup` from this script dir
 if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-setup" || ( echo "Cannot source mtps-setup" >&2; exit 91 ); fi
 
-YUM_VERSION=`$YUMDNFCMD --version`
+YUM_VERSION=$("${YUMDNFCMD}" --version)
 [ ${YUM_VERSION:0:1} == "3" ] && ALLOWERASING=""
 
 from_nevra() {
@@ -345,7 +345,7 @@ pkg_downgrade_if_present() {
         echo "Not downgrading package: $nevra. There is already installed old package: $installed_nevra_old"
         return 0
     fi
-    "$YUMDNFCMD" -y downgrade ${ALLOWERASING} "$name"
+    "$YUMDNFCMD" -y downgrade "$ALLOWERASING" "$name"
 }
 
 get_old_nevra() {
@@ -357,7 +357,7 @@ get_old_nevra() {
     local arch="$(from_nevra "$nevra" "arch")"
     # Find previous version of the package.
     local old_nevras=($(
-        repoquery -q $name.$arch --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" | \
+        repoquery -q "$name"."$arch" --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" | \
         tr -s ' ' | \
         grep $arch | \
         sed -n -e "/^${name}-${epoch}:${version}-${release}.${arch}$/"'!p'
@@ -393,7 +393,7 @@ pkg_remove_any_newer() {
             continue
         fi
         echo "Removing package: $to_remove"
-        "$YUMDNFCMD" -y remove ${ALLOWERASING} "$to_remove" || :
+        "$YUMDNFCMD" -y remove "$ALLOWERASING" "$to_remove" || :
     done
 }
 
@@ -409,7 +409,7 @@ pkg_remove_any_older() {
         fi
         if nevra_older_then "$to_remove" "$nevra"; then
             echo "Removing older package: $to_remove"
-            "$YUMDNFCMD" -y remove ${ALLOWERASING} "$to_remove" || :
+            "$YUMDNFCMD" -y remove "$ALLOWERASING" "$to_remove" || :
         else
             debug "Not removing newer package: $to_remove"
             continue
@@ -432,7 +432,7 @@ pkg_update_to_new_if_present() {
         debug "Installed package $installed_nevra_new is not older. Not updating."
         return 0
     fi
-    "$YUMDNFCMD" -y upgrade ${ALLOWERASING} "$nevra"
+    "$YUMDNFCMD" -y upgrade "$ALLOWERASING" "$nevra"
     if pkg_is_absent "$nevra"; then
         echo "Could not update to: $nevra"
         return 1
