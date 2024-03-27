@@ -45,16 +45,16 @@ if [ -n "$FIXREPO" ]; then
     done
 fi
 
-yum config-manager --set-disabled '*'
+yum-config-manager --disable '*'
 declare -a yumrepos
 for repofile in "${INSTALLED_REPO_FILES[@]}"; do
     yumrepos=($(cat "$repofile" | sed -n -e '/buildroot/d' -e '/^\[/p' | tr -d '[]'))
-    yum config-manager --set-enabled "${yumrepos[@]}"
+    yum-config-manager --enable "${yumrepos[@]}"
 done
 
 if [ -n "$ENABLE_BUILD_ROOT" ]; then
     buildroot_repo=$(cat "$REPOFILE" | sed -n -e '/^\[/{/buildroot/p}' | tr -d '[]')
-    yum config-manager --set-enabled "$buildroot_repo"
+    yum-config-manager --enable "$buildroot_repo"
 fi
 
 # repoquery util acts not on live system, but rather on set of enabled repos. mini-tps hold personal list of protected packages, such as openssh-server
