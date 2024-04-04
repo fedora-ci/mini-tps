@@ -164,7 +164,7 @@ pkgs_list=()
 for i in $nevras_in_repo; do
         pkgs_list+=("   * $i")
 done
-box_out "# $(echo $TEST | tr '[:lower:]' '[:upper:]') TEST" "" "Packages:" "" "${pkgs_list[@]}"
+box_out "# $(echo "$TEST" | tr '[:lower:]' '[:upper:]') TEST" "" "Packages:" "" "${pkgs_list[@]}"
 
 # Put logs by default at CDIR/mtps-logs
 mkdir -p "${LOGS_DIR:=mtps-logs}"
