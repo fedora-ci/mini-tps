@@ -1,11 +1,17 @@
+%if 0%{?rhel} == 7
+%define yumcmd yum
+%else
+%define yumcmd dnf
+%endif
+
 Name: mini-tps
 Version: 0.1
-Release: 170%{?dist}
+Release: 171%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
 URL:     https://github.com/fedora-ci/mini-tps
-Source0: mini-tps.tar.gz
+Source0: mini-tps-0.1.tar.gz
 BuildArch: noarch
 # Don't add any Requires here because those would become protected, see mini-tps.conf
 
@@ -13,7 +19,7 @@ BuildArch: noarch
 Light version of TPS
 
 %prep
-%autosetup -n mini-tps
+%autosetup -n mini-tps-0.1
 
 %build
 
@@ -21,8 +27,8 @@ Light version of TPS
 mkdir -p %{buildroot}%{_sbindir} # epel7
 install -pD -m 0755 --target-directory=%{buildroot}%{_sbindir} mtps-*
 
-mkdir -p %{buildroot}%{_sysconfdir}/dnf/protected.d/
-cat > %{buildroot}%{_sysconfdir}/dnf/protected.d/mini-tps.conf <<EOF
+mkdir -p %{buildroot}%{_sysconfdir}/%{yumcmd}/protected.d/
+cat > %{buildroot}%{_sysconfdir}/%{yumcmd}/protected.d/mini-tps.conf <<EOF
 # Packages for which mini-tps won't run the 'remove' test (i.e. won't try to remove them).
 
 mini-tps
@@ -31,7 +37,7 @@ yum
 yum-utils
 EOF
 %if 0%{?rhel} > 7
-cat >> %{buildroot}%{_sysconfdir}/dnf/protected.d/mini-tps.conf <<EOF
+cat >> %{buildroot}%{_sysconfdir}/%{yumcmd}/protected.d/mini-tps.conf <<EOF
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1641631
 dnf-plugins-core
@@ -58,12 +64,15 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 %files
 %{_sbindir}/mtps-*
-%config %{_sysconfdir}/dnf/protected.d/mini-tps.conf
+%config %{_sysconfdir}/%{yumcmd}/protected.d/mini-tps.conf
 %{_datarootdir}/mini-tps/*
 %{_libexecdir}/mini-tps/*
 
 
 %changelog
+* Fri Mar 22 2024 Jan Blazek <jblazek@redhat.com> - 0.1-171
+- Add compatibility with RHEL 7
+
 * Thu Feb 22 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-170
 - rhel-10.0-beta repo file
 
