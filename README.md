@@ -96,8 +96,8 @@ change from a (yet unmerged) pull request in those pipelines:
 
 #### RHEL
 
-- Replace [repo url](https://gitlab.cee.redhat.com/osci-pipelines/installability-pipeline/-/blob/master/prepare.sh?ref_type=heads#L27)
-  with `https://copr.fedorainfracloud.org/coprs/packit/fedora-ci-mini-tps-<PR-number>/repo/epel-${RHEL_VER_MAJOR}/packit-fedora-ci-mini-tps-<PR-number>.repo` and open an MR in the
+- Replace [repo url](https://gitlab.cee.redhat.com/osci-pipelines/installability-pipeline/-/blob/ae25435bb668a59e431e2bc33ff299839023f11d/prepare.sh#L34)
+  with `https://copr.fedorainfracloud.org/coprs/packit/fedora-ci-mini-tps-<PR-number>/repo/epel-${EPEL_VERSION}` and open an MR in the
   [repo](https://gitlab.cee.redhat.com/osci-pipelines/installability-pipeline).
 - Once the MR appears in [pipelines for MRs](https://jenkins.prod.osci.redhat.com/job/OSCI-Pipelines/job/osci-pipelines%252Finstallability-pipeline/view/change-requests/),
   submit `Build with Parameters`.
