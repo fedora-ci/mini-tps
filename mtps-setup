@@ -60,6 +60,14 @@ if [ -z "$YUMDNFCMD" ]; then
     fi
 fi
 
+# on EL 7, there is no 'yum repoquery', on everything else supported
+# there is 'dnf repoquery' or 'yum repoquery'
+if [ -f "/usr/bin/repoquery" ]; then
+    REPOQUERYCMD="repoquery"
+else
+    REPOQUERYCMD="$YUMDNFCMD repoquery"
+fi
+
 debug() {
     if [[ -n "${DEBUG:-}" || -n "${GB_DEBUG:-}" ]]; then
         echo -e "$*" >&2

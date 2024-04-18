@@ -784,7 +784,7 @@ fi
 
 # Query packages in the created repo
 nevras_in_repo="$(
-    "$YUMDNFCMD" repoquery \
+    "$REPOQUERYCMD" \
         --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}" \
         --repo "$repo_name" 2>&1 | \
         sed -n -e "/^${repo_name}[[:space:]]/ s/^${repo_name}[[:space:]]//p"
