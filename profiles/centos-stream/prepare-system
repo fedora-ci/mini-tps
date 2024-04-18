@@ -37,7 +37,7 @@ yum clean all
 yum makecache
 
 echo "Installing packages required for testing..."
-yum -y install createrepo_c which procps-ng
+yum -y install createrepo_c which procps-ng yum-utils
 
 echo "Updating the system..."
 yum -y upgrade

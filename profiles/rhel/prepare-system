@@ -61,7 +61,7 @@ fi
 # yum config-manager --set-enabled astepano-mini-tps || :
 
 echo "Installing required packages for testing"
-yum -y install createrepo_c which procps-ng
+yum -y install createrepo_c which procps-ng yum-utils
 
 yum -y upgrade
 yum clean all
