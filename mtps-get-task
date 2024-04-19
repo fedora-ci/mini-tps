@@ -477,7 +477,7 @@ mk_url() {
     local srpm_filename="$1" && shift
     local is_scratch="$1" && shift
     if [ "$is_scratch" == "no" ]; then
-        # http://download.devel.redhat.com/brewroot/packages/curl/7.61.1/34.el8/x86_64/curl-7.61.1-34.el8.x86_64.rpm
+        # https://download.devel.redhat.com/brewroot/packages/curl/7.61.1/34.el8/x86_64/curl-7.61.1-34.el8.x86_64.rpm
         # https://kojipkgs.fedoraproject.org//packages/packit/0.87.1/1.fc40/src/packit-0.87.1-1.fc40.src.rpm
         filename=$(basename "$filename")
         srpm_filename=$(basename "$srpm_filename")
@@ -507,7 +507,7 @@ mk_url() {
 : "${REPODIR:=repodir}"
 : "${BREWHUB:=https://brewhub.engineering.redhat.com/brewhub}"
 : "${DOWNLOAD:=}"
-: "${BREWROOT:=http://download.devel.redhat.com/brewroot}"
+: "${BREWROOT:=https://download.devel.redhat.com/brewroot}"
 : "${RECURSIVE:=}"
 : "${CREATEREPO:=}"
 : "${ONLYINREPO:=}"

@@ -154,7 +154,7 @@ mk_url() {
     local name="$(from_rpm_name "$srpm" "name")"
     local ver="$(from_rpm_name "$srpm" "ver")"
     local rel="$(from_rpm_name "$srpm" "rel")"
-    # http://download.devel.redhat.com/brewroot/packages/libsolv/0.6.34/2.el8+7/src/libsolv-0.6.34-2.el8+7.src.rpm
+    # https://download.devel.redhat.com/brewroot/packages/libsolv/0.6.34/2.el8+7/src/libsolv-0.6.34-2.el8+7.src.rpm
     # Need to be re-writen as for mtps-get-task
     url="${GB_BREWPKGS}/${name}/${ver}/${rel}/${arch}/${pkg}.${arch}.rpm"
     debug "URL for $pkg: $url"
@@ -196,7 +196,7 @@ download_rpm() {
 GB_PROG="${GB_PROG:-${0##*/}}"
 GB_DEBUG="${GB_DEBUG:-}"
 GB_BREWHUB="${GB_BREWHUB:-https://brewhub.engineering.redhat.com/brewhub}"
-GB_BREWPKGS="${GB_BREWPKGS:-http://download.devel.redhat.com/brewroot/packages}"
+GB_BREWPKGS="${GB_BREWPKGS:-https://download.devel.redhat.com/brewroot/packages}"
 GB_BREWINFO="${GB_BREWINFO:-https://brewweb.engineering.redhat.com/brew/buildinfo?buildID=}"
 GB_BUILD="${GB_BUILD:-}"
 GB_ARCH="${GB_ARCH:-$(uname -m)}"

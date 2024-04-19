@@ -1,21 +1,21 @@
 ###### BASE OS ###########
 [rhel-8-base]
 name=RHEL-8 BaseOS
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/BaseOS/$basearch/os/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/BaseOS/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-base-source]
 name=RHEL-8 BaseOS Source
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/BaseOS/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/BaseOS/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-base-debug]
 name=RHEL-8 BaseOS Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/BaseOS/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/BaseOS/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -23,21 +23,21 @@ skip_if_unavailable=True
 ########### APPSTREAM ##################
 [rhel-8-appstream]
 name=RHEL-8 AppStream
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/AppStream/$basearch/os/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/AppStream/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-appstream-debug]
 name=RHEL-8 AppStream Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/AppStream/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/AppStream/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-appstream-source]
 name=RHEL-8 AppStream Source
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/AppStream/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/AppStream/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -45,21 +45,21 @@ skip_if_unavailable=True
 ########### CRB ##################
 [rhel-8-crb]
 name=RHEL-8 CRB
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/CRB/$basearch/os/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/CRB/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-crb-debug]
 name=RHEL-8 CRB Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/CRB/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/CRB/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-crb-source]
 name=RHEL-8 CRB Source
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/CRB/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/CRB/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -67,21 +67,21 @@ skip_if_unavailable=True
 ########### HighAvailability ##################
 [rhel-8-highavailability]
 name=RHEL-8 HighAvailability
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/HighAvailability/$basearch/os/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/HighAvailability/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-highavailability-debug]
 name=RHEL-8 HighAvailability Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/HighAvailability/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/HighAvailability/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-highavailability-source]
 name=RHEL-8 HighAvailability Source
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/HighAvailability/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/HighAvailability/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -90,21 +90,21 @@ skip_if_unavailable=True
 ########### NFV ##################
 [rhel-8-nfv]
 name=RHEL-8 NFV
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/NFV/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/NFV/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-nfv-debug]
 name=RHEL-8 NFV Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/NFV/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/NFV/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-nfv-source]
 name=RHEL-8 NFV Source
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/NFV/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/NFV/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -113,21 +113,21 @@ skip_if_unavailable=True
 ########### RT ##################
 [rhel-8-rt]
 name=RHEL-8 RT
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/RT/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/RT/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-rt-debug]
 name=RHEL-8 RT Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/RT/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/RT/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-rt-source]
 name=RHEL-8 RT Source
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/RT/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/RT/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -136,21 +136,21 @@ skip_if_unavailable=True
 ########### ResilientStorage ##################
 [rhel-8-resilientstorage]
 name=RHEL-8 ResilientStorage
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/ResilientStorage/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/ResilientStorage/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-resilientstorage-debug]
 name=RHEL-8 ResilientStorage Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/ResilientStorage/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/ResilientStorage/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-resilientstorage-source]
 name=RHEL-8 ResilientStorage Source
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/ResilientStorage/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/ResilientStorage/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -159,21 +159,21 @@ skip_if_unavailable=True
 ########### SAP ##################
 [rhel-8-sap]
 name=RHEL-8 SAP
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAP/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAP/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-sap-debug]
 name=RHEL-8 SAP Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAP/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAP/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-sap-source]
 name=RHEL-8 SAP Source
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAP/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAP/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -182,21 +182,21 @@ skip_if_unavailable=True
 ########### SAPHANA ##################
 [rhel-8-saphana]
 name=RHEL-8 SAPHANA
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAPHANA/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAPHANA/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-saphana-debug]
 name=RHEL-8 SAPHANA Debug
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAPHANA/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAPHANA/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-8-saphana-source]
 name=RHEL-8 SAPHANA Source
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAPHANA/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.5.1/compose/SAPHANA/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -206,7 +206,7 @@ skip_if_unavailable=True
 
 [rhel-8-buildroot]
 name=RHEL-8 Buildroot
-baseurl=http://download.lab.bos.redhat.com/brewroot/repos/rhel-8.5.1-z-build/latest/x86_64/
+baseurl=https://download.devel.redhat.com/brewroot/repos/rhel-8.5.1-z-build/latest/x86_64/
 enabled=0
 gpgcheck=0
 skip_if_unavailable=True

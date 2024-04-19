@@ -169,7 +169,7 @@ mk_url_mmd() {
     local stream="$(from_module_name "$module" "stream")"
     local version="$(from_module_name "$module" "version")"
     local context="$(from_module_name "$module" "context")"
-    # http://download.devel.redhat.com/brewroot/packages/389-ds/1.4/820190201170147.1fc8b219/files/module/
+    # https://download.devel.redhat.com/brewroot/packages/389-ds/1.4/820190201170147.1fc8b219/files/module/
     url="${BREWPKGS}/${name}/${stream//-/_}/${version}.${context}/files/module/modulemd.${arch}.txt"
     debug "URL for modulemd: $url"
     echo "$url"
@@ -307,7 +307,7 @@ EOF
 : "${PROG:=${0##*/}}"
 : "${DEBUG:=}"
 : "${BREWHUB:=https://brewhub.engineering.redhat.com/brewhub}"
-: "${BREWPKGS:=http://download.devel.redhat.com/brewroot/packages}"
+: "${BREWPKGS:=https://download.devel.redhat.com/brewroot/packages}"
 : "${MBS:=https://mbs.engineering.redhat.com}"
 : "${TAG:=}"
 : "${GETINFO:=}"

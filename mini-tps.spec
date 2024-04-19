@@ -71,7 +71,7 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 %changelog
 * Fri Apr 19 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-172
-- Use download.devel.redhat.com
+- Use https://download.devel.redhat.com everywhere
 
 * Fri Mar 22 2024 Jan Blazek <jblazek@redhat.com> - 0.1-171
 - Add compatibility with RHEL 7
