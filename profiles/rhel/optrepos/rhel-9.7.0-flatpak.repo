@@ -1,6 +1,6 @@
 [rhel-9.7.0-flatpak]
 name=RHEL-9.7.0 Flatpak Hidden
-baseurl=http://download.devel.redhat.com/rhel-9/nightly/flatpak/latest-FLATPAK-9.7.0-RHEL-9/compose/Hidden/$basearch/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/flatpak/latest-FLATPAK-9.7.0-RHEL-9/compose/Hidden/$basearch/os/
 enabled=0
 gpgcheck=0
 skip_if_unavailable=True
