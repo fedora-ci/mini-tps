@@ -209,7 +209,7 @@ skip_if_unavailable=True
 
 [rhel-10-buildroot]
 name=RHEL-10 Buildroot
-baseurl=http://download.eng.bos.redhat.com/brewroot/repos/rhel-10.0-beta-build/latest/$basearch/
+baseurl=http://download.devel.redhat.com/brewroot/repos/rhel-10.0-beta-build/latest/$basearch/
 enabled=0
 gpgcheck=0
 skip_if_unavailable=True
