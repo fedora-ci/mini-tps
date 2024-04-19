@@ -29,8 +29,8 @@
 #
 # There is always old version of package at:
 #
-#   * http://download.devel.redhat.com/nightly/latest-RHEL-8/compose/BaseOS
-#   * http://download.devel.redhat.com/nightly/latest-RHEL-8/compose/AppStream
+#   * https://download.devel.redhat.com/nightly/latest-RHEL-8/compose/BaseOS
+#   * https://download.devel.redhat.com/nightly/latest-RHEL-8/compose/AppStream
 #
 
 : "${PROG:=${0##*/}}"

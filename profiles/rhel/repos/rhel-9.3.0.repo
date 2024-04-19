@@ -1,21 +1,21 @@
 ###### BASE OS ###########
 [rhel-9-base]
 name=RHEL-9 BaseOS
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/BaseOS/$basearch/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/BaseOS/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-base-debug]
 name=RHEL-9 BaseOS Debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/BaseOS/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/BaseOS/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-base-source]
 name=RHEL-9 BaseOS Source
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/BaseOS/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/BaseOS/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -24,21 +24,21 @@ skip_if_unavailable=True
 ########### APPSTREAM ##################
 [rhel-9-appstream]
 name=RHEL-9 AppStream
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/AppStream/$basearch/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/AppStream/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-appstream-debug]
 name=RHEL-9 AppStream-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/AppStream/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/AppStream/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-appstream-source]
 name=RHEL-9 AppStream-source
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/AppStream/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/AppStream/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -47,21 +47,21 @@ skip_if_unavailable=True
 ########### CRB ##################
 [rhel-9-crb]
 name=RHEL-9 CRB
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/CRB/$basearch/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/CRB/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-crb-debug]
 name=RHEL-9 CRB-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/CRB/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/CRB/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-crb-source]
 name=RHEL-9 CRB-source
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/CRB/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/CRB/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -70,21 +70,21 @@ skip_if_unavailable=True
 ########### HighAvailability ##################
 [rhel-9-highavailability]
 name=RHEL-9 HighAvailability
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/HighAvailability/$basearch/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/HighAvailability/$basearch/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-highavailability-debug]
 name=RHEL-9 HighAvailability-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/HighAvailability/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/HighAvailability/$basearch/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-highavailability-source]
 name=RHEL-9 HighAvailability-source
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/HighAvailability/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/HighAvailability/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -93,21 +93,21 @@ skip_if_unavailable=True
 ########### NFV ##################
 [rhel-9-nfv]
 name=RHEL-9 NFV
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/NFV/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/NFV/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-nfv-debug]
 name=RHEL-9 NFV-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/NFV/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/NFV/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-nfv-source]
 name=RHEL-9 NFV-source
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/NFV/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/NFV/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -116,21 +116,21 @@ skip_if_unavailable=True
 ########### RT ##################
 [rhel-9-rt]
 name=RHEL-9 RT
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/RT/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/RT/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-rt-debug]
 name=RHEL-9 RT-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/RT/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/RT/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-rt-source]
 name=RHEL-9 RT-source
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/RT/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/RT/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -139,21 +139,21 @@ skip_if_unavailable=True
 ########### ResilientStorage ##################
 [rhel-9-resilientstorage]
 name=RHEL-9 ResilientStorage
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/ResilientStorage/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/ResilientStorage/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-resilientstorage-debug]
 name=RHEL-9 ResilientStorage-debug
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/ResilientStorage/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/ResilientStorage/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-resilientstorage-source]
 name=RHEL-9 ResilientStorage-source
-baseurl=http://download.eng.rdu2.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/ResilientStorage/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/ResilientStorage/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -162,21 +162,21 @@ skip_if_unavailable=True
 ########### SAP ##################
 [rhel-9-sap]
 name=RHEL-9 SAP
-baseurl=http://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAP/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAP/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-sap-debug]
 name=RHEL-9 SAP Debug
-baseurl=http://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAP/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAP/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-sap-source]
 name=RHEL-9 SAP Source
-baseurl=http://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAP/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAP/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -185,21 +185,21 @@ skip_if_unavailable=True
 ########### SAPHANA ##################
 [rhel-9-saphana]
 name=RHEL-9 SAPHANA
-baseurl=http://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAPHANA/x86_64/os/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAPHANA/x86_64/os/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-saphana-debug]
 name=RHEL-9 SAPHANA Debug
-baseurl=http://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAPHANA/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAPHANA/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
 
 [rhel-9-saphana-source]
 name=RHEL-9 SAPHANA Source
-baseurl=http://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAPHANA/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.3.0/compose/SAPHANA/source/tree/
 enabled=1
 gpgcheck=0
 skip_if_unavailable=True
@@ -209,7 +209,7 @@ skip_if_unavailable=True
 
 [rhel-9-buildroot]
 name=RHEL-9 Buildroot
-baseurl=http://download.devel.redhat.com/brewroot/repos/rhel-9.3.0-build/latest/x86_64/
+baseurl=https://download.devel.redhat.com/brewroot/repos/rhel-9.3.0-build/latest/x86_64/
 enabled=0
 gpgcheck=0
 skip_if_unavailable=True
