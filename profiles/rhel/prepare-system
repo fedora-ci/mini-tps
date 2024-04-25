@@ -45,6 +45,7 @@ if [ -n "$FIXREPO" ]; then
     done
 fi
 
+yum -y install yum-utils  # yum-config-manager
 yum-config-manager --disable '*'
 declare -a yumrepos
 for repofile in "${INSTALLED_REPO_FILES[@]}"; do
@@ -61,7 +62,7 @@ fi
 # yum config-manager --set-enabled astepano-mini-tps || :
 
 echo "Installing required packages for testing"
-yum -y install createrepo_c which procps-ng yum-utils
+yum -y install createrepo_c which procps-ng
 
 yum -y upgrade
 yum clean all
