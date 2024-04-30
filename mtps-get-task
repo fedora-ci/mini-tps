@@ -779,9 +779,8 @@ echo "$repo_file_text"
 
 # Query packages in the created repo
 nevras_in_repo="$(
-    repoquery \
-        --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}" \
-        --repo "$repo_name" 2>&1 | \
+    repoquery --repoid="$repo_name" --all \
+        --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}" 2>&1 | \
         sed -n -e "/^${repo_name}[[:space:]]/ s/^${repo_name}[[:space:]]//p"
 )"
 # Exclude SRPMs
