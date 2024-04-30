@@ -755,7 +755,7 @@ which 'createrepo' >/dev/null 2>&1 && CREATEREPO_BIN="createrepo" || :
 which 'createrepo_c' >/dev/null 2>&1 && CREATEREPO_BIN="createrepo_c" || :
 if [ -z "$CREATEREPO_BIN" ]; then
     echo "Install createrepo[_c] to create repositories."
-    exit 0
+    exit 1
 fi
 echo "Using $CREATEREPO_BIN"
 "$CREATEREPO_BIN" --database "$REPODIR"
