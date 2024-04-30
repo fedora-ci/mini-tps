@@ -4,30 +4,12 @@ jobs:
     trigger: pull_request
     targets:
       - fedora-all
-      - epel-7-ppc64le
-      - epel-7-x86_64
-      - epel-8-aarch64
-      - epel-8-ppc64le
-      - epel-8-s390x
-      - epel-8-x86_64
-      - epel-9-aarch64
-      - epel-9-ppc64le
-      - epel-9-s390x
-      - epel-9-x86_64
+      - epel-all
 #  - job: copr_build
 #    trigger: commit
 #    branch: main
 #    targets:
 #      - fedora-all
-#      - epel-7-ppc64le
-#      - epel-7-x86_64
-#      - epel-8-aarch64
-#      - epel-8-ppc64le
-#      - epel-8-s390x
-#      - epel-8-x86_64
-#      - epel-9-aarch64
-#      - epel-9-ppc64le
-#      - epel-9-s390x
-#      - epel-9-x86_64
+#      - epel-all
 #    owner: "@osci"
 #    project: mini-tps
