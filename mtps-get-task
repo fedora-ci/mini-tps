@@ -767,20 +767,15 @@ else
     repo_file_text="$(mk_repo "$TASK" "$REPODIR" "1")"
     repo_name="brew-${TASK}"
 fi
-echo "Repo file:"
-echo "$repo_file_text"
+
 id="$(id -u)"
-
 if [[ -n "$INSTALLREPOFILE" && "$id" -eq 0 ]]; then
-    if [ -n "$REPOFILENAME" ]; then
-        repofile="/etc/yum.repos.d/${REPOFILENAME}.repo"
-    else
-        repofile="/etc/yum.repos.d/brew-${TASK}.repo"
-    fi
-
+    repofile="/etc/yum.repos.d/${repo_name}.repo"
     echo "Creating repo file: $repofile"
     echo "$repo_file_text" > "$repofile"
 fi
+echo "Repo file content:"
+echo "$repo_file_text"
 
 # Query packages in the created repo
 nevras_in_repo="$(
