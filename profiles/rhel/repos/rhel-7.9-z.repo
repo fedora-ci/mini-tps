@@ -189,3 +189,12 @@ name=rhel-RT-debuginfo
 baseurl=https://download.devel.redhat.com/released/RHEL-7/7.9/Server-RT/x86_64/debug/tree/
 enabled=1
 gpgcheck=0
+
+############# BUILDROOT ##############
+
+[rhel-7-buildroot]
+name=RHEL-7 Buildroot
+baseurl=https://download.devel.redhat.com/brewroot/repos/rhel-7.9-z-build/latest/$basearch/
+enabled=0
+gpgcheck=0
+skip_if_unavailable=True
