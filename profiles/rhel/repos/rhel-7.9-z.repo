@@ -13,25 +13,25 @@ gpgcheck=0
 [rhel-debuginfo-updates]
 name=rhel-debuginfo-updates
 baseurl=https://download.devel.redhat.com/rhel-7/rel-eng/updates/RHEL-7/latest-RHEL-7.9/compose/Server/$basearch/debug/tree/
-enabled=0
+enabled=1
 gpgcheck=0
 
 [rhel-opt-debuginfo-updates]
 name=rhel-opt-debuginfo-updates
 baseurl=https://download.devel.redhat.com/rhel-7/rel-eng/updates/RHEL-7/latest-RHEL-7.9/compose/Server-optional/$basearch/debug/tree/
-enabled=0
+enabled=1
 gpgcheck=0
 
 [rhel-source-updates]
 name=rhel-source-updates
 baseurl=https://download.devel.redhat.com/rhel-7/rel-eng/updates/RHEL-7/latest-RHEL-7.9/compose/Server/source/tree/
-enabled=0
+enabled=1
 gpgcheck=0
 
 [rhel-opt-source-updates]
 name=rhel-opt-source-updates
 baseurl=https://download.devel.redhat.com/rhel-7/rel-eng/updates/RHEL-7/latest-RHEL-7.9/compose/Server-optional/source/tree/
-enabled=0
+enabled=1
 gpgcheck=0
 
 [rhel-SAP-updates]
@@ -109,25 +109,25 @@ gpgcheck=0
 [rhel-debuginfo]
 name=rhel-debuginfo
 baseurl=https://download.devel.redhat.com/released/RHEL-7/7.9/Server/$basearch/debug/tree/
-enabled=0
+enabled=1
 gpgcheck=0
 
 [rhel-opt-debuginfo]
 name=rhel-opt-debuginfo
 baseurl=https://download.devel.redhat.com/released/RHEL-7/7.9/Server-optional/$basearch/debug/tree/
-enabled=0
+enabled=1
 gpgcheck=0
 
 [rhel-source]
 name=rhel-source
 baseurl=https://download.devel.redhat.com/released/RHEL-7/7.9/Server/source/tree/
-enabled=0
+enabled=1
 gpgcheck=0
 
 [rhel-opt-source]
 name=rhel-opt-source
 baseurl=https://download.devel.redhat.com/released/RHEL-7/7.9/Server-optional/source/tree/
-enabled=0
+enabled=1
 gpgcheck=0
 
 [rhel-SAP]
