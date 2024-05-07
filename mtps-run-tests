@@ -138,7 +138,7 @@ if [ -n "$SELINUX" ]; then
     fi
     if [ -e '/usr/sbin/setenforce' ]; then
         echo "Set selinux enforce to: $SELINUX"
-        setenforce "$SELINUX"
+        setenforce "$SELINUX" || :  # Always return 0 to be able to run/test in a container
     else
         debug "Skipping setenforce. 'setenforce' command is part of libselinux-utils package."
     fi
@@ -146,7 +146,7 @@ fi
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=584525
 nevras_in_repo="$(
-    repoquery --repoid=${REPONAME} --all \
+    repoquery --repoid="$REPONAME" --all \
         --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}" 2>&1 | \
         sed -n -e "/^${REPONAME}[[:space:]]/ s/^${REPONAME}[[:space:]]//p"
 )"

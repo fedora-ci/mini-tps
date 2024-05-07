@@ -58,11 +58,9 @@ if [ -n "$ENABLE_BUILD_ROOT" ]; then
     yum-config-manager --enable "$buildroot_repo"
 fi
 
-# repoquery util acts not on live system, but rather on set of enabled repos. mini-tps hold personal list of protected packages, such as openssh-server
-# yum config-manager --set-enabled astepano-mini-tps || :
-
 echo "Installing required packages for testing"
-yum -y install createrepo_c which procps-ng
+yum -y install createrepo_c || yum -y install createrepo
+yum -y install which procps-ng
 
 yum -y upgrade
 yum clean all

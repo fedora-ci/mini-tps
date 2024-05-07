@@ -209,7 +209,7 @@ skip_if_unavailable=True
 
 [rhel-9-buildroot]
 name=RHEL-9 Buildroot
-baseurl=https://download.devel.redhat.com/brewroot/repos/rhel-9.4.0-build/latest/x86_64/
+baseurl=https://download.devel.redhat.com/brewroot/repos/rhel-9.4.0-build/latest/$basearch/
 enabled=0
 gpgcheck=0
 skip_if_unavailable=True

@@ -357,7 +357,7 @@ get_old_nevra() {
     local arch="$(from_nevra "$nevra" "arch")"
     # Find previous version of the package.
     local old_nevras=($(
-        repoquery -q "$name"."$arch" --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" | \
+        repoquery -q "$name"."$arch" --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" --show-duplicates | \
         tr -s ' ' | \
         grep "$arch" | \
         sed -n -e "/^${name}-${epoch}:${version}-${release}.${arch}$/"'!p'
