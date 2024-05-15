@@ -23,11 +23,11 @@
 # 2. If /usr/bin/yum is symlink:
 #
 #   * read this symlink
-#   * <=f38, c8s, c9s, rhel8, rhel9:
+#   * <=f40, <= c10s, <= rhel10:
 #
 #      lrwxrwxrwx. 1 root root 5 May 29 00:00 /usr/bin/yum -> dnf-3
 #
-#   * >=F39:
+#   * >=F41:
 #
 #      lrwxrwxrwx. 1 root root 4 Jul 19 00:00 /usr/bin/yum -> dnf5
 #
@@ -41,15 +41,7 @@ if [ -z "$YUMDNFCMD" ]; then
     if [ -f "/usr/bin/yum" ]; then
         YUMDNFCMD="yum"
         if [ -L "/usr/bin/yum" ]; then
-            YUMLINK="$(readlink "/usr/bin/yum")"
-            if [[ "$YUMLINK" == *dnf5* && -x "/usr/bin/dnf-3" ]]; then
-                YUMDNFCMD="/usr/bin/dnf-3"
-                if [ "$EUID" -eq 0 ]; then
-                    if ! rpm -q python3-dnf >/dev/null; then
-                        dnf -y install python3-dnf
-                    fi
-                fi
-            fi
+            YUMDNFCMD="$(readlink "/usr/bin/yum")"
         fi
     else
         YUMDNFCMD="dnf"
