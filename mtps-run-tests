@@ -172,8 +172,6 @@ TESTRUN_ID="$(date +%H%M%S)"
 if [ -z "${nevras_in_repo// /}" ]; then
     logfname="${LOGS_DIR%%/}/FAIL-${TESTRUN_ID}-${TEST}-mtps-run-tests.log"
     echo "Test '$TEST' failed due no packages for testing in repo '$REPONAME:'." | tee -a "$logfname"
-    echo "Output for: ${YUMDNFCMD} repo-pkgs $REPONAME list --showduplicates" | tee -a "$logfname"
-    "$YUMDNFCMD" repo-pkgs "$REPONAME" list --showduplicates 2>&1 | tee -a "$logfname"
     exit 1
 fi
 
