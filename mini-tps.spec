@@ -33,6 +33,9 @@ cat > %{buildroot}%{_sysconfdir}/%{yumcmd}/protected.d/mini-tps.conf <<EOF
 
 mini-tps
 openssh-server
+dnf5
+python3-dnf
+dnf-utils
 yum
 yum-utils
 EOF

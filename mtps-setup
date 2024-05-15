@@ -36,7 +36,6 @@
 #
 
 YUMDNFCMD="${MINITPSYUMDNFCMD:-}"
-PROTECTEDCFG="/etc/dnf/protected.d/mini-tps-old-dnf.conf"
 
 if [ -z "$YUMDNFCMD" ]; then
     if [ -f "/usr/bin/yum" ]; then
@@ -48,9 +47,6 @@ if [ -z "$YUMDNFCMD" ]; then
                 if [ "$EUID" -eq 0 ]; then
                     if ! rpm -q python3-dnf >/dev/null; then
                         dnf -y install python3-dnf
-                        if [ ! -e "$PROTECTEDCFG" ]; then
-                            echo "python3-dnf" >> "$PROTECTEDCFG"
-                        fi
                     fi
                 fi
             fi
