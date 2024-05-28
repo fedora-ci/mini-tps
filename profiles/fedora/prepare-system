@@ -46,6 +46,11 @@ skip_if_unavailable=True
 EOF
 fi
 
+# Ugly hack for
+# https://github.com/fedora-ci/mini-tps/issues/57#issuecomment-2134998129
+# Remove it with a proper fix for mini-tps/issues/57 !
+dnf-3 -y install 'dnf-command(config-manager)'
+
 # Make sure fedora and fedora-updates repos are enabled
 "$YUMDNFCMD" config-manager --set-enabled 'fedora' 'updates'
 # Disable all COPR repositories (mini-tps, ...)
