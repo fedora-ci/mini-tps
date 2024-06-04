@@ -26,10 +26,10 @@ for log in mtps_log_dir.iterdir():
         continue
 
     # Selinux test has the "selinux" infix, for example:
-    # FAIL-selinux-045051-install-systemd-container-0:252-2.el9.x86_64.log
+    # WARN-selinux-045051-install-systemd-container-0:252-2.el9.x86_64.log
     if test_run_id == "selinux":
         result, _, _, test_name, test_object = log.name[: -len(".log")].split("-", 4)
-        test_object += " (selinux AVCs)"
+        test_object += " (SELinux AVCs)"
 
     # The mtps log file with mtps-get-task object contains information about
     # the download of Brew build, for example:
