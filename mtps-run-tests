@@ -229,7 +229,7 @@ for nevra in $nevras_in_repo; do
         if [ "$selinux_status" -ne "0" ]; then
             ret=1
             # Selinux failed
-            new_logfname="$(dirname "$logfname")/FAIL-selinux-$(basename "$logfname")"
+            new_logfname="$(dirname "$logfname")/WARN-selinux-$(basename "$logfname")"
             echo "Selinux policy:" | tee -a "$logfname"
             ausearch -m avc,user_avc,selinux_err,user_selinux_err -i -ts "$START_DATE" "$START_TIME" | tee -a "$new_logfname"
         fi
