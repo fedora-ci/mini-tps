@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 177%{?dist}
+Release: 178%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -73,6 +73,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Wed Jun 12 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-178
+- Add repo for RHEL 7.7 z-stream
+
 * Tue Jun 04 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-177
 - Treat SELinux AVCs as warnings
 
