@@ -202,14 +202,14 @@ pkg_remove_any() {
         debug "${FUNCNAME[0]}: $name is not installed. Not removing."
         return 0
     fi
-    # yum remove --allowerasing kernel-rt-kvm
+    # yum remove kernel-rt-kvm
     #=============================================================================
     # Package         Arch    Version                Repository              Size
     #=============================================================================
     #Removing:
     # kernel-rt-kvm   x86_64  4.18.0-39.rt9.82.el8   @rhel-8-buildroot      361 k
     # kernel-rt-kvm   x86_64  4.18.0-37.rt9.80.el8   @rhel-8-buildroot-old  361 k
-    "$YUMDNFCMD" -y remove ${ALLOWERASING} "$name" || :
+    "$YUMDNFCMD" -y remove "$name" || :
     # yum returns 1 for removing non-existing package for yum4/dnf
     local ret=0
     pkg_is_present "$name" && ret=1
@@ -393,7 +393,7 @@ pkg_remove_any_newer() {
             continue
         fi
         echo "Removing package: $to_remove"
-        "$YUMDNFCMD" -y remove "$ALLOWERASING" "$to_remove" || :
+        "$YUMDNFCMD" -y remove "$to_remove" || :
     done
 }
 
@@ -409,7 +409,7 @@ pkg_remove_any_older() {
         fi
         if nevra_older_then "$to_remove" "$nevra"; then
             echo "Removing older package: $to_remove"
-            "$YUMDNFCMD" -y remove "$ALLOWERASING" "$to_remove" || :
+            "$YUMDNFCMD" -y remove "$to_remove" || :
         else
             debug "Not removing newer package: $to_remove"
             continue

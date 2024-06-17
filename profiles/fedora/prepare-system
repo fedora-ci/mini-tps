@@ -46,15 +46,15 @@ skip_if_unavailable=True
 EOF
 fi
 
-# Ugly hack for
-# https://github.com/fedora-ci/mini-tps/issues/57#issuecomment-2134998129
-# Remove it with a proper fix for mini-tps/issues/57 !
-"$YUMDNFCMD" -y install dnf-plugins-core
-
 # Make sure fedora and fedora-updates repos are enabled
-"$YUMDNFCMD" config-manager --set-enabled 'fedora' 'updates'
-# Disable all COPR repositories (mini-tps, ...)
-"$YUMDNFCMD" config-manager --set-disabled 'copr:*'
+if [[ "$YUMDNFCMD" == "dnf5" ]]; then
+  dnf5 -y install dnf5-plugins  # config-manager
+  dnf5 config-manager setopt fedora.enabled=1 updates.enabled=1
+  dnf5 repo list
+else
+  "$YUMDNFCMD" -y install dnf-plugins-core  # config-manager
+  "$YUMDNFCMD" config-manager --set-enabled fedora updates
+fi
 
 echo "Recreating the DNF cache..."
 "$YUMDNFCMD" clean all
