@@ -149,6 +149,10 @@ run_with_scriptlet_check() {
                 #  Ignore warning about UID being outside of the SYS_UID_MIN/SYS_UID_MAX range.
                 #  This is a "known unfixable". See comments in OSCI-4825 for more information.
                 grep -P -v -i 'useradd warning: [^ ]+ uid [0-9]+ outside of the SYS_UID_MIN [0-9]+ and SYS_UID_MAX [0-9]+ range\.' "$output_part" > "${output_part}-filtered" && mv "${output_part}-filtered" "$output_part"
+                #  Ignore (bogus?) warnings about removed systemd unit files being changed on disk and needing to be reloaded.
+                #  This seems to be a bug in systemd(?): https://github.com/systemd/systemd/issues/32959
+                #  TODO: Remove this once systemd gets updated and the problem is no longer present
+                grep -P -v -i "warning: the unit file, source configuration file or drop-ins of .* changed on disk\. run 'systemctl daemon-reload' to reload units\." "$output_part" > "${output_part}-filtered" && mv "${output_part}-filtered" "$output_part"
 
                 # We only look for the following problematic words (case-insensitive):
                 # * error
