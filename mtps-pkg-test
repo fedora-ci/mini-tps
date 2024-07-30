@@ -461,7 +461,16 @@ pkg_downgrade_to_old() {
         return 1
     fi
     # dnf returns 1 if no downgrade available
-    "$YUMDNFCMD" -y downgrade "$ALLOWERASING" "$name"
+    if [[ "$YUMDNFCMD" == "yum" ]]; then
+      # yum v3.4.3 has trouble resolving dependencies. Specify all what's installed from brew-$TASK_ID to workaround
+      installed_pkgs=()
+      while IFS= read -r package; do
+        installed_pkgs+=("$package")
+      done < <("$YUMDNFCMD" list installed | awk '/@brew-'${TASK_ID}'/ {print $1}')
+      "$YUMDNFCMD" -y downgrade "$name" "${installed_pkgs[@]}"
+    else
+      "$YUMDNFCMD" -y downgrade "$ALLOWERASING" "$name"
+    fi
 }
 
 box_out() {
