@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 180%{?dist}
+Release: 181%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -73,6 +73,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Wed Aug 14 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-181
+- Workaround for downgrade test when yum v3.4.3
+
 * Mon Jul 1 2024 Michal Srb <michal@redhat.com> - 0.1-180
 - Temporarily ignore warnings about removed systemd unit files being changed on disk
 
