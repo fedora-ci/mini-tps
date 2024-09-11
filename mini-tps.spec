@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 181%{?dist}
+Release: 182%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -73,6 +73,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Wed Sep 11 2024 Michal Srb <michal@redhat.com> - 0.1-182
+- Add repo for RHEL 10.0
+
 * Wed Aug 14 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-181
 - Workaround for downgrade test when yum v3.4.3
 
