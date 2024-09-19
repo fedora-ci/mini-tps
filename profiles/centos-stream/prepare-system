@@ -39,5 +39,9 @@ yum makecache
 echo "Installing packages required for testing..."
 yum -y install createrepo_c which procps-ng yum-utils
 
+echo "Enabling crb and epel"
+yum config-manager --enable crb
+yum -y install epel-release
+
 echo "Updating the system..."
 yum -y upgrade
