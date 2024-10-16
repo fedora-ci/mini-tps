@@ -163,39 +163,6 @@ enabled=1
 skip_if_unavailable=True
 
 
-########### PowerTools ##################
-[nfv]
-name=CentOS Stream 10 - PowerTools
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/PowerTools/x86_64/os/
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-gpgcheck=0
-repo_gpgcheck=0
-metadata_expire=6h
-countme=1
-enabled=1
-skip_if_unavailable=True
-
-[nfv-debug]
-name=CentOS Stream 10 - PowerTools - Debug
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/PowerTools/x86_64/debug/tree/
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-gpgcheck=0
-repo_gpgcheck=0
-metadata_expire=6h
-enabled=1
-skip_if_unavailable=True
-
-[nfv-source]
-name=CentOS Stream 10 - PowerTools - Source
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/PowerTools/source/tree/
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-gpgcheck=0
-repo_gpgcheck=0
-metadata_expire=6h
-enabled=1
-skip_if_unavailable=True
-
-
 ########### RT ##################
 [rt]
 name=CentOS Stream 10 - RT
@@ -260,6 +227,73 @@ repo_gpgcheck=0
 metadata_expire=6h
 enabled=1
 skip_if_unavailable=True
+
+
+########### SAP ##################
+[sap]
+name=CentOS Stream 10 - SAP
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/SAP/$basearch/os/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+countme=1
+enabled=1
+skip_if_unavailable=True
+
+[sap-debug]
+name=CentOS Stream 10 - SAP - Debug
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/SAP/$basearch/debug/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+[sap-source]
+name=CentOS Stream 10 - SAP - Source
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/SAP/source/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+
+########### SAPHANA ##################
+[saphana]
+name=CentOS Stream 10 - SAPHANA
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/SAPHANA/$basearch/os/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+countme=1
+enabled=1
+skip_if_unavailable=True
+
+[saphana-debug]
+name=CentOS Stream 10 - SAPHANA - Debug
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/SAPHANA/$basearch/debug/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
+[saphana-source]
+name=CentOS Stream 10 - SAPHANA - Source
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/SAPHANA/source/tree/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgcheck=0
+repo_gpgcheck=0
+metadata_expire=6h
+enabled=1
+skip_if_unavailable=True
+
 
 
 ############# BUILDROOT ##############
