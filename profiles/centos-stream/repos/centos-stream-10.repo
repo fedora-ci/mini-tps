@@ -1,7 +1,7 @@
 ###### BASE OS ###########
 [baseos]
 name=CentOS Stream 10 - BaseOS
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/BaseOS/x86_64/os/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/BaseOS/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -12,7 +12,7 @@ skip_if_unavailable=True
 
 [baseos-debug]
 name=CentOS Stream 10 - BaseOS - Debug
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/BaseOS/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/BaseOS/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -34,7 +34,7 @@ skip_if_unavailable=True
 ########### APPSTREAM ##################
 [appstream]
 name=CentOS Stream 10 - AppStream
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/AppStream/x86_64/os/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/AppStream/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -45,7 +45,7 @@ skip_if_unavailable=True
 
 [appstream-debug]
 name=CentOS Stream 10 - AppStream - Debug
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/AppStream/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/AppStream/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -100,7 +100,7 @@ skip_if_unavailable=True
 ########### HighAvailability ##################
 [highavailability]
 name=CentOS Stream 10 - HighAvailability
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/HighAvailability/x86_64/os/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/HighAvailability/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -111,7 +111,7 @@ skip_if_unavailable=True
 
 [highavailability-debug]
 name=CentOS Stream 10 - HighAvailability - Debug
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/HighAvailability/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/HighAvailability/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -133,7 +133,7 @@ skip_if_unavailable=True
 ########### NFV ##################
 [nfv]
 name=CentOS Stream 10 - NFV
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/NFV/x86_64/os/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/NFV/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -144,7 +144,7 @@ skip_if_unavailable=True
 
 [nfv-debug]
 name=CentOS Stream 10 - NFV - Debug
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/NFV/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/NFV/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -199,7 +199,7 @@ skip_if_unavailable=True
 ########### RT ##################
 [rt]
 name=CentOS Stream 10 - RT
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/RT/x86_64/os/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/RT/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -210,7 +210,7 @@ skip_if_unavailable=True
 
 [rt-debug]
 name=CentOS Stream 10 - RT - Debug
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/RT/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/RT/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -232,7 +232,7 @@ skip_if_unavailable=True
 ########### ResilientStorage ##################
 [resilientstorage]
 name=CentOS Stream 10 - ResilientStorage
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/ResilientStorage/x86_64/os/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/ResilientStorage/$basearch/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -243,7 +243,7 @@ skip_if_unavailable=True
 
 [resilientstorage-debug]
 name=CentOS Stream 10 - ResilientStorage - Debug
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/ResilientStorage/x86_64/debug/tree/
+baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/ResilientStorage/$basearch/debug/tree/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgcheck=0
 repo_gpgcheck=0
@@ -266,7 +266,7 @@ skip_if_unavailable=True
 
 [centos-stream-buildroot]
 name=CentOS Stream 10 Buildroot
-baseurl=https://kojihub.stream.centos.org/kojifiles/repos/c8s-build/latest/x86_64/
+baseurl=https://kojihub.stream.centos.org/kojifiles/repos/c10s-build/latest/$basearch/
 enabled=0
 gpgcheck=0
 skip_if_unavailable=True
