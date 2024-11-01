@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 182%{?dist}
+Release: 183%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -73,6 +73,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Fri Nov 01 2024 Michal Srb <michal@redhat.com> - 0.1-183
+- Remove Resilient Storage repos for 10
+
 * Wed Sep 11 2024 Michal Srb <michal@redhat.com> - 0.1-182
 - Add repo for RHEL 10.0
 
