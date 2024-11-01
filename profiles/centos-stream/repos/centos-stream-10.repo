@@ -196,39 +196,6 @@ enabled=1
 skip_if_unavailable=True
 
 
-########### ResilientStorage ##################
-[resilientstorage]
-name=CentOS Stream 10 - ResilientStorage
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/ResilientStorage/$basearch/os/
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-gpgcheck=0
-repo_gpgcheck=0
-metadata_expire=6h
-countme=1
-enabled=1
-skip_if_unavailable=True
-
-[resilientstorage-debug]
-name=CentOS Stream 10 - ResilientStorage - Debug
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/ResilientStorage/$basearch/debug/tree/
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-gpgcheck=0
-repo_gpgcheck=0
-metadata_expire=6h
-enabled=1
-skip_if_unavailable=True
-
-[resilientstorage-source]
-name=CentOS Stream 10 - ResilientStorage - Source
-baseurl=https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/ResilientStorage/source/tree/
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-gpgcheck=0
-repo_gpgcheck=0
-metadata_expire=6h
-enabled=1
-skip_if_unavailable=True
-
-
 ########### SAP ##################
 [sap]
 name=CentOS Stream 10 - SAP

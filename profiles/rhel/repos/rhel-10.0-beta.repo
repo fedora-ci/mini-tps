@@ -136,29 +136,6 @@ gpgcheck=0
 skip_if_unavailable=True
 
 
-########### ResilientStorage ##################
-[rhel-10-resilientstorage]
-name=RHEL-10 ResilientStorage
-baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10-Public-Beta/latest-RHEL-10.0/compose/ResilientStorage/x86_64/os/
-enabled=1
-gpgcheck=0
-skip_if_unavailable=True
-
-[rhel-10-resilientstorage-debug]
-name=RHEL-10 ResilientStorage-debug
-baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10-Public-Beta/latest-RHEL-10.0/compose/ResilientStorage/x86_64/debug/tree/
-enabled=1
-gpgcheck=0
-skip_if_unavailable=True
-
-[rhel-10-resilientstorage-source]
-name=RHEL-10 ResilientStorage-source
-baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10-Public-Beta/latest-RHEL-10.0/compose/ResilientStorage/source/tree/
-enabled=1
-gpgcheck=0
-skip_if_unavailable=True
-
-
 ########### SAP ##################
 [rhel-10-sap]
 name=RHEL-10 SAP
