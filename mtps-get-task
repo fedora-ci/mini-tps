@@ -140,12 +140,12 @@ brew_get_build() {
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
-<methodName>getBuild</methodName>
-<params>
-<param>
-<value>$build</value>
-</param>
-</params>
+  <methodName>getBuild</methodName>
+  <params>
+    <param>
+      <value>$build</value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -160,12 +160,12 @@ brew_list_build_tags() {
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
-<methodName>listTags</methodName>
-<params>
-<param>
-<value><int>$build</int></value>
-</param>
-</params>
+  <methodName>listTags</methodName>
+  <params>
+    <param>
+      <value><int>$build</int></value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -180,21 +180,21 @@ brew_list_builds() {
     local query="$(cat << EOF
 <?xml version='1.0'?>
 <methodCall>
-<methodName>listBuilds</methodName>
-<params>
-<param>
-<value><struct>
-<member>
-<name>__starstar</name>
-<value><boolean>1</boolean></value>
-</member>
-<member>
-<name>taskID</name>
-<value><int>$task</int></value>
-</member>
-</struct></value>
-</param>
-</params>
+  <methodName>listBuilds</methodName>
+  <params>
+    <param>
+      <value><struct>
+        <member>
+          <name>__starstar</name>
+          <value><boolean>1</boolean></value>
+        </member>
+        <member>
+          <name>taskID</name>
+          <value><int>$task</int></value>
+        </member>
+      </struct></value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -204,15 +204,15 @@ EOF
 
 brew_get_task_result() {
     # getTaskResult query
-    # Build can be: NVR or build number.
-    local task="$1" && shift
+    # Task: ID of task queried
+    local task_id="$1" && shift
     local query="$(cat << EOF
 <?xml version='1.0'?>
 <methodCall>
     <methodName>getTaskResult</methodName>
     <params>
         <param>
-            <value><int>$task</int></value>
+            <value><int>$task_id</int></value>
         </param>
     </params>
 </methodCall>
@@ -228,12 +228,12 @@ brew_get_user() {
     local query="$(cat << EOF
 <?xml version='1.0'?>
 <methodCall>
-<methodName>getUser</methodName>
-<params>
-<param>
-<value><int>$user_id</int></value>
-</param>
-</params>
+  <methodName>getUser</methodName>
+  <params>
+    <param>
+      <value><int>$user_id</int></value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -243,16 +243,16 @@ EOF
 
 brew_get_task_info() {
     # getTaskInfo query
-    local task="$1" && shift
+    local task_id="$1" && shift
     local query="$(cat << EOF
 <?xml version='1.0'?>
 <methodCall>
-<methodName>getTaskInfo</methodName>
-<params>
-<param>
-<value><int>$task</int></value>
-</param>
-</params>
+  <methodName>getTaskInfo</methodName>
+  <params>
+    <param>
+      <value><int>$task_id</int></value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -262,16 +262,16 @@ EOF
 
 brew_get_task_request() {
     # getTaskRequest query
-    local task="$1" && shift
+    local task_id="$1" && shift
     local query="$(cat << EOF
 <?xml version='1.0'?>
 <methodCall>
-<methodName>getTaskRequest</methodName>
-<params>
-<param>
-<value><int>$task</int></value>
-</param>
-</params>
+  <methodName>getTaskRequest</methodName>
+  <params>
+    <param>
+      <value><int>$task_id</int></value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -329,15 +329,14 @@ ownerinfo2krb() {
 
 brew_get_task_children() {
     # getTaskChildren query
-    # Build can be: NVR or build number.
-    local task="$1" && shift
+    local task_id="$1" && shift
     local query="$(cat << EOF
 <?xml version='1.0'?>
 <methodCall>
     <methodName>getTaskChildren</methodName>
     <params>
         <param>
-            <value><int>$task</int></value>
+            <value><int>$task_id</int></value>
         </param>
     </params>
 </methodCall>

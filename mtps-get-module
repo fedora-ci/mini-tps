@@ -105,12 +105,12 @@ brew_get_build() {
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
-<methodName>getBuild</methodName>
-<params>
-<param>
-<value>$build</value>
-</param>
-</params>
+  <methodName>getBuild</methodName>
+  <params>
+    <param>
+      <value>$build</value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -121,16 +121,16 @@ EOF
 brew_get_latest_builds() {
     # getLatestBuilds query
     # Tag is int (ID)
-    local tag="$1" && shift
+    local tag_id="$1" && shift
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
-<methodName>getLatestBuilds</methodName>
-<params>
-<param>
-<value><int>$tag</int></value>
-</param>
-</params>
+  <methodName>getLatestBuilds</methodName>
+  <params>
+    <param>
+      <value><int>$tag_id</int></value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"

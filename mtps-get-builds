@@ -55,18 +55,16 @@ brew_list_build_rpms() {
     # Build can be: NVR or build number.
     local build="$1" && shift
     local re='^[0-9]+$'
-    if [[ $build =~ $re ]] ; then
-        build="<i4>$build</i4>"
-    fi
+    [[ $build =~ $re ]] && build="<i4>$build</i4>"
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
-<methodName>listBuildRPMs</methodName>
-<params>
-<param>
-<value>$build</value>
-</param>
-</params>
+  <methodName>listBuildRPMs</methodName>
+  <params>
+    <param>
+      <value>$build</value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
