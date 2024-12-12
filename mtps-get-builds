@@ -63,8 +63,8 @@ brew_list_build_rpms() {
 <methodCall>
 <methodName>listBuildRPMs</methodName>
 <params>
-<value>$build</value>
 <param>
+<value>$build</value>
 </param>
 </params>
 </methodCall>
