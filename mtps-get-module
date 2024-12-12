@@ -98,15 +98,17 @@ send_query() {
 
 brew_get_build() {
     # getBuild query
-    # Build can be: NVR or build number.
+    # Build can be: int ID or a string NVR
     local build="$1" && shift
+    local re='^[0-9]+$'
+    [[ $build =~ $re ]] && build="<int>$build</int>"
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
 <methodName>getBuild</methodName>
 <params>
-<value>$build</value>
 <param>
+<value>$build</value>
 </param>
 </params>
 </methodCall>
