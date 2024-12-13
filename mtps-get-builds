@@ -22,9 +22,9 @@ if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-set
 RET_NO_RPMS_IN_BREW=7
 RET_NO_RPMS_IN_REPOS=8
 
-rpms_from_answer() {
-    local arch="$1" && shift
-    local xml="$1" && shift
+build_rpms_info2rpms() {
+    local arch="$1" && shift  # architecture
+    local xml="$1" && shift   # listBuildRPMs response
     local tmpfile="$(mktemp)"
     echo "$xml" > "$tmpfile"
     local cmd="cat //member[value/string='$arch']/../member[name='nvr']/value/string/text()"
@@ -33,8 +33,8 @@ rpms_from_answer() {
     echo "$rpm"
 }
 
-build_from_answer() {
-    local xml="$1" && shift
+build_rpms_info2buid_id() {
+    local xml="$1" && shift  # listBuildRPMs response
     local build_id=
     build_id="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
     debug "Brew build id: $build_id"
@@ -300,12 +300,12 @@ debug "Create repo: $GB_CREATEREPO"
 
 build_rpms="$(brew_list_build_rpms $GB_BUILD)"
 # rpms_from_build is a list of packages in form NVR: dhcp-relay-4.3.6-27.el8+7 dhcp-server-4.3.6-27.el8+7
-rpms_from_build="$(rpms_from_answer "$GB_ARCH" "$build_rpms")"
+rpms_from_build="$(build_rpms_info2rpms "$GB_ARCH" "$build_rpms")"
 rpms_from_build_all="$rpms_from_build"
-rpms_from_build_noarch="$(rpms_from_answer "noarch" "$build_rpms")"
+rpms_from_build_noarch="$(build_rpms_info2rpms "noarch" "$build_rpms")"
 rpms_from_build_noarch_all="$rpms_from_build_noarch"
-srpm="$(rpms_from_answer "src" "$build_rpms").src.rpm"
-brew_build_id="$(build_from_answer "$build_rpms")"
+srpm="$(build_rpms_info2rpms "src" "$build_rpms").src.rpm"
+brew_build_id="$(build_rpms_info2buid_id "$build_rpms")"
 srpm_url="$(mk_url "$srpm" "${srpm%%.src.rpm}" "src")"
 
 echo "Brew build ID: $brew_build_id"
@@ -321,7 +321,7 @@ if [ -n "$GB_ONLYINREPO" ]; then
     # Purpose:
     #
     #   * Brew builds always have 1 input SRPM.
-    #   * Brew builds can have many PRM.
+    #   * Brew builds can have many RPMs.
     #
     # RCM team can choose only some RPM. And make AppStream / BaseOS / Compose
     # only from some RPMs, ignoring other RPMs from Brew build. This options
