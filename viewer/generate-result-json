@@ -50,7 +50,8 @@ for log in mtps_log_dir.iterdir():
         {
             "result": RESULTS_MAPPING[result],
             "message": f"{test_name}: {test_object}" if test_object else test_name,
-            "details": log.read_text(),
+            # dnf5 can print invalid UTF characters due to https://github.com/rpm-software-management/dnf5/issues/1865
+            "details": log.read_text(errors="replace"),
         }
     )
 
