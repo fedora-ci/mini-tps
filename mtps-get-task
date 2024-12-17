@@ -323,7 +323,7 @@ ownerinfo2krb() {
     local cmd="cat //member[name='krb_principal']/value/string/text()"
     local email
     email="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
-    debug "Task owner email:\n${email}\n---"
+    debug "Task owner kerberos:\n${email}\n---"
     echo "$email"
 }
 
@@ -353,7 +353,8 @@ mk_repo() {
     local repo_enabled="${1:0}" && shift
     repo_dir="${repo_dir##/}"
     repo_dir="${repo_dir%%/}"
-    local repo="$(cat << EOF
+    local repo
+    repo="$(cat << EOF
 [brew-${task_id}]
 name=Repo for $task_id Brew build
 baseurl=file:///${repo_dir}/
@@ -371,7 +372,8 @@ mk_named_repo() {
     local repo_enabled="${1:0}" && shift
     repo_dir="${repo_dir##/}"
     repo_dir="${repo_dir%%/}"
-    local repo="$(cat << EOF
+    local repo
+    repo="$(cat << EOF
 [${repo_name}]
 name=Repo for $repo_name
 baseurl=file:///${repo_dir}/
@@ -478,15 +480,15 @@ mk_url() {
     local srpm_filename="$1" && shift
     local is_scratch="$1" && shift
     if [ "$is_scratch" == "no" ]; then
-        # https://download.devel.redhat.com/brewroot/packages/curl/7.61.1/34.el8/x86_64/curl-7.61.1-34.el8.x86_64.rpm
-        # https://kojipkgs.fedoraproject.org//packages/packit/0.87.1/1.fc40/src/packit-0.87.1-1.fc40.src.rpm
         filename=$(basename "$filename")
         srpm_filename=$(basename "$srpm_filename")
         name="$(from_rpm_name "${srpm_filename}" "name")"
-        rel="$(from_rpm_name "${srpm_filename}" "rel")"
         ver="$(from_rpm_name "${srpm_filename}" "ver")"
+        rel="$(from_rpm_name "${srpm_filename}" "rel")"
         arch="$(from_rpm_name "${filename}" "arch")"
-        url="${BREWROOT}/packages/${srpm_pkg_name}/${ver}/${rel}/${arch}/$filename"
+        # https://download.devel.redhat.com/brewroot/packages/curl/7.61.1/34.el8/x86_64/curl-7.61.1-34.el8.x86_64.rpm
+        # https://kojipkgs.fedoraproject.org//packages/packit/0.87.1/1.fc40/src/packit-0.87.1-1.fc40.src.rpm
+        url="${BREWROOT}/packages/${name}/${ver}/${rel}/${arch}/$filename"
     else
         # https://download.devel.redhat.com/brewroot/work/tasks/237/57520237/curl-7.61.1-34.el8.x86_64.rpm
         # https://kojipkgs.fedoraproject.org//work/tasks/9873/109769873/packit-0.87.1-1.fc40.src.rpm

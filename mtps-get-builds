@@ -81,7 +81,7 @@ mk_repo() {
     repo_dir="${repo_dir%%/}"
     local repo="$(cat << EOF
 [brew-${brew_id}]
-name=Repo for $brew_id Brew build
+name=Brew build $brew_id repo
 baseurl=file:///${repo_dir}/
 enabled=$repo_enabled
 gpgcheck=0
