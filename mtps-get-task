@@ -173,6 +173,27 @@ EOF
     send_query "$query"
 }
 
+brew_list_build_rpms() {
+    # listBuildRPMs query
+    # Build can be: NVR or build number.
+    local build="$1" && shift
+    local re='^[0-9]+$'
+    [[ $build =~ $re ]] && build="<int>$build</int>"
+    local query="$(cat << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+  <methodName>listBuildRPMs</methodName>
+  <params>
+    <param>
+      <value>$build</value>
+    </param>
+  </params>
+</methodCall>
+EOF
+    )"
+#    debug "Brew query for listBuildRPMs: ${query:0:200}...(truncated)"
+    send_query "$query"
+}
 
 brew_list_builds() {
     # listBuilds query
@@ -291,6 +312,18 @@ taskinfo2owner() {
     echo "$owner"
 }
 
+taskinfo2method() {
+    local xml="$1" && shift
+    local tmpfile
+    tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local cmd="cat //member[name='method']/value/string/text()"
+    local method
+    method="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    debug "Method:\n${method}\n---"
+    echo "$method"
+}
+
 task_request2target() {
     local xml="$1" && shift
     local tmpfile
@@ -301,6 +334,25 @@ task_request2target() {
     target="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
     debug "Task target:\n${target}\n---"
     echo "$target"
+}
+
+build_rpms_info2rpms() {
+    local arch="$1" && shift  # architecture
+    local xml="$1" && shift   # listBuildRPMs response
+    local tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local cmd="cat //member[value/string='$arch']/../member[name='nvr']/value/string/text()"
+    rpms="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    if [[ -n "${rpms}" ]]; then
+        # Add .{arch}.rpm to each line
+        declare -a lines
+        while IFS= read -r line; do
+            lines+=("${line}.${arch}.rpm")
+        done <<< "$rpms"
+        rpms=$(printf "%s\n" "${lines[@]}")
+    fi
+    debug "${arch} rpms:\n${rpms}\n---"
+    echo "$rpms"
 }
 
 ownerinfo2user() {
@@ -660,60 +712,75 @@ buildtags="$(buildtags_from_answer "$listbuildtags")"
 buildtags="$(echo "$buildtags" | tr '\n' ' ')"
 buildtags="${buildtags%% }"
 
-TASKS="$TASK"
-if [ -n "$RECURSIVE" ]; then
-    task_children="$(brew_get_task_children "$TASK")"
-    task_children="$(children_from_answer "$task_children")"
-    TASKS="$TASKS $task_children"
-    TASKS="${TASKS%% }"
-fi
-
-srpm_url=
-volume_name=
-build_source=
-srpm_pkg_file=
-srpm_pkg_name=
-rpms_from_task_all=""
-rpms_from_task_noarch_all=""
-for task in $TASKS; do
-    debug "Process task: $task"
-    task_result="$(brew_get_task_result "$task")" # Holds plain XML
-    rpms_from_task="$(task_result2rpms "$ARCH" "$task_result")"
-    rpms_from_task_noarch="$(task_result2rpms "noarch" "$task_result")"
-    srpm="$(task_result2srpm "$task_result")"
-    if [ -n "$srpm" ]; then
-        srpm_pkg_file="$(basename "$srpm")"
-        srpm_pkg_name="$(from_rpm_name "${srpm_pkg_file}" "name")"
-        if [ -z "$nvr" ]; then
-            nvr="${srpm_pkg_file%%.src.rpm}"
-        fi
-        build="$(brew_get_build "$nvr")"
-        volume_name="$(build2volume_name "$build")"
-        build_source="$(build2build_source "$build")"
-        srpm_url="$(mk_url "$srpm" "$srpm_pkg_file" "$is_scratch")"
-    fi
-    rpms_from_task_all+=" $rpms_from_task"
-    rpms_from_task_noarch_all+=" $rpms_from_task_noarch"
-done
-
-# remove trailing whitespaces
-rpms_from_task_all="${rpms_from_task_all%%+( )}"
-rpms_from_task_noarch_all="${rpms_from_task_noarch_all%%+( )}"
-
-echo "NVR: $nvr"
 echo "BUILD ID: $buildid"
 echo "BUILD TAGS: $buildtags"
-echo "SRPM PKG NAME: $srpm_pkg_name"
-echo "SRPM PKG FILE: $srpm_pkg_file"
-echo "SRPM URL: $srpm_url"
-echo "BUILD SOURCE: $build_source"
 
-if [ -n "$SRPM" ]; then
-    # Print only SRPM information
-    exit 0
+task_method="$(taskinfo2method "$task_info")"
+debug "task_method: $task_method"
+if [[ "$task_method" == "build" ]]; then
+    TASKS="$TASK"
+    if [ -n "$RECURSIVE" ]; then
+        task_children="$(brew_get_task_children "$TASK")"
+        task_children="$(children_from_answer "$task_children")"
+        TASKS="$TASKS $task_children"
+        TASKS="${TASKS%% }"
+    fi
+
+    srpm_url=
+    volume_name=
+    build_source=
+    srpm_pkg_file=
+    srpm_pkg_name=
+    rpms_arch_all=""
+    rpms_noarch_all=""
+    for task in $TASKS; do
+        task_result="$(brew_get_task_result "$task")" # Holds plain XML
+        rpms_from_task="$(task_result2rpms "$ARCH" "$task_result")"
+        rpms_from_task_noarch="$(task_result2rpms "noarch" "$task_result")"
+        srpm="$(task_result2srpm "$task_result")"
+        if [ -n "$srpm" ]; then
+            srpm_pkg_file="$(basename "$srpm")"
+            srpm_pkg_name="$(from_rpm_name "${srpm_pkg_file}" "name")"
+            if [ -z "$nvr" ]; then
+                nvr="${srpm_pkg_file%%.src.rpm}"
+            fi
+            build="$(brew_get_build "$nvr")"
+            volume_name="$(build2volume_name "$build")"
+            build_source="$(build2build_source "$build")"
+            srpm_url="$(mk_url "$srpm" "$srpm_pkg_file" "$is_scratch")"
+        fi
+        rpms_arch_all+=" $rpms_from_task"
+        rpms_noarch_all+=" $rpms_from_task_noarch"
+    done
+
+    # remove trailing whitespaces
+    rpms_arch_all="${rpms_arch_all%%+( )}"
+    rpms_noarch_all="${rpms_noarch_all%%+( )}"
+
+    echo "NVR: $nvr"
+    echo "SRPM PKG NAME: $srpm_pkg_name"
+    echo "SRPM PKG FILE: $srpm_pkg_file"
+    echo "SRPM URL: $srpm_url"
+    echo "BUILD SOURCE: $build_source"
+
+    if [ -n "$SRPM" ]; then
+        # Print only SRPM information
+        exit 0
+    fi
+# Builds imported from Konflux don't have descendant/child tasks to take the (S)RPMs from.
+# This is much easier than taking the (S)RPMs from (sub)task(s)
+# but can't be used for the 'build' method because of scratch builds (they don't have build id)
+elif [[ "$task_method" == "cg_import" ]]; then
+    build_rpms="$(brew_list_build_rpms "$buildid")"
+    rpms_arch_all="$(build_rpms_info2rpms "$ARCH" "$build_rpms")"
+    rpms_noarch_all="$(build_rpms_info2rpms "noarch" "$build_rpms")"
+    srpm_pkg_file="$(build_rpms_info2rpms "src" "$build_rpms")"
+else
+    echo "Unknown Brew method: $task_method"
+    exit 1
 fi
 
-if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
+if [ -z "${rpms_arch_all}${rpms_noarch_all}" ]; then
     echo "There are no ${ARCH}/noarch RPMs for Brew/Koji task ${TASK}"
     exit "$RET_NO_RPMS_IN_BREW"
 fi
@@ -727,18 +794,18 @@ if [ -n "$ONLYINREPO" ]; then
     # RCM team can choose only some RPM. And make AppStream / BaseOS / Compose
     # only from some RPMs, ignoring other RPMs from Brew build. This options
     # says to ignore RPMs that are absent.
-    rpms_from_task_all="$(filter_available "$ARCH" "$rpms_from_task_all")"
-    rpms_from_task_noarch_all="$(filter_available "noarch" "$rpms_from_task_noarch_all")"
+    rpms_arch_all="$(filter_available "$ARCH" "$rpms_arch_all")"
+    rpms_noarch_all="$(filter_available "noarch" "$rpms_noarch_all")"
 fi
 
-if [ -z "${rpms_from_task_all}${rpms_from_task_noarch_all}" ]; then
+if [ -z "${rpms_arch_all}${rpms_noarch_all}" ]; then
     # all packages have been filtered out above
     echo "None of the packages is available in repos. Is it a new package?"
     exit "$RET_NO_RPMS_IN_REPOS"
 fi
 
 declare -A urls # associative array (dictionary, map)
-for pkg in $rpms_from_task_all $rpms_from_task_noarch_all; do
+for pkg in $rpms_arch_all $rpms_noarch_all; do
     url="$(mk_url "$pkg" "$srpm_pkg_file" "$is_scratch")"
     urls["$url"]=1 # in order to deduplicate, store url as key, value is unimportant
 done
