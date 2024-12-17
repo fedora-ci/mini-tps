@@ -149,7 +149,7 @@ brew_get_build() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for getBuild: ${query:0:200}...(truncated)"
+#    debug "Brew query for getBuild: ${query:0:200}...(truncated)"
     send_query "$query"
 }
 
@@ -169,7 +169,7 @@ brew_list_build_tags() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for listTags: ${query:0:200}...(truncated)"
+#    debug "Brew query for listTags: ${query:0:200}...(truncated)"
     send_query "$query"
 }
 
@@ -198,7 +198,7 @@ brew_list_builds() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for listBuilds: ${query:0:200}...(truncated)"
+#    debug "Brew query for listBuilds: ${query:0:200}...(truncated)"
     send_query "$query"
 }
 
@@ -218,7 +218,7 @@ brew_get_task_result() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for getTaskResult: ${query:0:200}...(truncated)"
+#    debug "Brew query for getTaskResult: ${query:0:200}...(truncated)"
     send_query "$query"
 }
 
@@ -237,7 +237,7 @@ brew_get_user() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for getUser: ${query:0:200}...(truncated)"
+#    debug "Brew query for getUser: ${query:0:200}...(truncated)"
     send_query "$query"
 }
 
@@ -256,7 +256,7 @@ brew_get_task_info() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for getTaskInfo: ${query:0:200}...(truncated)"
+#    debug "Brew query for getTaskInfo: ${query:0:200}...(truncated)"
     send_query "$query"
 }
 
@@ -275,7 +275,7 @@ brew_get_task_request() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for getTaskRequest: ${query:0:200}...(truncated)"
+#    debug "Brew query for getTaskRequest: ${query:0:200}...(truncated)"
     send_query "$query"
 }
 
@@ -342,7 +342,7 @@ brew_get_task_children() {
 </methodCall>
 EOF
     )"
-    debug "Brew query for getTaskChildren: ${query:0:200}...(truncated)"
+#    debug "Brew query for getTaskChildren: ${query:0:200}...(truncated)"
     send_query "$query"
 }
 
