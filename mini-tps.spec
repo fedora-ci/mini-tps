@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 183%{?dist}
+Release: 184%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -73,6 +73,11 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Tue Dec 17 2024 Jiri Popelka <jpopelka@redhat.com> - 0.1-184
+- Konflux imported: Get RPMs from build intead of from a (sub)task(s)
+- Don't install redhat-internal-cert-install rpm
+- viewer: ignore UTF-8 errors
+
 * Fri Nov 01 2024 Michal Srb <michal@redhat.com> - 0.1-183
 - Remove Resilient Storage repos for 10
 
