@@ -2,11 +2,6 @@
 
 RET_NO_COMPOSE_ID=10
 
-if ! rpm -q redhat-internal-cert-install >/dev/null 2>&1; then
-    echo "Deploying internal certs"
-    yum -y install "${INT_CERTS:-https://hdn.corp.redhat.com/rhel8-csb/RPMS/noarch/redhat-internal-cert-install-0.1-31.el7.noarch.rpm}"
-fi
-
 echo "Setting up RHEL internal YUM repos for selected profile"
 find "/etc/yum.repos.d/" -name "${REPOFILE_OPT_PREFIX}*.repo" -exec rm --verbose -f '{}' ';'
 declare -a INSTALLED_REPO_FILES=("$REPOFILE")
