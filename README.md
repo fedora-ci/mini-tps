@@ -72,12 +72,13 @@ repo file then you can find it in the `Repo Download` on the Copr page.
 
 Currently, we don't build automatically because there are no tests and
 an unnoticed push to `main` could silently break our RHEL/Fedora pipelines.
-To create a new build:
+To create a new SRPM, either:
 
-- run `rpmdev-bumpspec mini-tps.spec` to bump the release in the spec file
-- run `packit srpm --no-update-release` to create a SRPM
-- Go to [@osci/mini-tps New Build](https://copr.fedorainfracloud.org/coprs/g/osci/mini-tps/add_build_upload),
-  select the SRPM file and hit `Build`
+- run `packit srpm` or
+- run `rpmdev-bumpspec mini-tps.spec` and `packit srpm --no-update-release`
+
+Then, go to [@osci/mini-tps New Build](https://copr.fedorainfracloud.org/coprs/g/osci/mini-tps/add_build_upload),
+select the SRPM file and hit `Build`
 
 To enable the automatic builds, all you need to do is uncomment the `copr_build` job
 in the [.packit.yaml](.packit.yaml).
