@@ -41,12 +41,12 @@ tagged2nvrs() {
     echo "$nvrs"
 }
 
-tag2tag_id() {
+tag_info2tag_id() {
     local xml="$1" && shift
     local task=
-    volume_name="$(echo "$xml" | xmllint --xpath 'string(//member[name="id"]/value/int/text())' -)"
-    debug "Volume name: $volume_name"
-    echo "$volume_name"
+    tag_id="$(echo "$xml" | xmllint --xpath 'string(//member[name="id"]/value/int/text())' -)"
+    debug "Tag name: $tag_id"
+    echo "$tag_id"
 }
 
 send_query() {
@@ -64,18 +64,22 @@ send_query() {
 #
 
 brew_get_tag() {
+    # tag may be either
+    # a string (the tag name) or an int (the tag ID)
     local tag="$1" && shift
+    local re='^[0-9]+$'
+    [[ $tag =~ $re ]] && tag="<int>$tag</int>"
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
-<methodName>getTag</methodName>
-<params>
-<param>
-<value>
-<string>$tag</string>
-</value>
-</param>
-</params>
+  <methodName>getTag</methodName>
+  <params>
+    <param>
+      <value>
+        <string>$tag</string>
+      </value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -85,18 +89,21 @@ EOF
 
 
 brew_list_tagged() {
+    # tag: tag name or ID number
     local tag="$1" && shift
+    local re='^[0-9]+$'
+    [[ $tag =~ $re ]] && tag="<int>$tag</int>"
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
-<methodName>listTagged</methodName>
-<params>
-<param>
-<value>
-<string>$tag</string>
-</value>
-</param>
-</params>
+  <methodName>listTagged</methodName>
+  <params>
+    <param>
+      <value>
+        <string>$tag</string>
+      </value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -126,7 +133,7 @@ EOF
 
 DEBUG="${DEBUG:-}"
 PROG="${PROG:-${0##*/}}"
-TAG_NAME="${TAG_NAME:-}"
+tag_id="${tag_id:-}"
 GET_TASKS="${GET_TASKS:-}"
 GET_NVRS="${GET_NVRS:-}"
 GET_TAG_ID="${GET_TAG_ID:-}"
@@ -139,7 +146,7 @@ eval set -- "$opt"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --tname)
-            TAG_NAME="$2"
+            tag_id="$2"
             shift 2
             ;;
         -t|--tasks)
@@ -172,15 +179,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Test correct invocation
-if [ -z "$TAG_NAME" ]; then
+if [ -z "$tag_id" ]; then
   echo "Use: $PROG -h for help."
   exit
 fi
 
-debug "Tag: $TAG_NAME"
+debug "Tag: $tag_id"
 
 if [[ -n "$GET_NVRS" || -n "$GET_TASKS" ]]; then
-    list_tagged="$(brew_list_tagged "$TAG_NAME")"
+    list_tagged="$(brew_list_tagged "$tag_id")"
     if [ -n "$GET_NVRS" ]; then
         nvrs="$(tagged2nvrs "$list_tagged")"
         echo "$nvrs"
@@ -192,8 +199,8 @@ if [[ -n "$GET_NVRS" || -n "$GET_TASKS" ]]; then
 fi
 
 if [ -n "$GET_TAG_ID" ]; then
-    tag="$(brew_get_tag "$TAG_NAME")"
-    tag_id="$(tag2tag_id "$tag")"
+    tag="$(brew_get_tag "$tag_id")"
+    tag_id="$(tag_info2tag_id "$tag")"
     echo "$tag_id"
     exit 0
 fi

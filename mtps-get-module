@@ -98,17 +98,19 @@ send_query() {
 
 brew_get_build() {
     # getBuild query
-    # Build can be: NVR or build number.
+    # Build can be: int ID or a string NVR
     local build="$1" && shift
+    local re='^[0-9]+$'
+    [[ $build =~ $re ]] && build="<int>$build</int>"
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
-<methodName>getBuild</methodName>
-<params>
-<value>$build</value>
-<param>
-</param>
-</params>
+  <methodName>getBuild</methodName>
+  <params>
+    <param>
+      <value>$build</value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
@@ -118,17 +120,17 @@ EOF
 
 brew_get_latest_builds() {
     # getLatestBuilds query
-    # Build can be: NVR or build number.
-    local tag="$1" && shift
+    # Tag is int (ID)
+    local tag_id="$1" && shift
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
-<methodName>getLatestBuilds</methodName>
-<params>
-<value>$tag</value>
-<param>
-</param>
-</params>
+  <methodName>getLatestBuilds</methodName>
+  <params>
+    <param>
+      <value><int>$tag_id</int></value>
+    </param>
+  </params>
 </methodCall>
 EOF
     )"
