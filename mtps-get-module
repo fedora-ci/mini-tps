@@ -120,15 +120,17 @@ EOF
 
 brew_get_latest_builds() {
     # getLatestBuilds query
-    # Tag is int (ID)
-    local tag_id="$1" && shift
+    # Tag can be: ID (int) or name (string)
+    local tag="$1" && shift
+    local re='^[0-9]+$'
+    [[ $tag =~ $re ]] && tag="<int>$tag</int>"
     local query="$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <methodCall>
   <methodName>getLatestBuilds</methodName>
   <params>
     <param>
-      <value><int>$tag_id</int></value>
+      <value>$tag</value>
     </param>
   </params>
 </methodCall>
