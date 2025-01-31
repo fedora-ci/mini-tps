@@ -11,7 +11,7 @@ Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
 URL:     https://github.com/fedora-ci/mini-tps
-Source0: mini-tps-0.1.tar.gz
+Source0: mini-tps.tar.gz
 BuildArch: noarch
 # Don't add any Requires here because those would become protected, see mini-tps.conf
 
@@ -19,7 +19,7 @@ BuildArch: noarch
 Light version of TPS
 
 %prep
-%autosetup -n mini-tps-0.1
+%autosetup -n mini-tps
 
 %build
 
