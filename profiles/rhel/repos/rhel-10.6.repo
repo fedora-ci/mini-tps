@@ -1,0 +1,192 @@
+###### BASE OS ###########
+[rhel-10-base]
+name=RHEL-10 BaseOS
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/BaseOS/$basearch/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-base-debug]
+name=RHEL-10 BaseOS Debug
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/BaseOS/$basearch/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-base-source]
+name=RHEL-10 BaseOS Source
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/BaseOS/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
+########### APPSTREAM ##################
+[rhel-10-appstream]
+name=RHEL-10 AppStream
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/AppStream/$basearch/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-appstream-debug]
+name=RHEL-10 AppStream-debug
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/AppStream/$basearch/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-appstream-source]
+name=RHEL-10 AppStream-source
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/AppStream/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
+########### CRB ##################
+[rhel-10-crb]
+name=RHEL-10 CRB
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/CRB/$basearch/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-crb-debug]
+name=RHEL-10 CRB-debug
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/CRB/$basearch/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-crb-source]
+name=RHEL-10 CRB-source
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/CRB/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
+########### HighAvailability ##################
+[rhel-10-highavailability]
+name=RHEL-10 HighAvailability
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/HighAvailability/$basearch/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-highavailability-debug]
+name=RHEL-10 HighAvailability-debug
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/HighAvailability/$basearch/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-highavailability-source]
+name=RHEL-10 HighAvailability-source
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/HighAvailability/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
+########### NFV ##################
+[rhel-10-nfv]
+name=RHEL-10 NFV
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/NFV/x86_64/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-nfv-debug]
+name=RHEL-10 NFV-debug
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/NFV/x86_64/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-nfv-source]
+name=RHEL-10 NFV-source
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/NFV/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
+########### RT ##################
+[rhel-10-rt]
+name=RHEL-10 RT
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/RT/x86_64/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-rt-debug]
+name=RHEL-10 RT-debug
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/RT/x86_64/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-rt-source]
+name=RHEL-10 RT-source
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/RT/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
+########### SAP ##################
+[rhel-10-sap]
+name=RHEL-10 SAP
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/SAP/x86_64/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-sap-debug]
+name=RHEL-10 SAP Debug
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/SAP/x86_64/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-sap-source]
+name=RHEL-10 SAP Source
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/SAP/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
+########### SAPHANA ##################
+[rhel-10-saphana]
+name=RHEL-10 SAPHANA
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/SAPHANA/x86_64/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-saphana-debug]
+name=RHEL-10 SAPHANA Debug
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/SAPHANA/x86_64/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-saphana-source]
+name=RHEL-10 SAPHANA Source
+baseurl=https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10.6/compose/SAPHANA/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
+############# BUILDROOT ##############
+
+[rhel-10-buildroot]
+name=RHEL-10 Buildroot
+baseurl=https://download.devel.redhat.com/brewroot/repos/rhel-10.6-build/latest/$basearch/
+enabled=0
+gpgcheck=0
+skip_if_unavailable=True
