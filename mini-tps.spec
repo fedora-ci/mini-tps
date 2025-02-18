@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 185%{?dist}
+Release: 186%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -73,6 +73,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Tue Feb 18 2025 Michal Fabik <mfabik@redhat.com> - 0.1-186
+- Fix SRPM URL creation for draft builds
+
 * Fri Jan 31 2025 Michal Srb <michal@redhat.com> - 0.1-185
 - Add RHEL 10 profiles
 
