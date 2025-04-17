@@ -212,7 +212,7 @@ mbsid2minfo() {
 minfo2tag() {
     local minfo="$1" && shift
     local tag
-    tag="$(echo "$minfo" | sed -n -e '/component_builds/,/"koji_tag"/ s/^.\+"koji_tag":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    tag="$(echo "$minfo" | sed -n -e 's/.*"koji_tag":[[:space:]]*"\([^"]*\)".*/\1/p')"
     debug "MBS build has tag: $tag"
     echo "$tag"
 }
@@ -220,7 +220,7 @@ minfo2tag() {
 minfo2name() {
     local minfo="$1" && shift
     local name
-    name="$(echo "$minfo" | sed -n -e '/component_builds/,/"name"/ s/^.\+"name":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    name="$(echo "$minfo" | sed -n -e 's/.*"name":[[:space:]]*"\([^"]*\)".*/\1/p')"
     debug "MBS build has name: $name"
     echo "$name"
 }
@@ -228,7 +228,7 @@ minfo2name() {
 minfo2stream() {
     local minfo="$1" && shift
     local stream
-    stream="$(echo "$minfo" | sed -n -e '/component_builds/,/"stream"/ s/^.\+"stream":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    stream="$(echo "$minfo" | sed -n -e 's/.*"stream":[[:space:]]*"\([^"]*\)".*/\1/p')"
     debug "MBS build has stream: $stream"
     echo "$stream"
 }
@@ -236,7 +236,7 @@ minfo2stream() {
 minfo2version() {
     local minfo="$1" && shift
     local version
-    version="$(echo "$minfo" | sed -n -e '/component_builds/,/"version"/ s/^.\+"version":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    version="$(echo "$minfo" | sed -n -e 's/.*"version":[[:space:]]*"\([^"]*\)".*/\1/p')"
     debug "MBS build has version: $version"
     echo "$version"
 }
@@ -244,7 +244,7 @@ minfo2version() {
 minfo2context() {
     local minfo="$1" && shift
     local context
-    context="$(echo "$minfo" | sed -n -e '/component_builds/,/"context"/ s/^.\+"context":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    context="$(echo "$minfo" | sed -n -e 's/.*"context":[[:space:]]*"\([^"]*\)".*/\1/p')"
     debug "MBS build has context: $context"
     echo "$context"
 }
@@ -252,7 +252,7 @@ minfo2context() {
 minfo2platformtag() {
     local minfo="$1" && shift
     local koji_tag
-    koji_tag="$(echo "$minfo" | sed -n -e '/"platform"/,/koji_tag/ s/^.\+"koji_tag":[[:space:]]\+"\(.\+\)"[\,[:space:]]*$/\1/p')"
+    koji_tag="$(echo "$minfo" | grep -o '"buildrequires":{.*"platform":{[^}]*}' | grep -o '"koji_tag":"[^"]*"' | sed 's/"koji_tag":"//;s/"$//')"
     debug "MBS build has platform module koji_tag: $koji_tag"
     echo "$koji_tag"
 }
