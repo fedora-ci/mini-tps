@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 186%{?dist}
+Release: 187%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -46,6 +46,7 @@ cat >> %{buildroot}%{_sysconfdir}/%{yumcmd}/protected.d/mini-tps.conf <<EOF
 dnf-plugins-core
 libselinux-utils
 rpm-plugin-selinux
+jq
 EOF
 
 %endif
@@ -73,6 +74,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Fri Apr 18 2025 Jiri Popelka <jpopelka@redhat.com> - 0.1-187
+- Use jq in mtps-get-module
+
 * Tue Feb 18 2025 Michal Fabik <mfabik@redhat.com> - 0.1-186
 - Fix SRPM URL creation for draft builds
 
