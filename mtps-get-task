@@ -513,7 +513,7 @@ filter_available() {
     for rpm in $rpms; do
         rpm_file="$(basename "$rpm")"
         name="$(from_rpm_name "${rpm_file}" "name")"
-        "$YUMDNFCMD" info "${name}.${arch}" >/dev/null 2>&1
+        "$YUMDNFCMD" info "${name}" >/dev/null 2>&1
         ret="$?"
         if [ "$ret" -ne 0 ]; then
             echo "Skipping as it is absent in shipped repos: $name" >&2
