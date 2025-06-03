@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 187%{?dist}
+Release: 188%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -79,6 +79,10 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Tue Jun 03 2025 Michal Srb <michal@redhat.com> - 0.1-188
+- Ignore arch when detecting whether a package is shipped or not
+- Related: OSCI-8422
+
 * Fri Apr 18 2025 Jiri Popelka <jpopelka@redhat.com> - 0.1-187
 - Use jq in mtps-get-module
 
