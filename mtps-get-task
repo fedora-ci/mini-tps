@@ -102,6 +102,15 @@ builds2build_id() {
     echo "$buildid"
 }
 
+builds2is_draft() {
+    local xml="$1" && shift
+    local is_draft
+    is_draft="$(echo "$xml" | xmllint --xpath 'string(//member[name="draft"]/value/boolean/text())' -)"
+    [[ "$is_draft" == '1' ]] && is_draft="yes" || is_draft="no"
+    debug "Is draft: $is_draft"
+    echo "$is_draft"
+}
+
 buildtags_from_answer() {
     local xml="$1" && shift
     local tmpfile
@@ -791,6 +800,9 @@ elif [[ "$task_method" == "cg_import" ]]; then
     rpms_arch_all="$(build_rpms_info2rpms "$ARCH" "$build_rpms")"
     rpms_noarch_all="$(build_rpms_info2rpms "noarch" "$build_rpms")"
     srpm_pkg_file="$(build_rpms_info2rpms "src" "$build_rpms")"
+    # Import tasks don't tell you if the build is a draft, so determine it from the build
+    # otherwise the URL will be constructed incorrectly
+    is_draft="$(builds2is_draft "$listbuilds")"
 else
     echo "Unknown Brew method: $task_method"
     exit 1
