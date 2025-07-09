@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 188%{?dist}
+Release: 189%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -79,6 +79,10 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Wed Jul 09 2025 Chris Kelley <ckelley@redhat.com> - 0.1-189
+- Make mtps work for imported draft builds
+- Related: OSCI-8507
+
 * Tue Jun 03 2025 Michal Srb <michal@redhat.com> - 0.1-188
 - Ignore arch when detecting whether a package is shipped or not
 - Related: OSCI-8422
