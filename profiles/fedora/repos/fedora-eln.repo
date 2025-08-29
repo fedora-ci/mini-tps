@@ -1,0 +1,331 @@
+########### BaseOS ###########
+[eln-baseos]
+name=Fedora - ELN BaseOS - Developmental packages for the next Enterprise Linux release
+baseurl=https://dl.fedoraproject.org/pub/eln/1/BaseOS/$basearch/os/
+enabled=1
+countme=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-baseos-debuginfo]
+name=Fedora - ELN BaseOS - Debug
+baseurl=https://dl.fedoraproject.org/pub/eln/1/BaseOS/$basearch/debug/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-baseos-source]
+name=Fedora - ELN BaseOS - Source
+baseurl=https://dl.fedoraproject.org/pub/eln/1/BaseOS/source/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+
+########### AppStream ###########
+[eln-appstream]
+name=Fedora - ELN AppStream - Developmental packages for the next Enterprise Linux release
+baseurl=https://dl.fedoraproject.org/pub/eln/1/AppStream/$basearch/os/
+enabled=1
+countme=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-appstream-debuginfo]
+name=Fedora - ELN AppStream - Debug
+baseurl=https://dl.fedoraproject.org/pub/eln/1/AppStream/$basearch/debug/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-appstream-source]
+name=Fedora - ELN AppStream - Source
+baseurl=https://dl.fedoraproject.org/pub/eln/1/AppStream/source/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+
+########### CRB ###########
+[eln-crb]
+name=Fedora - ELN CRB - Developmental packages for the next Enterprise Linux release
+baseurl=https://dl.fedoraproject.org/pub/eln/1/CRB/$basearch/os/
+enabled=1
+countme=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-crb-debuginfo]
+name=Fedora - ELN CRB - Debug
+baseurl=https://dl.fedoraproject.org/pub/eln/1/CRB/$basearch/debug/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-crb-source]
+name=Fedora - ELN CRB - Source
+baseurl=https://dl.fedoraproject.org/pub/eln/1/CRB/source/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+
+########### Extras ###########
+[eln-extras]
+name=Fedora - ELN Extras - Developmental packages for the next Enterprise Linux release
+baseurl=https://dl.fedoraproject.org/pub/eln/1/Extras/$basearch/os/
+enabled=1
+countme=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-extras-debuginfo]
+name=Fedora - ELN Extras - Debug
+baseurl=https://dl.fedoraproject.org/pub/eln/1/Extras/$basearch/debug/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-extras-source]
+name=Fedora - ELN Extras - Source
+baseurl=https://dl.fedoraproject.org/pub/eln/1/Extras/source/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+
+########### HighAvailability ###########
+[eln-ha]
+name=Fedora - ELN HighAvailability - Developmental packages for the next Enterprise Linux release
+baseurl=https://dl.fedoraproject.org/pub/eln/1/HighAvailability/$basearch/os/
+enabled=1
+countme=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-ha-debuginfo]
+name=Fedora - ELN HighAvailability - Debug
+baseurl=https://dl.fedoraproject.org/pub/eln/1/HighAvailability/$basearch/debug/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-ha-source]
+name=Fedora - ELN HighAvailability - Source
+baseurl=https://dl.fedoraproject.org/pub/eln/1/HighAvailability/source/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+
+########### RT ###########
+[eln-rt]
+name=Fedora - ELN RT - Developmental packages for the next Enterprise Linux release
+baseurl=https://dl.fedoraproject.org/pub/eln/1/RT/$basearch/os/
+enabled=1
+countme=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-rt-debuginfo]
+name=Fedora - ELN RT - Debug
+baseurl=https://dl.fedoraproject.org/pub/eln/1/RT/$basearch/debug/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-rt-source]
+name=Fedora - ELN RT - Source
+baseurl=https://dl.fedoraproject.org/pub/eln/1/RT/source/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+
+########### NFV ###########
+[eln-nfv]
+name=Fedora - ELN NFV - Developmental packages for the next Enterprise Linux release
+baseurl=https://dl.fedoraproject.org/pub/eln/1/NFV/$basearch/os/
+enabled=1
+countme=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-nfv-debuginfo]
+name=Fedora - ELN NFV - Debug
+baseurl=https://dl.fedoraproject.org/pub/eln/1/NFV/$basearch/debug/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-nfv-source]
+name=Fedora - ELN NFV - Source
+baseurl=https://dl.fedoraproject.org/pub/eln/1/NFV/source/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+
+########### SAP ###########
+[eln-sap]
+name=Fedora - ELN SAP - Developmental packages for the next Enterprise Linux release
+baseurl=https://dl.fedoraproject.org/pub/eln/1/SAP/$basearch/os/
+enabled=1
+countme=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-sap-debuginfo]
+name=Fedora - ELN SAP - Debug
+baseurl=https://dl.fedoraproject.org/pub/eln/1/SAP/$basearch/debug/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-sap-source]
+name=Fedora - ELN SAP - Source
+baseurl=https://dl.fedoraproject.org/pub/eln/1/SAP/source/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+
+########### SAPHANA ###########
+[eln-saphana]
+name=Fedora - ELN SAPHANA - Developmental packages for the next Enterprise Linux release
+baseurl=https://dl.fedoraproject.org/pub/eln/1/SAPHANA/$basearch/os/
+enabled=1
+countme=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-saphana-debuginfo]
+name=Fedora - ELN SAPHANA - Debug
+baseurl=https://dl.fedoraproject.org/pub/eln/1/SAPHANA/$basearch/debug/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+[eln-saphana-source]
+name=Fedora - ELN SAPHANA - Source
+baseurl=https://dl.fedoraproject.org/pub/eln/1/SAPHANA/source/tree/
+enabled=1
+metadata_expire=6h
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-eln-$basearch
+skip_if_unavailable=True
+
+
+############# BUILDROOT ##############
+[eln-buildroot]
+name=Fedora - ELN Buildroot
+baseurl=https://kojipkgs.fedoraproject.org/repos/eln-build/latest/$basearch/
+enabled=0
+gpgcheck=0
+skip_if_unavailable=True
