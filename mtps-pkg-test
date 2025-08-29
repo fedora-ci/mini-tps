@@ -359,9 +359,10 @@ get_old_nevra() {
     local epoch="$(from_nevra "$nevra" "epoch")"
     local release="$(from_nevra "$nevra" "rel")"
     local arch="$(from_nevra "$nevra" "arch")"
+    # shellcheck disable=SC2086
     # Find previous version of the package.
     local old_nevras=($(
-        repoquery -q "$name"."$arch" --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}" --show-duplicates | \
+        ${REPOQUERYCMD} -q "$name"."$arch" --qf="%{name}-%{epoch}:%{version}-%{release}.%{arch}${REPOQUERY_SEPARATOR:-}" ${REPOQUERY_SHOWDUPLICATES:-} | \
         tr -s ' ' | \
         grep "$arch" | \
         sed -n -e "/^${name}-${epoch}:${version}-${release}.${arch}$/"'!p'
