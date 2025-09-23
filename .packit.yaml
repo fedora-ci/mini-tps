@@ -5,11 +5,13 @@ jobs:
     targets:
       - fedora-all
       - epel-all
-#  - job: copr_build
-#    trigger: commit
-#    branch: main
-#    targets:
-#      - fedora-all
-#      - epel-all
-#    owner: "@osci"
-#    project: mini-tps
+      - fedora-eln
+  - job: copr_build
+    trigger: commit
+    branch: main
+    targets:
+      - fedora-all
+      - epel-all
+      - fedora-eln
+    owner: "@osci"
+    project: mini-tps
