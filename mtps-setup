@@ -48,6 +48,28 @@ if [ -z "$YUMDNFCMD" ]; then
     fi
 fi
 
+# shellcheck disable=SC2034
+# What command to use for repoquery command defined based on YUMDNFCMD:
+# 1. If `yum`, then `repoquery` (from yum-utils)
+# 2. If any version of `dnf`, then `dnf repoquery` (from python3-dnf or dnf5)
+case "$YUMDNFCMD" in
+    yum)
+       REPOQUERYCMD="repoquery"
+       REPOQUERY_SEPARATOR=
+       REPOQUERY_SHOWDUPLICATES="--show-duplicates"
+       ;;
+    dnf5)
+       REPOQUERYCMD="dnf5 repoquery"
+       REPOQUERY_SEPARATOR="\n"
+       REPOQUERY_SHOWDUPLICATES=
+       ;;
+    *)
+       REPOQUERYCMD="dnf repoquery"
+       REPOQUERY_SEPARATOR=
+       REPOQUERY_SHOWDUPLICATES="--show-duplicates"
+       ;;
+esac
+
 debug() {
     if [[ -n "${DEBUG:-}" || -n "${GB_DEBUG:-}" ]]; then
         echo -e "$*" >&2

@@ -40,7 +40,7 @@ if [ -n "$FIXREPO" ]; then
     done
 fi
 
-yum -y install yum-utils  # yum-config-manager
+yum -y install yum-utils  # yum-config-manager, repoquery
 yum-config-manager --disable '*'
 declare -a yumrepos
 for repofile in "${INSTALLED_REPO_FILES[@]}"; do

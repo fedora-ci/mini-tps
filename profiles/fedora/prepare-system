@@ -32,7 +32,7 @@ if [ -n "${FIXREPO:-}" ]; then
 fi
 
 # Add buildroot repo, if needed
-if [ -n "${ENABLE_BUILD_ROOT:-}" ]; then
+if [ -n "${ENABLE_BUILD_ROOT:-}" ] && [ "${PROFILE}" != "fedora-eln" ]; then
     echo "Enabling buildroot repository..."
     FEDORA_NUMBER=$(echo "${PROFILE}" | awk -F'-' '{ print $2 }')
 
@@ -46,8 +46,18 @@ skip_if_unavailable=True
 EOF
 fi
 
+if [[ "$PROFILE" == "fedora-eln" ]]; then
+  # Replace system repositories with a profile repo
+  find "/etc/yum.repos.d/" -name "*.repo" -delete
+  cp -f "$PFILE" "$REPOFILE"
+  # Add buildroot repo, if needed
+  dnf5 -y install dnf5-plugins  # config-manager
+  if [ -n "${ENABLE_BUILD_ROOT:-}" ]; then
+      dnf5 config-manager setopt eln-buildroot.enabled=1
+  fi
+  dnf5 repo list
 # Make sure fedora and fedora-updates repos are enabled
-if [[ "$YUMDNFCMD" == "dnf5" ]]; then
+elif [[ "$YUMDNFCMD" == "dnf5" ]]; then
   dnf5 -y install dnf5-plugins  # config-manager
   dnf5 config-manager setopt fedora.enabled=1 updates.enabled=1
   dnf5 repo list
@@ -61,7 +71,7 @@ echo "Recreating the DNF cache..."
 "$YUMDNFCMD" makecache
 
 echo "Installing packages required for testing..."
-"$YUMDNFCMD" -y install createrepo_c which procps-ng dnf-utils
+"$YUMDNFCMD" -y install createrepo_c which procps-ng
 
 echo "Updating the system..."
 "$YUMDNFCMD" -y upgrade

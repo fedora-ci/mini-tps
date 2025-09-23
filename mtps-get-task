@@ -875,10 +875,11 @@ fi
 echo "Repo file content:"
 echo "$repo_file_text"
 
+# shellcheck disable=SC2086
 # Query packages in the created repo
 nevras_in_repo="$(
-    repoquery --repoid="$repo_name" --all \
-        --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}" 2>&1 | \
+    ${REPOQUERYCMD} --repoid="$repo_name" '*' \
+        --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}${REPOQUERY_SEPARATOR:-}" 2>&1 | \
         sed -n -e "/^${repo_name}[[:space:]]/ s/^${repo_name}[[:space:]]//p"
 )"
 # Exclude SRPMs

@@ -144,10 +144,11 @@ if [ -n "$SELINUX" ]; then
     fi
 fi
 
+# shellcheck disable=SC2086
 # https://bugzilla.redhat.com/show_bug.cgi?id=584525
 nevras_in_repo="$(
-    repoquery --repoid="$REPONAME" --all \
-        --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}" 2>&1 | \
+    ${REPOQUERYCMD} --repoid="$REPONAME" '*' \
+        --qf "%{repoid} %{name}-%{epoch}:%{version}-%{release}.%{arch}${REPOQUERY_SEPARATOR:-}" 2>&1 | \
         sed -n -e "/^${REPONAME}[[:space:]]/ s/^${REPONAME}[[:space:]]//p"
 )"
 
