@@ -72,6 +72,46 @@ EOF
     send_query "$query"
 }
 
+brew_get_build() {
+    # getBuild query
+    # Build can be: int ID or a string NVR
+    local build="$1" && shift
+    local re='^[0-9]+$'
+    [[ $build =~ $re ]] && build="<int>$build</int>"
+    local query
+    query="$(cat << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+  <methodName>getBuild</methodName>
+  <params>
+    <param>
+      <value>$build</value>
+    </param>
+  </params>
+</methodCall>
+EOF
+    )"
+    debug "Brew query for getBuild: ${query:0:200}...(truncated)"
+    send_query "$query"
+}
+
+build2is_draft() {
+    local xml="$1" && shift
+    local is_draft
+    is_draft="$(echo "$xml" | xmllint --xpath 'string(//member[name="draft"]/value/boolean/text())' -)"
+    [[ "$is_draft" == '1' ]] && is_draft="yes" || is_draft="no"
+    debug "Is draft: $is_draft"
+    echo "$is_draft"
+}
+
+build2nvr() {
+    local xml="$1" && shift
+    local nvr
+    nvr="$(echo "$xml" | xmllint --xpath 'string(//member[name="nvr"]/value/string/text())' -)"
+    debug "NVR: $nvr"
+    echo "$nvr"
+}
+
 
 mk_repo() {
     local brew_id="$1" && shift
@@ -149,9 +189,20 @@ mk_url() {
     local srpm="$1" && shift
     local pkg="$1" && shift
     local arch="$1" && shift
-    local name="$(from_rpm_name "$srpm" "name")"
-    local ver="$(from_rpm_name "$srpm" "ver")"
-    local rel="$(from_rpm_name "$srpm" "rel")"
+    local is_draft="${1:-no}" && shift
+    local nvr="${1:-}" && shift
+    local name
+    name="$(from_rpm_name "$srpm" "name")"
+    local ver
+    ver="$(from_rpm_name "$srpm" "ver")"
+    local rel
+    rel="$(from_rpm_name "$srpm" "rel")"
+    if [ "$is_draft" == "yes" ] && [ -n "$nvr" ]; then
+        # Only append draft part if it's not already in the release
+        if [[ "$rel" != *,draft_* ]]; then
+            rel="$rel",draft_${nvr#*,draft_}
+        fi
+    fi
     # https://download.devel.redhat.com/brewroot/packages/libsolv/0.6.34/2.el8+7/src/libsolv-0.6.34-2.el8+7.src.rpm
     # Need to be re-writen as for mtps-get-task
     url="${GB_BREWPKGS}/${name}/${ver}/${rel}/${arch}/${pkg}.${arch}.rpm"
@@ -283,8 +334,8 @@ do_clean_exit() {
     fi
     # Close tee pipes
     for pid in $(ps -o pid --no-headers --ppid $$); do
-        if [ -n "$(ps -p $pid -o pid=)" ]; then
-            kill -s HUP $pid
+        if [ -n "$(ps -p "$pid" -o pid=)" ]; then
+            kill -s HUP "$pid"
         fi
     done
     mv -f "$logfname" "$new_logfname"
@@ -298,7 +349,7 @@ debug "Brew arch: $GB_ARCH"
 debug "Store RPMS at: $GB_REPODIR"
 debug "Create repo: $GB_CREATEREPO"
 
-build_rpms="$(brew_list_build_rpms $GB_BUILD)"
+build_rpms="$(brew_list_build_rpms "$GB_BUILD")"
 # rpms_from_build is a list of packages in form NVR: dhcp-relay-4.3.6-27.el8+7 dhcp-server-4.3.6-27.el8+7
 rpms_from_build="$(build_rpms_info2rpms "$GB_ARCH" "$build_rpms")"
 rpms_from_build_all="$rpms_from_build"
@@ -306,7 +357,13 @@ rpms_from_build_noarch="$(build_rpms_info2rpms "noarch" "$build_rpms")"
 rpms_from_build_noarch_all="$rpms_from_build_noarch"
 srpm="$(build_rpms_info2rpms "src" "$build_rpms").src.rpm"
 brew_build_id="$(build_rpms_info2buid_id "$build_rpms")"
-srpm_url="$(mk_url "$srpm" "${srpm%%.src.rpm}" "src")"
+# Get build information to check if it's a draft build
+build_info="$(brew_get_build "$brew_build_id")"
+is_draft="$(build2is_draft "$build_info")"
+build_nvr="$(build2nvr "$build_info")"
+debug "Is draft build: $is_draft"
+debug "Build NVR: $build_nvr"
+srpm_url="$(mk_url "$srpm" "${srpm%%.src.rpm}" "src" "$is_draft" "$build_nvr")"
 
 echo "Brew build ID: $brew_build_id"
 echo "URL: ${GB_BREWINFO}${brew_build_id}"
@@ -339,14 +396,14 @@ fi
 
 # Download RPMs with specified arch
 for pkg in $rpms_from_build; do
-    url="$(mk_url "$srpm" "$pkg" "$GB_ARCH")"
+    url="$(mk_url "$srpm" "$pkg" "$GB_ARCH" "$is_draft" "$build_nvr")"
     echo "$url"
     download_rpm "$url"
 done
 
 # Download 'noarch' packages
 for pkg in $rpms_from_build_noarch; do
-    url="$(mk_url "$srpm" "$pkg" "noarch")"
+    url="$(mk_url "$srpm" "$pkg" "noarch" "$is_draft" "$build_nvr")"
     echo "$url"
     download_rpm "$url"
 done

@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 190%{?dist}
+Release: 191%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -79,6 +79,10 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Mon Dec 08 2025 Chris Kelley <ckelley@redhat.com> - 0.1-191
+- Fix mtps-get-builds handling of draft builds
+- Related: OSCI-9051
+
 * Tue Sep 09 2025 Yaakov Selkowitz <yselkowi@redhat.com> - 0.1-190
 - Onboard Fedora ELN
 
