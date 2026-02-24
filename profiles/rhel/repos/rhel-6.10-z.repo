@@ -12,7 +12,7 @@ gpgcheck=0
 
 [rhel-debuginfo-updates]
 name=rhel-debuginfo-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/debug/
 enabled=1
 gpgcheck=0
 
@@ -24,7 +24,7 @@ gpgcheck=0
 
 [rhel-source-updates]
 name=rhel-source-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/source/tree/
+baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/source/SRPMS/
 enabled=1
 gpgcheck=0
 
@@ -42,7 +42,7 @@ gpgcheck=0
 
 [rhel-SAP-debuginfo-updates]
 name=rhel-SAP-debuginfo-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server-SAP/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server-SAP/$basearch/debug/
 enabled=1
 gpgcheck=0
 
@@ -54,32 +54,32 @@ gpgcheck=0
 
 [rhel-SAPHANA-debuginfo-updates]
 name=rhel-SAPHANA-debuginfo-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server-SAPHANA/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server-SAPHANA/x86_64/debug/
 enabled=1
 gpgcheck=0
 
 [rhel-HighAvailability-updates]
 name=rhel-HighAvailability-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/os/addons/HighAvailability/
+baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/os/HighAvailability/
 enabled=1
 gpgcheck=0
 
 [rhel-HighAvailability-debuginfo-updates]
 name=rhel-HighAvailability-updates
 baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/debug/tree/addons/HighAvailability/
-enabled=1
+enabled=0
 gpgcheck=0
 
 [rhel-ResilientStorage-updates]
 name=rhel-ResilientStorage-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/os/addons/ResilientStorage/
+baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/os/ResilientStorage/
 enabled=1
 gpgcheck=0
 
 [rhel-ResilientStorage-debuginfo-updates]
 name=rhel-ResilientStorage-updates
 baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/debug/tree/addons/ResilientStorage/
-enabled=1
+enabled=0
 gpgcheck=0
 
 [rhel-RT-updates]
@@ -111,7 +111,7 @@ gpgcheck=0
 
 [rhel-debuginfo]
 name=rhel-debuginfo
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/debug/
 enabled=1
 gpgcheck=0
 
@@ -124,7 +124,7 @@ gpgcheck=0
 
 [rhel-source]
 name=rhel-source
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/source/tree/
+baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/source/SRPMS/
 enabled=1
 gpgcheck=0
 
@@ -143,7 +143,7 @@ gpgcheck=0
 
 [rhel-SAP-debuginfo]
 name=rhel-SAP-debuginfo
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server-SAP/$basearch/debug/tree/
+baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server-SAP/$basearch/debug/
 enabled=1
 gpgcheck=0
 
@@ -155,32 +155,32 @@ gpgcheck=0
 
 [rhel-SAPHANA-debuginfo]
 name=rhel-SAPHANA-debuginfo
-baseurl=https://download.devel.redhat.com/released/RHEL-6/6.10/Server-SAPHANA/x86_64/debug/tree/
+baseurl=https://download.devel.redhat.com/released/RHEL-6/6.10/Server-SAPHANA/x86_64/debug/
 enabled=1
 gpgcheck=0
 
 [rhel-HighAvailability]
 name=rhel-HighAvailability
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/os/addons/HighAvailability/
+baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/os/HighAvailability/
 enabled=1
 gpgcheck=0
 
 [rhel-HighAvailability-debuginfo]
 name=rhel-HighAvailability
 baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/debug/tree/addons/HighAvailability/
-enabled=1
+enabled=0
 gpgcheck=0
 
 [rhel-ResilientStorage]
 name=rhel-ResilientStorage
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/os/addons/ResilientStorage/
+baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/os/ResilientStorage/
 enabled=1
 gpgcheck=0
 
 [rhel-ResilientStorage-debuginfo]
 name=rhel-ResilientStorage
 baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/debug/tree/addons/ResilientStorage/
-enabled=1
+enabled=0
 gpgcheck=0
 
 [rhel-RT]
@@ -201,7 +201,7 @@ gpgcheck=0
 
 [rhel-6-buildroot]
 name=rhel-6 Buildroot
-baseurl=https://download.devel.redhat.com/brewroot/repos/rhel-6.10-Z-build/latest/$basearch/
+baseurl=https://download.devel.redhat.com/brewroot/repos/RHEL-6.10-Z-build/latest/$basearch/
 enabled=0
 gpgcheck=0
 skip_if_unavailable=True
