@@ -186,7 +186,7 @@ gpgcheck=0
 [rhel-RT]
 name=rhel-RT
 baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server-RT/x86_64/os/
-# Server-RT not present in rhel-6.10. Just a placeholder. 
+# Server-RT not present in rhel-6.10. Just a placeholder.
 enabled=1
 gpgcheck=0
 
