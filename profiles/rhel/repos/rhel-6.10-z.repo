@@ -4,11 +4,6 @@ baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/lates
 enabled=1
 gpgcheck=0
 
-[rhel-opt-updates]
-name=rhel-opt-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server-optional/$basearch/os/
-enabled=1
-gpgcheck=0
 
 [rhel-debuginfo-updates]
 name=rhel-debuginfo-updates
@@ -16,21 +11,9 @@ baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/lates
 enabled=1
 gpgcheck=0
 
-[rhel-opt-debuginfo-updates]
-name=rhel-opt-debuginfo-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server-optional/$basearch/debug/tree/
-enabled=1
-gpgcheck=0
-
 [rhel-source-updates]
 name=rhel-source-updates
 baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/source/SRPMS/
-enabled=1
-gpgcheck=0
-
-[rhel-opt-source-updates]
-name=rhel-opt-source-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server-optional/source/tree/
 enabled=1
 gpgcheck=0
 
@@ -82,19 +65,6 @@ baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/lates
 enabled=0
 gpgcheck=0
 
-[rhel-RT-updates]
-name=rhel-RT-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server-RT/x86_64/os/
-# Server-RT not present in RHEL-6.10. Just a placeholder.
-enabled=1
-gpgcheck=0
-
-[rhel-RT-debuginfo-updates]
-name=rhel-RT-debuginfo-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server-RT/x86_64/debug/tree/
-# Server-RT not present in RHEL-6.10. Just a placeholder.
-enabled=1
-gpgcheck=0
 
 [rhel]
 name=rhel
@@ -102,12 +72,6 @@ baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$ba
 enabled=1
 gpgcheck=0
 
-[rhel-opt]
-name=rhel-opt
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server-optional/$basearch/os/
-# Server-optional not present in RHEL-6.10. Just a placeholder.
-enabled=1
-gpgcheck=0
 
 [rhel-debuginfo]
 name=rhel-debuginfo
@@ -115,23 +79,9 @@ baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$ba
 enabled=1
 gpgcheck=0
 
-[rhel-opt-debuginfo]
-name=rhel-opt-debuginfo
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server-optional/$basearch/debug/tree/
-# Server-optional not present in RHEL-6.10. Just a placeholder.
-enabled=1
-gpgcheck=0
-
 [rhel-source]
 name=rhel-source
 baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/source/SRPMS/
-enabled=1
-gpgcheck=0
-
-[rhel-opt-source]
-name=rhel-opt-source
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server-optional/source/tree/
-# Server-optional not present in RHEL-6.10. Just a placeholder.
 enabled=1
 gpgcheck=0
 
@@ -181,20 +131,6 @@ gpgcheck=0
 name=rhel-ResilientStorage
 baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/debug/tree/addons/ResilientStorage/
 enabled=0
-gpgcheck=0
-
-[rhel-RT]
-name=rhel-RT
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server-RT/x86_64/os/
-# Server-RT not present in rhel-6.10. Just a placeholder.
-enabled=1
-gpgcheck=0
-
-[rhel-RT-debuginfo]
-name=rhel-RT-debuginfo
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server-RT/x86_64/debug/tree/
-# Server-RT not present in rhel-6.10. Just a placeholder.
-enabled=1
 gpgcheck=0
 
 ############# BUILDROOT ##############
