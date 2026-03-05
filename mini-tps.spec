@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 191%{?dist}
+Release: 192%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -79,6 +79,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Thu Mar 05 2026 Jiri Popelka <jpopelka@redhat.com> - 0.1-192
+- Backward Python2 compatible viewer/generate-result-json
+
 * Mon Dec 08 2025 Chris Kelley <ckelley@redhat.com> - 0.1-191
 - Fix mtps-get-builds handling of draft builds
 - Related: OSCI-9051
