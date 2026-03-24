@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 192%{?dist}
+Release: 193%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -79,6 +79,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Tue Mar 24 2026 Michal Srb <michal@redhat.com> - 0.1-193
+- Improve RHEL 6 compatibility - fix shebangs
+
 * Thu Mar 05 2026 Jiri Popelka <jpopelka@redhat.com> - 0.1-192
 - Backward Python2 compatible viewer/generate-result-json
 
