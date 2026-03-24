@@ -1,4 +1,4 @@
-#!/usr/bin/bash -efu
+#!/bin/bash -efu
 
 DEBUG="${DEBUG:-}"
 

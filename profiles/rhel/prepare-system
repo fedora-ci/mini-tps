@@ -1,4 +1,4 @@
-#!/usr/bin/bash -efu
+#!/bin/bash -efu
 
 RET_NO_COMPOSE_ID=10
 
