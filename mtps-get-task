@@ -558,7 +558,11 @@ mk_url() {
         ver="$(from_rpm_name "${srpm_filename}" "ver")"
         rel="$(from_rpm_name "${srpm_filename}" "rel")"
         if [ "$is_draft" == "yes" ]; then
-            rel="$rel",draft_${nvr#*,draft_}
+            # Promoted drafts are still draft=yes in Brew while the NVR no longer
+            # contains ",draft_<id>"; RPMs are then under the normal release path.
+            if [[ "$nvr" == *,draft_* ]]; then
+                rel="$rel",draft_${nvr#*,draft_}
+            fi
         fi
         arch="$(from_rpm_name "${filename}" "arch")"
         # https://download.devel.redhat.com/brewroot/packages/curl/7.61.1/34.el8/x86_64/curl-7.61.1-34.el8.x86_64.rpm

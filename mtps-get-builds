@@ -198,8 +198,10 @@ mk_url() {
     local rel
     rel="$(from_rpm_name "$srpm" "rel")"
     if [ "$is_draft" == "yes" ] && [ -n "$nvr" ]; then
-        # Only append draft part if it's not already in the release
-        if [[ "$rel" != *,draft_* ]]; then
+        # Only append draft part if it's not already in the release, and the NVR
+        # still carries ",draft_<id>" (promoted drafts strip that suffix but may stay
+        # draft=yes; those use the normal release path only).
+        if [[ "$rel" != *,draft_* && "$nvr" == *,draft_* ]]; then
             rel="$rel",draft_${nvr#*,draft_}
         fi
     fi
