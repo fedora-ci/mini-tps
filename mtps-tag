@@ -44,7 +44,7 @@ tagged2nvrs() {
 tag_info2tag_id() {
     local xml="$1" && shift
     local task=
-    tag_id="$(echo "$xml" | xmllint --xpath 'string(//member[name="id"]/value/int/text())' -)"
+    tag_id="$(xml_get_value "$xml" '//member[name="id"]/value/int/text()')"
     debug "Tag name: $tag_id"
     echo "$tag_id"
 }

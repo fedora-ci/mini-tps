@@ -36,7 +36,7 @@ build_rpms_info2rpms() {
 build_rpms_info2buid_id() {
     local xml="$1" && shift  # listBuildRPMs response
     local build_id=
-    build_id="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
+    build_id="$(xml_get_value "$xml" '//member[name="build_id"]/value/int/text()')"
     debug "Brew build id: $build_id"
     echo "$build_id"
 }
@@ -98,7 +98,7 @@ EOF
 build2is_draft() {
     local xml="$1" && shift
     local is_draft
-    is_draft="$(echo "$xml" | xmllint --xpath 'string(//member[name="draft"]/value/boolean/text())' -)"
+    is_draft="$(xml_get_value "$xml" '//member[name="draft"]/value/boolean/text()')"
     [[ "$is_draft" == '1' ]] && is_draft="yes" || is_draft="no"
     debug "Is draft: $is_draft"
     echo "$is_draft"
@@ -107,7 +107,7 @@ build2is_draft() {
 build2nvr() {
     local xml="$1" && shift
     local nvr
-    nvr="$(echo "$xml" | xmllint --xpath 'string(//member[name="nvr"]/value/string/text())' -)"
+    nvr="$(xml_get_value "$xml" '//member[name="nvr"]/value/string/text()')"
     debug "NVR: $nvr"
     echo "$nvr"
 }
@@ -236,7 +236,7 @@ download_rpm() {
         return
     fi
     mkdir -p "$GB_REPODIR"
-    GB_REPODIR="$(realpath "$GB_REPODIR")"
+    GB_REPODIR="$(readlink -f "$GB_REPODIR")"
     pushd "$GB_REPODIR" > /dev/null
     curl --retry 5 --insecure --fail --location --show-error --remote-name --remote-header-name "$url"
     popd > /dev/null
@@ -312,7 +312,7 @@ if [ -z "$GB_BUILD" ]; then
 fi
 
 mkdir -p "${LOGS_DIR:=mtps-logs}"
-LOGS_DIR="$(realpath "$LOGS_DIR")"
+LOGS_DIR="$(readlink -f "$LOGS_DIR")"
 while true; do
     TESTRUN_ID="$(date +%H%M%S)"
     logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-${GB_BUILD}-mtps-get-builds.log"
