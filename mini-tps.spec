@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 194%{?dist}
+Release: 195%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -79,6 +79,10 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Wed Apr 22 2026 Michal Srb <michal@redhat.com> - 0.1-195
+- Remove all system repos before testing
+- Related: OSCI-9313
+
 * Fri Apr 10 2026 Chris Kelley <ckelley@redhat.com> - 0.1-194
 - Fix bug with incorrectly constructed URL for promoted drafts
 
