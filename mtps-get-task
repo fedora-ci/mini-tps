@@ -55,7 +55,7 @@ task_result2srpm() {
 task_request2is_scratch() {
     local xml="$1" && shift
     local is_scratch
-    is_scratch="$(echo "$xml" | xmllint --xpath 'string(//member[name="scratch"]/value/boolean/text())' -)"
+    is_scratch="$(xml_get_value "$xml" '//member[name="scratch"]/value/boolean/text()')"
     [[ "$is_scratch" == '1' ]] && is_scratch="yes" || is_scratch="no"
     debug "Is scratch: $is_scratch"
     echo "$is_scratch"
@@ -64,7 +64,7 @@ task_request2is_scratch() {
 task_request2is_draft() {
     local xml="$1" && shift
     local is_draft
-    is_draft="$(echo "$xml" | xmllint --xpath 'string(//member[name="draft"]/value/boolean/text())' -)"
+    is_draft="$(xml_get_value "$xml" '//member[name="draft"]/value/boolean/text()')"
     [[ "$is_draft" == '1' ]] && is_draft="yes" || is_draft="no"
     debug "Is draft: $is_draft"
     echo "$is_draft"
@@ -73,7 +73,7 @@ task_request2is_draft() {
 build2volume_name() {
     local xml="$1" && shift
     local volume_name
-    volume_name="$(echo "$xml" | xmllint --xpath 'string(//member[name="volume_name"]/value/string/text())' -)"
+    volume_name="$(xml_get_value "$xml" '//member[name="volume_name"]/value/string/text()')"
     debug "Volume name: $volume_name"
     echo "$volume_name"
 }
@@ -81,7 +81,7 @@ build2volume_name() {
 build2build_source() {
     local xml="$1" && shift
     local build_source
-    build_source="$(echo "$xml" | xmllint --xpath 'string(//member[name="source"]/value/string/text())' -)"
+    build_source="$(xml_get_value "$xml" '//member[name="source"]/value/string/text()')"
     debug "Build source: $build_source"
     echo "$build_source"
 }
@@ -89,7 +89,7 @@ build2build_source() {
 builds2nvr() {
     local xml="$1" && shift
     local nvr
-    nvr="$(echo "$xml" | xmllint --xpath 'string(//member[name="nvr"]/value/string/text())' -)"
+    nvr="$(xml_get_value "$xml" '//member[name="nvr"]/value/string/text()')"
     debug "NVR: $nvr"
     echo "$nvr"
 }
@@ -97,7 +97,7 @@ builds2nvr() {
 builds2build_id() {
     local xml="$1" && shift
     local buildid
-    buildid="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
+    buildid="$(xml_get_value "$xml" '//member[name="build_id"]/value/int/text()')"
     debug "build id: $buildid"
     echo "$buildid"
 }
@@ -105,7 +105,7 @@ builds2build_id() {
 builds2is_draft() {
     local xml="$1" && shift
     local is_draft
-    is_draft="$(echo "$xml" | xmllint --xpath 'string(//member[name="draft"]/value/boolean/text())' -)"
+    is_draft="$(xml_get_value "$xml" '//member[name="draft"]/value/boolean/text()')"
     [[ "$is_draft" == '1' ]] && is_draft="yes" || is_draft="no"
     debug "Is draft: $is_draft"
     echo "$is_draft"
@@ -538,7 +538,7 @@ download_rpm() {
         return
     fi
     mkdir -p "$REPODIR"
-    REPODIR="$(realpath "$REPODIR")"
+    REPODIR="$(readlink -f "$REPODIR")"
     pushd "$REPODIR" > /dev/null
     curl --retry 5 --insecure --fail --location --show-error --remote-name --remote-header-name "$url"
     popd > /dev/null
@@ -665,7 +665,7 @@ if [ -z "$TASK" ]; then
 fi
 
 mkdir -p "${LOGS_DIR:=mtps-logs}"
-LOGS_DIR="$(realpath "$LOGS_DIR")"
+LOGS_DIR="$(readlink -f "$LOGS_DIR")"
 while true; do
     TESTRUN_ID="$(date +%H%M%S)"
     logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-${TASK}-mtps-get-task.log"
