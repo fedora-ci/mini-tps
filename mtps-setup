@@ -75,3 +75,18 @@ debug() {
         echo -e "$*" >&2
     fi
 }
+
+# Portable xmllint helper: extracts a single text value via XPath.
+# Works with xmllint --shell (available since RHEL 6) instead of --xpath (RHEL 7+).
+# Usage: xml_get_value "$xml_string" "//member[name='foo']/value/string/text()"
+xml_get_value() {
+    local xml="$1" && shift
+    local xpath="$1" && shift
+    local tmpfile
+    tmpfile="$(mktemp)"
+    echo "$xml" > "$tmpfile"
+    local result
+    result="$(echo "cat $xpath" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    rm -f "$tmpfile"
+    echo "$result"
+}
