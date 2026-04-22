@@ -3,7 +3,8 @@
 RET_NO_COMPOSE_ID=10
 
 echo "Setting up RHEL internal YUM repos for selected profile"
-find "/etc/yum.repos.d/" -name "${REPOFILE_OPT_PREFIX}*.repo" -exec rm --verbose -f '{}' ';'
+# Replace system repositories with a profile repo
+find "/etc/yum.repos.d/" -name "*.repo" -delete
 declare -a INSTALLED_REPO_FILES=("$REPOFILE")
 cp -f "$PFILE" "$REPOFILE"
 if [ ${#OPTREPOS[@]} -ne 0 ]; then
