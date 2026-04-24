@@ -56,7 +56,8 @@ fi
 
 echo "Installing required packages for testing"
 yum -y install createrepo_c || yum -y install createrepo
-yum -y install which procps-ng
+yum -y install procps-ng || yum -y install procps
+yum -y install which
 
 yum -y upgrade
 yum clean all
