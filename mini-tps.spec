@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 195%{?dist}
+Release: 196%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -26,6 +26,14 @@ Light version of TPS
 %install
 mkdir -p %{buildroot}%{_sbindir} # epel7
 install -pD -m 0755 --target-directory=%{buildroot}%{_sbindir} mtps-*
+# Module stack: only RHEL (and CentOS Stream) 8–9; omit on Fedora and other RHEL majors.
+%if 0%{?fedora} || (0%{?rhel} != 8 && 0%{?rhel} != 9)
+rm -f %{buildroot}%{_sbindir}/mtps-mutils \
+      %{buildroot}%{_sbindir}/mtps-get-module \
+      %{buildroot}%{_sbindir}/mtps-run-mtests \
+      %{buildroot}%{_sbindir}/mtps-module-test \
+      %{buildroot}%{_sbindir}/mtps-enable-mod-reqs
+%endif
 
 mkdir -p %{buildroot}%{_sysconfdir}/%{yumcmd}/protected.d/
 cat > %{buildroot}%{_sysconfdir}/%{yumcmd}/protected.d/mini-tps.conf <<EOF
@@ -71,6 +79,11 @@ install -pD -m 0755 profiles/rhel/prepare-system %{buildroot}%{_libexecdir}/mini
 install -pD -m 0755 profiles/centos-stream/prepare-system %{buildroot}%{_libexecdir}/mini-tps/centos-stream/prepare-system
 install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mini-tps/fedora/prepare-system
 
+# Viewer: avoid RPM auto-require on /usr/bin/python3 when building for RHEL 6/7.
+%if 0%{?rhel} == 6 || 0%{?rhel} == 7
+sed -i '1s|^#!/usr/bin/python3|#!/usr/bin/python2|' %{buildroot}%{_libexecdir}/mini-tps/viewer/generate-result-json
+%endif
+
 %files
 %{_sbindir}/mtps-*
 %config %{_sysconfdir}/%{yumcmd}/protected.d/mini-tps.conf
@@ -79,6 +92,9 @@ install -pD -m 0755 profiles/fedora/prepare-system %{buildroot}%{_libexecdir}/mi
 
 
 %changelog
+* Thu Apr 24 2026 Avinash Singh and Jiri Popelka <jpopelka@redhat.com> - 0.1-196
+- More RHEL 6 compatibility fixes
+
 * Wed Apr 22 2026 Michal Srb <michal@redhat.com> - 0.1-195
 - Remove all system repos before testing
 - Related: OSCI-9313
