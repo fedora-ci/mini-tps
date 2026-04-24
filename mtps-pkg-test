@@ -99,25 +99,10 @@ nevra_older_then() {
     local rcmp
     # https://rpm-software-management.github.io/rpm/manual/lua
     # rpm.vercmp(v1, v2) returns -1, 0 or 1 if v1 is smaller, equal or larger than v2
-    if rpm --eval '%{lua: print(rpm.vercmp("a","b"))}' >/dev/null 2>&1; then
-        # RPM supports Lua vercmp (RHEL 7+)
-        rcmp="$(rpm --define "pkg1 $nevra1" --define "pkg2 $nevra2"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}')"
-    elif command -v rpmdev-vercmp >/dev/null 2>&1; then
-        # Fallback to rpmdev-vercmp (RHEL 6)
-        # rpmdev-vercmp exits with 11 if arg1 < arg2, 12 if arg1 > arg2, 0 if equal
-        local rc=0
-        rpmdev-vercmp "$nevra1" "$nevra2" >/dev/null 2>&1 || rc=$?
-        if [[ "$rc" -eq 11 ]]; then
-            rcmp="-1"
-        elif [[ "$rc" -eq 12 ]]; then
-            rcmp="1"
-        else
-            rcmp="0"
-        fi
-    else
-        echo "Error: No version comparison tool available (need rpm with Lua vercmp or rpmdev-vercmp)" >&2
-        exit 1
-    fi
+    # RPM < 4.16 (RHEL < 9): Lua rpm.vercmp only ran rpmvercmp() on the full strings instead of
+    # parsing EVR (epoch, version, release), so results could differ from real compares
+    # (e.g. 0:1.0-1 vs 1.0-1 were not treated as equal).
+    rcmp="$(rpm --define "pkg1 $nevra1" --define "pkg2 $nevra2"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}')"
     if [[ "$rcmp" == "-1" ]]; then
         # True
         return 0
