@@ -28,12 +28,8 @@ RET_EMPTY_REPOQUERY=11
 task_result2rpms() {
     local arch="$1" && shift
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='rpms']//value/string/text()"
     local rpms
-    rpms="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.$arch\.rpm/p")"
+    rpms="$(xml_get_value "$xml" '//member[name="rpms"]//value/string/text()' | sed -n -e "/\.$arch\.rpm/p")"
     # e.g. tasks/7171/57387171/libcap-static-2.48-9.el9_0.x86_64.rpm. Don't strip the prefix off here, we need it.
     debug "$arch rpms:\n${rpms}\n---"
     echo "$rpms"
@@ -41,12 +37,8 @@ task_result2rpms() {
 
 task_result2srpm() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='srpms']//value/string/text()"
     local srpm
-    srpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p' | sed -n -e "/\.rpm/p")"
+    srpm="$(xml_get_value "$xml" '//member[name="srpms"]//value/string/text()' | sed -n -e "/\.rpm/p")"
     # e.g. tasks/3126/110193126/keyutils-1.6.3-1.fc40.src.rpm. Don't strip the prefix off here, we need it.
     debug "srpm: ${srpm}\n---"
     echo "$srpm"
@@ -113,24 +105,16 @@ builds2is_draft() {
 
 buildtags_from_answer() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='name']/value/string/text()"
     local tags
-    tags="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    tags="$(xml_get_value "$xml" '//member[name="name"]/value/string/text()')"
     debug "Build tags:\n${tags}\n---"
     echo "$tags"
 }
 
 children_from_answer() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='id']/value/int/text()"
     local children
-    children="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    children="$(xml_get_value "$xml" '//member[name="id"]/value/int/text()')"
     debug "Task children:\n${children}\n---"
     echo "$children"
 }
@@ -320,36 +304,24 @@ EOF
 
 taskinfo2owner() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='owner']/value/int/text()"
     local owner
-    owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    owner="$(xml_get_value "$xml" '//member[name="owner"]/value/int/text()')"
     debug "Task owner id:\n${owner}\n---"
     echo "$owner"
 }
 
 taskinfo2method() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='method']/value/string/text()"
     local method
-    method="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    method="$(xml_get_value "$xml" '//member[name="method"]/value/string/text()')"
     debug "Method:\n${method}\n---"
     echo "$method"
 }
 
 task_request2target() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //params/param[1]/value/array/data[1]/value[2]/string/text()"
     local target
-    target="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    target="$(xml_get_value "$xml" '//params/param[1]/value/array/data[1]/value[2]/string/text()')"
     debug "Task target:\n${target}\n---"
     echo "$target"
 }
@@ -357,10 +329,7 @@ task_request2target() {
 build_rpms_info2rpms() {
     local arch="$1" && shift  # architecture
     local xml="$1" && shift   # listBuildRPMs response
-    local tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[value/string='$arch']/../member[name='nvr']/value/string/text()"
-    rpms="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    rpms="$(xml_get_value "$xml" "//member[value/string='$arch']/../member[name='nvr']/value/string/text()")"
     if [[ -n "${rpms}" ]]; then
         # Add .{arch}.rpm to each line
         declare -a lines
@@ -375,24 +344,16 @@ build_rpms_info2rpms() {
 
 ownerinfo2user() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='name']/value/string/text()"
     local owner
-    owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    owner="$(xml_get_value "$xml" '//member[name="name"]/value/string/text()')"
     debug "Task owner name:\n${owner}\n---"
     echo "$owner"
 }
 
 ownerinfo2krb() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='krb_principal']/value/string/text()"
     local email
-    email="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    email="$(xml_get_value "$xml" '//member[name="krb_principal"]/value/string/text()')"
     debug "Task owner kerberos:\n${email}\n---"
     echo "$email"
 }

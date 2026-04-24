@@ -23,20 +23,16 @@ if [ -z "${YUMDNFCMD:-}" ]; then source "$(dirname "${BASH_SOURCE[0]}")/mtps-set
 
 tagged2tasks() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='task_id']//value/int/text()"
-    local tasks="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:digit:]]/p')"
+    local tasks
+    tasks="$(xml_get_value "$xml" '//member[name="task_id"]//value/int/text()')"
     debug "Tag tasks:\n${tasks}\n---"
     echo "$tasks"
 }
 
 tagged2nvrs() {
     local xml="$1" && shift
-    local tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='nvr']//value/string/text()"
-    local nvrs="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local nvrs
+    nvrs="$(xml_get_value "$xml" '//member[name="nvr"]//value/string/text()')"
     debug "Tag tasks:\n${nvrs}\n---"
     echo "$nvrs"
 }

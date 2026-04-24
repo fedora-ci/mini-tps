@@ -25,11 +25,8 @@ RET_NO_MODULE_ARCH=9
 
 builds_from_answer() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='build_id']/value/int/text()"
-    builds="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local builds
+    builds="$(xml_get_value "$xml" '//member[name="build_id"]/value/int/text()')"
     debug "Module builds:\n${builds}\n---"
     echo "$builds"
 }
@@ -52,36 +49,24 @@ build2tag() {
 
 build2owner() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='owner_name']/value/string/text()"
     local owner
-    owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    owner="$(xml_get_value "$xml" '//member[name="owner_name"]/value/string/text()')"
     debug "Context generated build in Brew has owner name:\n${owner}\n---"
     echo "$owner"
 }
 
 build2name() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='package_name']/value/string/text()"
     local name
-    name="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    name="$(xml_get_value "$xml" '//member[name="package_name"]/value/string/text()')"
     debug "Module name:\n${name}\n---"
     echo "$name"
 }
 
 build2nvr() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='nvr']/value/string/text()"
     local nvr
-    nvr="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    nvr="$(xml_get_value "$xml" '//member[name="nvr"]/value/string/text()')"
     debug "Module NVR for context build in Brew:\n${nvr}\n---"
     echo "$nvr"
 }

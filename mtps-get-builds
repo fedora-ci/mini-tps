@@ -25,10 +25,7 @@ RET_NO_RPMS_IN_REPOS=8
 build_rpms_info2rpms() {
     local arch="$1" && shift  # architecture
     local xml="$1" && shift   # listBuildRPMs response
-    local tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[value/string='$arch']/../member[name='nvr']/value/string/text()"
-    rpm="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    rpm="$(xml_get_value "$xml" "//member[value/string='$arch']/../member[name='nvr']/value/string/text()")"
     debug "${arch} rpms:\n${rpm}\n---"
     echo "$rpm"
 }
