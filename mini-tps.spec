@@ -1,4 +1,4 @@
-%if 0%{?rhel} == 7
+%if 0%{?rhel} < 8
 %define yumcmd yum
 %else
 %define yumcmd dnf
