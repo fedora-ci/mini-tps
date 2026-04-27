@@ -501,7 +501,7 @@ download_rpm() {
     mkdir -p "$REPODIR"
     REPODIR="$(readlink -f "$REPODIR")"
     pushd "$REPODIR" > /dev/null
-    curl --retry 5 --insecure --fail --location --show-error --remote-name --remote-header-name "$url"
+    curl --retry 5 --insecure --fail --location --show-error --remote-name "$url"
     popd > /dev/null
 }
 
