@@ -28,7 +28,7 @@ if [ -n "$FIXREPO" ]; then
             sed -n -e '0,/baseurl/{ /baseurl/ s/^baseurl[[:space:]]*=[[:space:]]*//p }' | \
             sed -n -e 's/\(latest[^/]\+\).*$/\1\/COMPOSE_ID/p')"
         set +e
-        COMPOSEID="$(curl --retry 5 --insecure --fail --location --show-error  --remote-header-name "$composeid_url")"
+        COMPOSEID="$(curl --retry 5 --insecure --fail --location --show-error "$composeid_url")"
         set -e
         if [[ -z "$COMPOSEID" ]]; then
             echo "Failed to get compose id from $composeid_url"
