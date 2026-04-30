@@ -28,7 +28,7 @@ if [ -n "$FIXREPO" ]; then
             sed -n -e '0,/baseurl/{ /baseurl/ s/^baseurl[[:space:]]*=[[:space:]]*//p }' | \
             sed -n -e 's/\(latest[^/]\+\).*$/\1\/COMPOSE_ID/p')"
         set +e
-        COMPOSEID="$(curl --retry 5 --insecure --fail --location --show-error  --remote-header-name "$composeid_url")"
+        COMPOSEID="$(curl --retry 5 --insecure --fail --location --show-error "$composeid_url")"
         set -e
         if [[ -z "$COMPOSEID" ]]; then
             echo "Failed to get compose id from $composeid_url"
@@ -56,7 +56,8 @@ fi
 
 echo "Installing required packages for testing"
 yum -y install createrepo_c || yum -y install createrepo
-yum -y install which procps-ng
+yum -y install procps-ng || yum -y install procps
+yum -y install which
 
 yum -y upgrade
 yum clean all

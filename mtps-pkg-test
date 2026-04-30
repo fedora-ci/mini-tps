@@ -50,7 +50,9 @@ YUM_VERSION=$("${YUMDNFCMD}" --version)
 from_nevra() {
     # Input: foo-1.0-1.i386 or foo-1:1.0-1.i386
     local nevra="$1" && shift
-    # One of: name, ver, rel, epoch, arch
+    # One of: name, ver, rel, epoch, arch,
+    # nvra (name-version-release.arch),
+    # nevr (name-epoch:version-release)
     local req_info="$1" && shift
     # Arch
     local arch="${nevra##*.}"
@@ -77,6 +79,8 @@ from_nevra() {
     local name="${nevra%-${epoch_ver}-${rel}.${arch}}"
     debug "$nevra name: $name"
     [[ $req_info == 'name' ]] && echo "$name" && return
+    [[ $req_info == 'nvra' ]] && echo "${name}-${ver}-${rel}.${arch}" && return
+    [[ $req_info == 'nevr' ]] && echo "${name}-${epoch}:${ver}-${rel}" && return
 }
 
 # Is the first arg (nevra) older than the second arg (nevra)?
@@ -84,22 +88,15 @@ nevra_older_then() {
     # Verify with: rpmdev-vercmp
     local nevra1="$1" && shift
     local nevra2="$1" && shift
-    local name1="$(from_nevra "$nevra1" "name")"
-    local name2="$(from_nevra "$nevra2" "name")"
-    local epoch1="$(from_nevra "$nevra1" "epoch")"
-    local epoch2="$(from_nevra "$nevra2" "epoch")"
-    local version1="$(from_nevra "$nevra1" "ver")"
-    local version2="$(from_nevra "$nevra2" "ver")"
-    local release1="$(from_nevra "$nevra1" "rel")"
-    local release2="$(from_nevra "$nevra2" "rel")"
-    local arch1="$(from_nevra "$nevra1" "arch")"
-    local arch2="$(from_nevra "$nevra2" "arch")"
-    nevra1="${name1}-${epoch1}:${version1}-${release1}"
-    nevra2="${name2}-${epoch2}:${version2}-${release2}"
+    nevr1="$(from_nevra "$nevra1" "nevr")"
+    nevr2="$(from_nevra "$nevra2" "nevr")"
     local rcmp
     # https://rpm-software-management.github.io/rpm/manual/lua
     # rpm.vercmp(v1, v2) returns -1, 0 or 1 if v1 is smaller, equal or larger than v2
-    rcmp="$(rpm --define "pkg1 $nevra1" --define "pkg2 $nevra2"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}')"
+    # RPM < 4.16 (RHEL < 9): Lua rpm.vercmp only ran rpmvercmp() on the full strings instead of
+    # parsing EVR (epoch, version, release), so results could differ from real compares
+    # (e.g. 0:1.0-1 vs 1.0-1 were not treated as equal).
+    rcmp="$(rpm --define "pkg1 $nevr1" --define "pkg2 $nevr2"  --eval '%{lua: print(rpm.vercmp(rpm.expand("%pkg1"), rpm.expand("%pkg2")))}')"
     if [[ "$rcmp" == "-1" ]]; then
         # True
         return 0
@@ -139,7 +136,7 @@ run_with_scriptlet_check() {
             scriptlet_nvra=$(head -1 "$output_part" | awk -F' ' '{ print $3 }')
 
             # Remove epoch from the NEVRA under test
-            test_nvra=$(echo "$NEVRA" | sed -e 's/-[0-9]\+:/-/')
+            test_nvra="$(from_nevra "$NEVRA" "nvra")"
             # Check if the  NVRA matches the NVRA under test
             if [[ "$test_nvra" == "$scriptlet_nvra" ]]; then
                 # We found a part of the output that matters, let's look for problematic words here;
@@ -240,9 +237,23 @@ pkg_install_if_absent() {
     return 0
 }
 
+
+# RHEL 6 rpm -q/--verify does not match NEVRA with embedded epoch (e.g. foo-2:1.0-1.x86_64).
+rhel6_nevra_to_nvra() {
+    local nevra="$1" && shift
+    debug "${FUNCNAME[0]}: $nevra"
+    if [[ "${PROFILE_NAME}" == rhel-6* && "$nevra" == *:* ]]; then
+        nvra="$(from_nevra "$nevra" "nvra")"
+        debug "${FUNCNAME[0]}: RHEL 6, NVRA: $nvra"
+        echo "$nvra" && return
+    fi
+    echo "$nevra"
+}
+
 pkg_is_present() {
     local name="$1" && shift
     debug "${FUNCNAME[0]}: $name"
+    name="$(rhel6_nevra_to_nvra "$name")"
     local ret=
     rpm -q --qf "" "$name" >/dev/null 2>&1 && ret=0 || ret=1
     debug "Package $name is $(test -z "${ret##0}" && echo present || echo absent)"
@@ -251,6 +262,7 @@ pkg_is_present() {
 
 pkg_is_absent() {
     local name="$1" && shift
+    debug "${FUNCNAME[0]}: $name"
     local ret=
     pkg_is_present "$name" && ret=1 || ret=0
     return $ret
@@ -261,6 +273,7 @@ rpm_db_verify() {
     local name="$1" && shift
     debug "${FUNCNAME[0]}: $name"
     local ret=
+    name="$(rhel6_nevra_to_nvra "$name")"
 
     echo
     echo
