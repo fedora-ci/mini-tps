@@ -515,7 +515,6 @@ from_rpm_name() {
 }
 
 filter_available() {
-    local arch="$1" && shift
     local rpms="$1" && shift
     local rpms_filtered=
     local name=
@@ -826,8 +825,8 @@ if [ -n "$ONLYINREPO" ]; then
     # RCM team can choose only some RPM. And make AppStream / BaseOS / Compose
     # only from some RPMs, ignoring other RPMs from Brew build. This options
     # says to ignore RPMs that are absent.
-    rpms_arch_all="$(filter_available "$ARCH" "$rpms_arch_all")"
-    rpms_noarch_all="$(filter_available "noarch" "$rpms_noarch_all")"
+    rpms_arch_all="$(filter_available "$rpms_arch_all")"
+    rpms_noarch_all="$(filter_available "$rpms_noarch_all")"
 fi
 
 if [ -z "${rpms_arch_all}${rpms_noarch_all}" ]; then
