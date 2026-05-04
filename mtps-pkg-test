@@ -651,7 +651,7 @@ case $TEST in
         exit $ret
         ;;
     update)
-        msg_prepare "updating" "$NEVRA"
+        msg_prepare "updating to" "$NEVRA"
         old_nevra="$(get_old_nevra "$NEVRA" || true)"
         if [ -z "$old_nevra" ]; then
             echo "Cannot find older package than $NEVRA. Skipping test."
