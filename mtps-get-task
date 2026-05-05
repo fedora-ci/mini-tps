@@ -198,7 +198,7 @@ EOF
 }
 
 brew_list_builds() {
-    # listBuilds query
+    # listBuilds query - state 1 is koji.BUILD_STATES 'COMPLETE'
     local task="$1" && shift
     local query="$(cat << EOF
 <?xml version='1.0'?>
@@ -214,6 +214,10 @@ brew_list_builds() {
         <member>
           <name>taskID</name>
           <value><int>$task</int></value>
+        </member>
+        <member>
+          <name>state</name>
+          <value><int>1</int></value>
         </member>
       </struct></value>
     </param>
