@@ -4,7 +4,10 @@ jobs:
     trigger: pull_request
     targets:
       - fedora-all
-      - epel-all
+      - epel-7
+      - epel-8
+      - epel-9
+      - epel-10
 #  - job: copr_build
 #    trigger: commit
 #    branch: main
