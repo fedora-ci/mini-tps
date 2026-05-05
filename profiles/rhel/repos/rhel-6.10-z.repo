@@ -47,22 +47,10 @@ baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/lates
 enabled=1
 gpgcheck=0
 
-[rhel-HighAvailability-debuginfo-updates]
-name=rhel-HighAvailability-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/debug/tree/addons/HighAvailability/
-enabled=0
-gpgcheck=0
-
 [rhel-ResilientStorage-updates]
 name=rhel-ResilientStorage-updates
 baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/os/ResilientStorage/
 enabled=1
-gpgcheck=0
-
-[rhel-ResilientStorage-debuginfo-updates]
-name=rhel-ResilientStorage-updates
-baseurl=https://download.devel.redhat.com/rhel-6/rel-eng/updates/RHEL-6.10/latest-RHEL-6.10/compose/Server/$basearch/debug/tree/addons/ResilientStorage/
-enabled=0
 gpgcheck=0
 
 
@@ -115,22 +103,10 @@ baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$ba
 enabled=1
 gpgcheck=0
 
-[rhel-HighAvailability-debuginfo]
-name=rhel-HighAvailability
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/debug/tree/addons/HighAvailability/
-enabled=0
-gpgcheck=0
-
 [rhel-ResilientStorage]
 name=rhel-ResilientStorage
 baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/os/ResilientStorage/
 enabled=1
-gpgcheck=0
-
-[rhel-ResilientStorage-debuginfo]
-name=rhel-ResilientStorage
-baseurl=https://download.devel.redhat.com/released/rhel-6/RHEL-6/6.10/Server/$basearch/debug/tree/addons/ResilientStorage/
-enabled=0
 gpgcheck=0
 
 ############# BUILDROOT ##############

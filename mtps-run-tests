@@ -224,13 +224,13 @@ for nevra in $nevras_in_repo; do
     mv "$logfname" "$new_logfname"
     if [ -n "$SELINUX" ] && rpm --quiet -q audit; then
         selinux_status=0
-        ausearch --format raw -m avc,user_avc,selinux_err,user_selinux_err -ts "$START_DATE" "$START_TIME" 2>&1 | sed -e '/received policyload notice/d' | grep -s -o '^' && selinux_status=1
+        ausearch --raw -m avc,user_avc,selinux_err,user_selinux_err -ts "$START_DATE" "$START_TIME" 2>&1 | sed -e '/received policyload notice/d' | grep -s -q '.' && selinux_status=1
         if [ "$selinux_status" -ne "0" ]; then
             ret=1
             # Selinux failed
             new_logfname="$(dirname "$logfname")/WARN-selinux-$(basename "$logfname")"
             echo "Selinux policy:" | tee -a "$logfname"
-            ausearch -m avc,user_avc,selinux_err,user_selinux_err -i -ts "$START_DATE" "$START_TIME" | tee -a "$new_logfname"
+            ausearch -m avc,user_avc,selinux_err,user_selinux_err --interpret -ts "$START_DATE" "$START_TIME" | tee -a "$new_logfname"
         fi
     fi
 done

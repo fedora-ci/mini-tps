@@ -25,11 +25,8 @@ RET_NO_MODULE_ARCH=9
 
 builds_from_answer() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='build_id']/value/int/text()"
-    builds="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    local builds
+    builds="$(xml_get_value "$xml" '//member[name="build_id"]/value/int/text()')"
     debug "Module builds:\n${builds}\n---"
     echo "$builds"
 }
@@ -37,7 +34,7 @@ builds_from_answer() {
 build2id() {
     local xml="$1" && shift
     local build_id
-    build_id="$(echo "$xml" | xmllint --xpath 'string(//member[name="build_id"]/value/int/text())' -)"
+    build_id="$(xml_get_value "$xml" '//member[name="build_id"]/value/int/text()')"
     debug "Brew build id: $build_id"
     echo "$build_id"
 }
@@ -45,43 +42,31 @@ build2id() {
 build2tag() {
     local xml="$1" && shift
     local brew_tag
-    brew_tag="$(echo "$xml" | xmllint --xpath 'string(//member[name="content_koji_tag"]/value/string/text())' -)"
+    brew_tag="$(xml_get_value "$xml" '//member[name="content_koji_tag"]/value/string/text()')"
     debug "Brew tag: $brew_tag"
     echo "$brew_tag"
 }
 
 build2owner() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='owner_name']/value/string/text()"
     local owner
-    owner="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    owner="$(xml_get_value "$xml" '//member[name="owner_name"]/value/string/text()')"
     debug "Context generated build in Brew has owner name:\n${owner}\n---"
     echo "$owner"
 }
 
 build2name() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='package_name']/value/string/text()"
     local name
-    name="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    name="$(xml_get_value "$xml" '//member[name="package_name"]/value/string/text()')"
     debug "Module name:\n${name}\n---"
     echo "$name"
 }
 
 build2nvr() {
     local xml="$1" && shift
-    local tmpfile
-    tmpfile="$(mktemp)"
-    echo "$xml" > "$tmpfile"
-    local cmd="cat //member[name='nvr']/value/string/text()"
     local nvr
-    nvr="$(echo "$cmd" | xmllint --shell "$tmpfile" | sed -n -e '/^[[:alnum:]]/p')"
+    nvr="$(xml_get_value "$xml" '//member[name="nvr"]/value/string/text()')"
     debug "Module NVR for context build in Brew:\n${nvr}\n---"
     echo "$nvr"
 }
@@ -194,9 +179,9 @@ download_artifact() {
     local url="$1" && shift
     local dstdir="$1" && shift
     mkdir -p "$dstdir"
-    dstdir="$(realpath "$dstdir")"
+    dstdir="$(readlink -f "$dstdir")"
     pushd "$dstdir" > /dev/null
-    curl --retry 5 --insecure --fail --location --show-error --remote-name --remote-header-name "$url"
+    curl --retry 5 --insecure --fail --location --show-error --remote-name "$url"
     popd > /dev/null
 }
 
@@ -389,7 +374,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p "${LOGS_DIR:=mtps-logs}"
-LOGS_DIR="$(realpath "$LOGS_DIR")"
+LOGS_DIR="$(readlink -f "$LOGS_DIR")"
 while true; do
     TESTRUN_ID="$(date +%H%M%S)"
     logfname="${LOGS_DIR%%/}/${TESTRUN_ID}-${MBSID}-mtps-get-module.log"
@@ -541,7 +526,7 @@ if [[ -z "$CREATEREPO" || ! -d "$REPODIR" ]]; then
     exit 0
 fi
 
-REPODIR="$(realpath "$REPODIR")"
+REPODIR="$(readlink -f "$REPODIR")"
 
 which 'createrepo' >/dev/null 2>&1 && CREATEREPO_BIN="createrepo" || :
 which 'createrepo_c' >/dev/null 2>&1 && CREATEREPO_BIN="createrepo_c" || :

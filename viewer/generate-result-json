@@ -60,7 +60,7 @@ for log_filename in os.listdir(mtps_log_dir):
     with io.open(log_path, "r", encoding="utf-8", errors="replace") as f:
         details = f.read()
 
-    message = "{}: {}".format(test_name, test_object) if test_object else test_name
+    message = "{0}: {1}".format(test_name, test_object) if test_object else test_name
     results[test_name].append(
         {
             "result": RESULTS_MAPPING[result],
