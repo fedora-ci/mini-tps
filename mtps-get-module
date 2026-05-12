@@ -34,7 +34,7 @@ builds_from_answer() {
 build2id() {
     local xml="$1" && shift
     local build_id
-    build_id="$(xml_get_value "$xml" '//member[name="build_id"]/value/int/text()')"
+    build_id="$(xml_get_value "$xml" '//member[name="build_id"]/value/int/text()' | head -1)"
     debug "Brew build id: $build_id"
     echo "$build_id"
 }
@@ -42,7 +42,7 @@ build2id() {
 build2tag() {
     local xml="$1" && shift
     local brew_tag
-    brew_tag="$(xml_get_value "$xml" '//member[name="content_koji_tag"]/value/string/text()')"
+    brew_tag="$(xml_get_value "$xml" '//member[name="content_koji_tag"]/value/string/text()' | head -1)"
     debug "Brew tag: $brew_tag"
     echo "$brew_tag"
 }
@@ -50,7 +50,7 @@ build2tag() {
 build2owner() {
     local xml="$1" && shift
     local owner
-    owner="$(xml_get_value "$xml" '//member[name="owner_name"]/value/string/text()')"
+    owner="$(xml_get_value "$xml" '//member[name="owner_name"]/value/string/text()' | head -1)"
     debug "Context generated build in Brew has owner name:\n${owner}\n---"
     echo "$owner"
 }
@@ -58,7 +58,7 @@ build2owner() {
 build2name() {
     local xml="$1" && shift
     local name
-    name="$(xml_get_value "$xml" '//member[name="package_name"]/value/string/text()')"
+    name="$(xml_get_value "$xml" '//member[name="package_name"]/value/string/text()' | head -1)"
     debug "Module name:\n${name}\n---"
     echo "$name"
 }
@@ -66,7 +66,7 @@ build2name() {
 build2nvr() {
     local xml="$1" && shift
     local nvr
-    nvr="$(xml_get_value "$xml" '//member[name="nvr"]/value/string/text()')"
+    nvr="$(xml_get_value "$xml" '//member[name="nvr"]/value/string/text()' | head -1)"
     debug "Module NVR for context build in Brew:\n${nvr}\n---"
     echo "$nvr"
 }
