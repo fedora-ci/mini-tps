@@ -38,7 +38,7 @@ task_result2rpms() {
 task_result2srpm() {
     local xml="$1" && shift
     local srpm
-    srpm="$(xml_get_value "$xml" '//member[name="srpms"]//value/string/text()' | sed -n -e "/\.rpm/p")"
+    srpm="$(xml_get_value "$xml" '//member[name="srpms"]//value/string/text()' | sed -n -e "/\.rpm/p" | head -1)"
     # e.g. tasks/3126/110193126/keyutils-1.6.3-1.fc40.src.rpm. Don't strip the prefix off here, we need it.
     debug "srpm: ${srpm}\n---"
     echo "$srpm"
@@ -47,7 +47,7 @@ task_result2srpm() {
 task_request2is_scratch() {
     local xml="$1" && shift
     local is_scratch
-    is_scratch="$(xml_get_value "$xml" '//member[name="scratch"]/value/boolean/text()')"
+    is_scratch="$(xml_get_value "$xml" '//member[name="scratch"]/value/boolean/text()' | head -1)"
     [[ "$is_scratch" == '1' ]] && is_scratch="yes" || is_scratch="no"
     debug "Is scratch: $is_scratch"
     echo "$is_scratch"
@@ -56,7 +56,7 @@ task_request2is_scratch() {
 task_request2is_draft() {
     local xml="$1" && shift
     local is_draft
-    is_draft="$(xml_get_value "$xml" '//member[name="draft"]/value/boolean/text()')"
+    is_draft="$(xml_get_value "$xml" '//member[name="draft"]/value/boolean/text()' | head -1)"
     [[ "$is_draft" == '1' ]] && is_draft="yes" || is_draft="no"
     debug "Is draft: $is_draft"
     echo "$is_draft"
@@ -65,7 +65,7 @@ task_request2is_draft() {
 build2volume_name() {
     local xml="$1" && shift
     local volume_name
-    volume_name="$(xml_get_value "$xml" '//member[name="volume_name"]/value/string/text()')"
+    volume_name="$(xml_get_value "$xml" '//member[name="volume_name"]/value/string/text()' | head -1)"
     debug "Volume name: $volume_name"
     echo "$volume_name"
 }
@@ -73,7 +73,7 @@ build2volume_name() {
 build2build_source() {
     local xml="$1" && shift
     local build_source
-    build_source="$(xml_get_value "$xml" '//member[name="source"]/value/string/text()')"
+    build_source="$(xml_get_value "$xml" '//member[name="source"]/value/string/text()' | head -1)"
     debug "Build source: $build_source"
     echo "$build_source"
 }
@@ -81,7 +81,7 @@ build2build_source() {
 builds2nvr() {
     local xml="$1" && shift
     local nvr
-    nvr="$(xml_get_value "$xml" '//member[name="nvr"]/value/string/text()')"
+    nvr="$(xml_get_value "$xml" '//member[name="nvr"]/value/string/text()' | head -1)"
     debug "NVR: $nvr"
     echo "$nvr"
 }
@@ -89,15 +89,15 @@ builds2nvr() {
 builds2build_id() {
     local xml="$1" && shift
     local buildid
-    buildid="$(xml_get_value "$xml" '//member[name="build_id"]/value/int/text()')"
-    debug "build id: $buildid"
+    buildid="$(xml_get_value "$xml" '//member[name="build_id"]/value/int/text()' | head -1)"
+    debug "Build id: $buildid"
     echo "$buildid"
 }
 
 builds2is_draft() {
     local xml="$1" && shift
     local is_draft
-    is_draft="$(xml_get_value "$xml" '//member[name="draft"]/value/boolean/text()')"
+    is_draft="$(xml_get_value "$xml" '//member[name="draft"]/value/boolean/text()' | head -1)"
     [[ "$is_draft" == '1' ]] && is_draft="yes" || is_draft="no"
     debug "Is draft: $is_draft"
     echo "$is_draft"
@@ -309,7 +309,7 @@ EOF
 taskinfo2owner() {
     local xml="$1" && shift
     local owner
-    owner="$(xml_get_value "$xml" '//member[name="owner"]/value/int/text()')"
+    owner="$(xml_get_value "$xml" '//member[name="owner"]/value/int/text()' | head -1)"
     debug "Task owner id:\n${owner}\n---"
     echo "$owner"
 }
@@ -317,7 +317,7 @@ taskinfo2owner() {
 taskinfo2method() {
     local xml="$1" && shift
     local method
-    method="$(xml_get_value "$xml" '//member[name="method"]/value/string/text()')"
+    method="$(xml_get_value "$xml" '//member[name="method"]/value/string/text()' | head -1)"
     debug "Method:\n${method}\n---"
     echo "$method"
 }
@@ -325,7 +325,7 @@ taskinfo2method() {
 task_request2target() {
     local xml="$1" && shift
     local target
-    target="$(xml_get_value "$xml" '//params/param[1]/value/array/data[1]/value[2]/string/text()')"
+    target="$(xml_get_value "$xml" '//params/param[1]/value/array/data[1]/value[2]/string/text()' | head -1)"
     debug "Task target:\n${target}\n---"
     echo "$target"
 }
@@ -349,7 +349,7 @@ build_rpms_info2rpms() {
 ownerinfo2user() {
     local xml="$1" && shift
     local owner
-    owner="$(xml_get_value "$xml" '//member[name="name"]/value/string/text()')"
+    owner="$(xml_get_value "$xml" '//member[name="name"]/value/string/text()' | head -1)"
     debug "Task owner name:\n${owner}\n---"
     echo "$owner"
 }
@@ -357,7 +357,7 @@ ownerinfo2user() {
 ownerinfo2krb() {
     local xml="$1" && shift
     local email
-    email="$(xml_get_value "$xml" '//member[name="krb_principal"]/value/string/text()')"
+    email="$(xml_get_value "$xml" '//member[name="krb_principal"]/value/string/text()' | head -1)"
     debug "Task owner kerberos:\n${email}\n---"
     echo "$email"
 }
