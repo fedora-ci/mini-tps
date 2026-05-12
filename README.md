@@ -90,14 +90,14 @@ change from a (yet unmerged) pull request in those pipelines:
 
 #### Fedora
 
-- Replace `dnf -y copr enable @osci/mini-tps` with `dnf -y copr enable packit/fedora-ci-mini-tps-<PR-number>`
-  in [prepare.sh](https://github.com/fedora-ci/installability-pipeline/blob/master/prepare.sh#L13)
+- Replace `@osci/mini-tps` with `packit/fedora-ci-mini-tps-<PR-number>`
+  in [installability.fmf](https://github.com/fedora-ci/installability-pipeline/blob/d3ee1ae6c38b0b8d4261ef57b6c48cc64484d5d9/installability.fmf#L12)
   and open a PR in the [repo](https://github.com/fedora-ci/installability-pipeline).
 - Once the PR appears in [pipelines for PRs](https://osci-jenkins-1.ci.fedoraproject.org/job/fedora-ci/job/installability-pipeline/view/change-requests/), submit `Build with Parameters`.
 
 #### RHEL
 
-- Replace [repo url](https://gitlab.cee.redhat.com/osci-pipelines/installability-pipeline/-/blob/ae25435bb668a59e431e2bc33ff299839023f11d/prepare.sh#L34)
+- Replace [repo url](https://gitlab.cee.redhat.com/osci-pipelines/installability-pipeline/-/blob/80a3b0972d8f00e1bed2d4740d5a51839ed7d107/prepare.sh#L47)
   with `https://copr.fedorainfracloud.org/coprs/packit/fedora-ci-mini-tps-<PR-number>/repo/epel-${EPEL_VERSION}` and open an MR in the
   [repo](https://gitlab.cee.redhat.com/osci-pipelines/installability-pipeline).
 - Once the MR appears in [pipelines for MRs](https://jenkins.prod.osci.redhat.com/job/OSCI-Pipelines/job/osci-pipelines%252Finstallability-pipeline/view/change-requests/),
