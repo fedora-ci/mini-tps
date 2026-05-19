@@ -640,7 +640,11 @@ fi
 case $TEST in
     install)
         msg_prepare "installing" "$NEVRA"
-        pkg_remove_any "$NEVRA"
+        if [ -n "$CHECK_SCRIPTLETS" ]; then
+            run_with_scriptlet_check pkg_remove_any "$NEVRA"
+        else
+            pkg_remove_any "$NEVRA"
+        fi
         msg_run "install" "$NEVRA"
         if [ -n "$CHECK_SCRIPTLETS" ]; then
             run_with_scriptlet_check pkg_install_if_absent "$NEVRA"
