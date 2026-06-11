@@ -242,7 +242,7 @@ pkg_install_if_absent() {
 rhel6_nevra_to_nvra() {
     local nevra="$1" && shift
     debug "${FUNCNAME[0]}: $nevra"
-    if [[ "${PROFILE_NAME}" == rhel-6* && "$nevra" == *:* ]]; then
+    if [[ "${PROFILE_NAME:-}" == rhel-6* && "$nevra" == *:* ]]; then
         nvra="$(from_nevra "$nevra" "nvra")"
         debug "${FUNCNAME[0]}: RHEL 6, NVRA: $nvra"
         echo "$nvra" && return
