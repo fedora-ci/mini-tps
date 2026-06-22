@@ -212,9 +212,9 @@ for nevra in $nevras_in_repo; do
     elif [ "$test_status" -eq $EXIT_CODE_WARN ]; then
         new_logfname="$(dirname "$logfname")/WARN-$(basename "$logfname")"
     elif [ "$test_status" -ne 0 ]; then
-        ret=1
         if [ -n "$CRITICAL" ]; then
             new_logfname="$(dirname "$logfname")/FAIL-$(basename "$logfname")"
+            ret=1
         else
             new_logfname="$(dirname "$logfname")/WARN-$(basename "$logfname")"
         fi
