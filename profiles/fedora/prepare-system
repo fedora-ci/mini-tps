@@ -61,6 +61,18 @@ elif [[ "$YUMDNFCMD" == "dnf5" ]]; then
   dnf5 -y install dnf5-plugins  # config-manager
   dnf5 config-manager setopt fedora.enabled=1 updates.enabled=1
   dnf5 repo list
+
+  # Installing certain libdnf5 plugins (e.g. libdnf5-plugin-local) alters the
+  # behavior of DNF5 such that subsequent installability tests fail. Here, we
+  # disable all libdnf5 plugins so that any plugins installed during testing
+  # remain inactive.
+  # A better solution might be to only disable plugins which are not installed
+  # by default in the distribution.
+  echo 'Disabling libdnf5 plugins'
+  cat << EOF > /etc/dnf/libdnf5.conf.d/90-disable-libdnf5-plugins.conf
+[main]
+plugins=0
+EOF
 else
   "$YUMDNFCMD" -y install dnf-plugins-core  # config-manager
   "$YUMDNFCMD" config-manager --set-enabled fedora updates
