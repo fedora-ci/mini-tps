@@ -182,6 +182,29 @@ gpgcheck=0
 skip_if_unavailable=True
 
 
+########### Extensions ##################
+[rhel-10-extensions]
+name=RHEL-10 Extensions
+baseurl=https://download.eng.brq.redhat.com/rhel-10/nightly/Ext-10/latest-Ext-10.4-RHEL-10/compose/Extensions/$basearch/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-extensions-debug]
+name=RHEL-10 Extensions-debug
+baseurl=https://download.eng.brq.redhat.com/rhel-10/nightly/Ext-10/latest-Ext-10.4-RHEL-10/compose/Extensions/$basearch/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-10-extensions-source]
+name=RHEL-10 Extensions-source
+baseurl=https://download.eng.brq.redhat.com/rhel-10/nightly/Ext-10/latest-Ext-10.4-RHEL-10/compose/Extensions/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
 ############# BUILDROOT ##############
 
 [rhel-10-buildroot]

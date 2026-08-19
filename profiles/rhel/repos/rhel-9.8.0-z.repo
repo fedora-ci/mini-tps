@@ -205,6 +205,29 @@ gpgcheck=0
 skip_if_unavailable=True
 
 
+########### Extensions ##################
+[rhel-9-extensions]
+name=RHEL-9 Extensions
+baseurl=https://download.eng.brq.redhat.com/rhel-9/nightly/updates/Ext-9/latest-Ext-9.8.0-RHEL-9/compose/Extensions/$basearch/os/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-9-extensions-debug]
+name=RHEL-9 Extensions-debug
+baseurl=https://download.eng.brq.redhat.com/rhel-9/nightly/updates/Ext-9/latest-Ext-9.8.0-RHEL-9/compose/Extensions/$basearch/debug/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+[rhel-9-extensions-source]
+name=RHEL-9 Extensions-source
+baseurl=https://download.eng.brq.redhat.com/rhel-9/nightly/updates/Ext-9/latest-Ext-9.8.0-RHEL-9/compose/Extensions/source/tree/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=True
+
+
 ############# BUILDROOT ##############
 
 [rhel-9-buildroot]
