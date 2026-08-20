@@ -6,7 +6,7 @@
 
 Name: mini-tps
 Version: 0.1
-Release: 196%{?dist}
+Release: 197%{?dist}
 Summary: Mini TPS - Test Package Sanity
 
 License: GPLv2
@@ -92,6 +92,11 @@ sed -i '1s|^#!/usr/bin/python3|#!/usr/bin/python2|' %{buildroot}%{_libexecdir}/m
 
 
 %changelog
+* Thu Aug 20 2026 Michal Srb <michal@redhat.com> - 0.1-197
+- Add Extensions repo to remaining RHEL 10 profiles
+- Add rhel-9.10.0 repos
+- Add empty repos for Fedora 47+
+
 * Thu Apr 24 2026 Avinash Singh and Jiri Popelka <jpopelka@redhat.com> - 0.1-196
 - More RHEL 6 compatibility fixes
 
