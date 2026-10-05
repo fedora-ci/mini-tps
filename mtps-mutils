@@ -23,10 +23,11 @@
 # https://github.com/fedora-modularity/libmodulemd
 
 import argparse
-import gi
 import gzip
 import logging
 import sys
+
+import gi
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,13 +38,13 @@ md2 = None
 # gi doesn't allow load two Modulemd at the same time
 
 try:
-    gi.require_version("Modulemd", "2.0")  # noqa
+    gi.require_version("Modulemd", "2.0")
     from gi.repository import Modulemd as md2
 except Exception:
     pass
 
 try:
-    gi.require_version("Modulemd", "1.0")  # noqa
+    gi.require_version("Modulemd", "1.0")
     from gi.repository import Modulemd as md1
 except Exception:
     pass
@@ -110,7 +111,7 @@ if md2:
     index = md2.ModuleIndex.new()
     ret, failures = index.update_from_string(md, True)
     module_names = index.get_module_names()
-    logger.debug("Found modules in {}: {}".format(args.modulemd, len(module_names)))
+    logger.debug(f"Found modules in {args.modulemd}: {len(module_names)}")
     if args.getfiltered:
         for name in module_names:
             module = index.get_module(name)
@@ -177,7 +178,7 @@ if md1 and not md2:
         return nsvc
 
     mmds = md1.objects_from_string(md)
-    logger.debug("Found modules in {}: {}".format(args.modulemd, len(mmds)))
+    logger.debug(f"Found modules in {args.modulemd}: {len(mmds)}")
     if args.getfiltered:
         for mmd in mmds:
             for filtered in mmd.peek_rpm_filter().get():
@@ -202,7 +203,7 @@ if md1 and not md2:
     if args.getnsvc:
         for mmd in mmds:
             nsvc = get_nsvc(mmd)
-            logger.debug("n:s:v:c for module {}: {}".format(nsvc, nsvc))
+            logger.debug(f"n:s:v:c for module {nsvc}: {nsvc}")
             print(nsvc)
     if args.getrequires:
         for mmd in mmds:
