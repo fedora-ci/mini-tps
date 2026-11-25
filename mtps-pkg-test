@@ -314,11 +314,82 @@ pkg_is_absent() {
     return $ret
 }
 
+extract_rpmverify_mismatches() {
+    awk '
+        /^missing[[:space:]]+/ {
+            line = $0
+            sub(/^missing[[:space:]]+/, "", line)
+            print "missing\t" line
+            next
+        }
+        length($0) >= 11 && substr($0, 10, 1) == " " {
+            flags = substr($0, 1, 9)
+            line = substr($0, 11)
+            sub(/^[[:space:]]+/, "", line)
+            sub(/^[[:alpha:]][[:space:]]+/, "", line)
+            if (length(line) > 0) {
+                print flags "\t" line
+            }
+        }
+    '
+}
+
+diagnose_rpmverify_path() {
+    local owner_pkg="$1" && shift
+    local verify_flags="$1" && shift
+    local path="$1" && shift
+    local rpm_dump_output=
+
+    echo
+    echo "Path: $path"
+    echo "rpm -V flags: $verify_flags"
+
+    if [[ -e "$path" ]]; then
+        stat -Lc 'Actual file: size=%s mtime=%Y mode=%a owner=%U:%G type=%F' "$path" || true
+        if [[ -f "$path" ]]; then
+            sha256sum "$path" || true
+        fi
+    else
+        echo "Actual file: missing on filesystem"
+    fi
+
+    echo "Owning package: $owner_pkg"
+    echo "RPM database metadata (rpm -q --dump columns: path size mtime digest mode owner group isconfig isdoc rdev symlink):"
+    rpm_dump_output="$(rpm -q --dump "$owner_pkg" 2>/dev/null || true)"
+    printf '%s\n' "$rpm_dump_output" | awk -v target="$path" '
+        $1 == target { print; found = 1 }
+        END { if (!found) print "path is not listed in rpm --dump output" }
+    '
+}
+
+diagnose_rpmverify_mismatches_for_package() {
+    local name="$1" && shift
+    local verify_output="$1" && shift
+    local mismatches=
+    local mismatch_count=
+
+    mismatches="$(printf '%s\n' "$verify_output" | extract_rpmverify_mismatches)"
+    mismatch_count="$(printf '%s\n' "$mismatches" | sed '/^$/d' | wc -l)"
+
+    if [ "$mismatch_count" -eq 0 ]; then
+        echo "No detailed file diagnostics available for this rpm --verify output."
+        return
+    fi
+
+    echo
+    echo "Detailed diagnostics for files reported by rpm --verify:"
+    while IFS=$'\t' read -r verify_flags path; do
+        [[ -z "$path" ]] && continue
+        diagnose_rpmverify_path "$name" "$verify_flags" "$path"
+    done < <(printf '%s\n' "$mismatches" | awk -F '\t' '!seen[$2]++')
+}
+
 rpm_db_verify() {
     # Run "rpm --verify" on the installed package
     local name="$1" && shift
     debug "${FUNCNAME[0]}: $name"
     local ret=
+    local verify_output=
     name="$(rhel6_nevra_to_nvra "$name")"
 
     echo
@@ -326,7 +397,8 @@ rpm_db_verify() {
     echo "***"
     echo "Verifying that the installed files match the metadata in the RPM database..."
     echo "$ rpm --verify $name"
-    rpm --verify "$name" && ret=0 || ret=1
+    verify_output="$(rpm --verify "$name" 2>&1)" && ret=0 || ret=1
+    printf '%s\n' "$verify_output"
     echo
     if [ "$ret" != "0" ]; then
         echo "Some discrepancies were found. This is how to interpret the output above:"
@@ -344,6 +416,7 @@ rpm_db_verify() {
         echo "These findings might be real bugs that can be fixed in the spec file,"
         echo "or they might be false positives that can be suppressed. See the \"%verify\""
         echo "scriptlet description in the RPM docs: https://rpm-software-management.github.io/rpm/manual/spec.html"
+        diagnose_rpmverify_mismatches_for_package "$name" "$verify_output"
     else
         echo "(ok)"
     fi
